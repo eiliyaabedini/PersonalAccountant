@@ -120,12 +120,12 @@ class ExpenseEntryViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-                addExpenseUseCase(amount, _uiState.value.selectedTag)
+                val newExpenseId = addExpenseUseCase(amount, _uiState.value.selectedTag)
                 _uiState.value = _uiState.value.copy(
                     currentAmount = "",
                     isLoading = false
                 )
-                _uiInteraction.send(ExpenseEntryUiInteraction.NavigateToExpenseList)
+                _uiInteraction.send(ExpenseEntryUiInteraction.NavigateToExpenseList(newExpenseId))
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
@@ -154,14 +154,14 @@ class ExpenseEntryViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-                addExpenseUseCase(amount, tag)
+                val newExpenseId = addExpenseUseCase(amount, tag)
                 _uiState.value = _uiState.value.copy(
                     currentAmount = "",
                     isLoading = false,
                     selectedTag = "General" // Reset to default
                 )
-                loadAvailableTags() // Refresh tags to update counts
-                loadTagExpenseData() // Refresh chart data
+                // Navigate back to expense list after successful save
+                _uiInteraction.send(ExpenseEntryUiInteraction.NavigateToExpenseList(newExpenseId))
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,

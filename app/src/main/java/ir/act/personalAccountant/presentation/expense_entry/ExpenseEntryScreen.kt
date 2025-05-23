@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import ir.act.personalAccountant.presentation.components.DonutChart
+import ir.act.personalAccountant.presentation.components.NumberKeypad
 import ir.act.personalAccountant.presentation.components.assignColorsToTagData
 import java.text.NumberFormat
 import java.util.Locale
@@ -39,7 +40,7 @@ fun ExpenseEntryScreen(
     LaunchedEffect(viewModel.uiInteraction) {
         viewModel.uiInteraction.collect { interaction ->
             when (interaction) {
-                ExpenseEntryUiInteraction.NavigateToExpenseList -> {
+                is ExpenseEntryUiInteraction.NavigateToExpenseList -> {
                     onNavigateToExpenseList()
                 }
             }
@@ -193,59 +194,15 @@ fun ExpenseEntryScreen(
             )
         }
 
-        // Keypad
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Numbers 1-3
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                KeypadButton("1") { viewModel.onEvent(ExpenseEntryEvent.NumberClicked("1")) }
-                KeypadButton("2") { viewModel.onEvent(ExpenseEntryEvent.NumberClicked("2")) }
-                KeypadButton("3") { viewModel.onEvent(ExpenseEntryEvent.NumberClicked("3")) }
-            }
-
-            // Numbers 4-6
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                KeypadButton("4") { viewModel.onEvent(ExpenseEntryEvent.NumberClicked("4")) }
-                KeypadButton("5") { viewModel.onEvent(ExpenseEntryEvent.NumberClicked("5")) }
-                KeypadButton("6") { viewModel.onEvent(ExpenseEntryEvent.NumberClicked("6")) }
-            }
-
-            // Numbers 7-9
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                KeypadButton("7") { viewModel.onEvent(ExpenseEntryEvent.NumberClicked("7")) }
-                KeypadButton("8") { viewModel.onEvent(ExpenseEntryEvent.NumberClicked("8")) }
-                KeypadButton("9") { viewModel.onEvent(ExpenseEntryEvent.NumberClicked("9")) }
-            }
-
-            // Decimal, 0, Backspace
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 32.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                KeypadButton(".") { viewModel.onEvent(ExpenseEntryEvent.DecimalClicked) }
-                KeypadButton("0") { viewModel.onEvent(ExpenseEntryEvent.NumberClicked("0")) }
-                KeypadButton("⌫") { viewModel.onEvent(ExpenseEntryEvent.BackspaceClicked) }
-            }
-        }
+        // Number keypad
+        NumberKeypad(
+            onNumberClick = { viewModel.onEvent(ExpenseEntryEvent.NumberClicked(it)) },
+            onDecimalClick = { viewModel.onEvent(ExpenseEntryEvent.DecimalClicked) },
+            onBackspaceClick = { viewModel.onEvent(ExpenseEntryEvent.BackspaceClicked) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 32.dp)
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -342,29 +299,6 @@ fun ExpenseEntryScreen(
                 onDismiss = { viewModel.onEvent(ExpenseEntryEvent.DismissAddTagDialog) }
             )
         }
-    }
-}
-
-@Composable
-private fun KeypadButton(
-    text: String,
-    onClick: () -> Unit
-) {
-    Button(
-        onClick = onClick,
-        modifier = Modifier.size(72.dp),
-        shape = RoundedCornerShape(36.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.onSurface
-        ),
-        elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
-    ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Medium
-        )
     }
 }
 

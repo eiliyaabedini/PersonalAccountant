@@ -1,8 +1,10 @@
 package ir.act.personalAccountant.data.local.dao
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 import ir.act.personalAccountant.data.local.entity.ExpenseEntity
 import ir.act.personalAccountant.data.local.model.TagWithCount
 import ir.act.personalAccountant.data.local.model.TagStatistics
@@ -12,7 +14,16 @@ import kotlinx.coroutines.flow.Flow
 interface ExpenseDao {
     
     @Insert
-    suspend fun insertExpense(expense: ExpenseEntity)
+    suspend fun insertExpense(expense: ExpenseEntity): Long
+    
+    @Update
+    suspend fun updateExpense(expense: ExpenseEntity)
+    
+    @Delete
+    suspend fun deleteExpense(expense: ExpenseEntity)
+    
+    @Query("SELECT * FROM expenses WHERE id = :id")
+    suspend fun getExpenseById(id: Long): ExpenseEntity?
     
     @Query("SELECT * FROM expenses ORDER BY timestamp DESC")
     fun getAllExpenses(): Flow<List<ExpenseEntity>>

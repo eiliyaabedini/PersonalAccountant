@@ -3,6 +3,7 @@ package ir.act.personalAccountant.presentation.expense_list
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import ir.act.personalAccountant.domain.usecase.DeleteExpenseUseCase
 import ir.act.personalAccountant.domain.usecase.GetAllExpensesUseCase
 import ir.act.personalAccountant.domain.usecase.GetTotalExpensesUseCase
 import ir.act.personalAccountant.domain.usecase.GetExpensesByTagUseCase
@@ -19,7 +20,8 @@ import javax.inject.Inject
 class ExpenseListViewModel @Inject constructor(
     private val getAllExpensesUseCase: GetAllExpensesUseCase,
     private val getTotalExpensesUseCase: GetTotalExpensesUseCase,
-    private val getExpensesByTagUseCase: GetExpensesByTagUseCase
+    private val getExpensesByTagUseCase: GetExpensesByTagUseCase,
+    private val deleteExpenseUseCase: DeleteExpenseUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ExpenseListUiState())
@@ -41,6 +43,34 @@ class ExpenseListViewModel @Inject constructor(
             }
             ExpenseListEvent.ClearError -> {
                 _uiState.value = _uiState.value.copy(error = null)
+            }
+            is ExpenseListEvent.EditClicked -> {
+                viewModelScope.launch {
+                    _uiInteraction.send(ExpenseListUiInteraction.NavigateToExpenseEdit(event.expense.id))
+                }
+            }
+            is ExpenseListEvent.DeleteClicked -> {
+                _uiState.value = _uiState.value.copy(
+                    showDeleteConfirmation = true,
+                    expenseToDelete = event.expense
+                )
+            }
+            ExpenseListEvent.ConfirmDelete -> {
+                _uiState.value.expenseToDelete?.let { expense ->
+                    viewModelScope.launch {
+                        deleteExpenseUseCase(expense.id)
+                        _uiState.value = _uiState.value.copy(
+                            showDeleteConfirmation = false,
+                            expenseToDelete = null
+                        )
+                    }
+                }
+            }
+            ExpenseListEvent.CancelDelete -> {
+                _uiState.value = _uiState.value.copy(
+                    showDeleteConfirmation = false,
+                    expenseToDelete = null
+                )
             }
         }
     }

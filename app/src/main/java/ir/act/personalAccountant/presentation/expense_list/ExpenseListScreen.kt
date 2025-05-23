@@ -1,13 +1,19 @@
 package ir.act.personalAccountant.presentation.expense_list
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -24,15 +30,22 @@ import java.util.*
 @Composable
 fun ExpenseListScreen(
     onNavigateToExpenseEntry: () -> Unit,
+    onNavigateToExpenseEdit: (Long) -> Unit,
     viewModel: ExpenseListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    
+    // Track the timestamp of when the screen was first shown
+    val screenOpenTime = remember { System.currentTimeMillis() }
 
     LaunchedEffect(viewModel.uiInteraction) {
         viewModel.uiInteraction.collect { interaction ->
             when (interaction) {
                 ExpenseListUiInteraction.NavigateToExpenseEntry -> {
                     onNavigateToExpenseEntry()
+                }
+                is ExpenseListUiInteraction.NavigateToExpenseEdit -> {
+                    onNavigateToExpenseEdit(interaction.expenseId)
                 }
             }
         }
@@ -173,8 +186,16 @@ fun ExpenseListScreen(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(uiState.expenses) { expense ->
-                        ExpenseItem(expense = expense)
+                    items(
+                        items = uiState.expenses,
+                        key = { it.id }
+                    ) { expense ->
+                        SwipeToDeleteExpenseItem(
+                            expense = expense,
+                            isNewlyAdded = expense.timestamp > screenOpenTime,
+                            onEditClick = { viewModel.onEvent(ExpenseListEvent.EditClicked(expense)) },
+                            onDeleteClick = { viewModel.onEvent(ExpenseListEvent.DeleteClicked(expense)) }
+                        )
                     }
                 }
             }
@@ -204,6 +225,34 @@ fun ExpenseListScreen(
             LaunchedEffect(error) {
                 viewModel.onEvent(ExpenseListEvent.ClearError)
             }
+        }
+        
+        // Delete confirmation dialog
+        if (uiState.showDeleteConfirmation) {
+            AlertDialog(
+                onDismissRequest = { viewModel.onEvent(ExpenseListEvent.CancelDelete) },
+                title = { Text("Delete Expense") },
+                text = { 
+                    uiState.expenseToDelete?.let { expense ->
+                        Text("Are you sure you want to delete this ${formatCurrency(expense.amount)} expense?")
+                    }
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = { viewModel.onEvent(ExpenseListEvent.ConfirmDelete) },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Text("Delete")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { viewModel.onEvent(ExpenseListEvent.CancelDelete) }) {
+                        Text("Cancel")
+                    }
+                }
+            )
         }
     }
 }
@@ -290,4 +339,153 @@ private fun formatDate(timestamp: Long): String {
         timestamp >= yesterdayStart -> "Yesterday ${timeFormat.format(Date(timestamp))}"
         else -> dateFormat.format(Date(timestamp))
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SwipeToDeleteExpenseItem(
+    expense: Expense,
+    isNewlyAdded: Boolean,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit
+) {
+    // Animation for newly added items
+    val highlightAlpha = remember { androidx.compose.animation.core.Animatable(if (isNewlyAdded) 0.3f else 0f) }
+    val scale = remember { androidx.compose.animation.core.Animatable(if (isNewlyAdded) 0.95f else 1f) }
+    
+    LaunchedEffect(isNewlyAdded) {
+        if (isNewlyAdded) {
+            // Animate scale
+            scale.animateTo(
+                targetValue = 1f,
+                animationSpec = androidx.compose.animation.core.spring(
+                    dampingRatio = 0.5f,
+                    stiffness = 300f
+                )
+            )
+            
+            // Animate highlight
+            highlightAlpha.animateTo(
+                targetValue = 0f,
+                animationSpec = androidx.compose.animation.core.tween(
+                    durationMillis = 2000,
+                    delayMillis = 500
+                )
+            )
+        }
+    }
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { dismissValue ->
+            when (dismissValue) {
+                SwipeToDismissBoxValue.EndToStart -> {
+                    onDeleteClick()
+                    false // Don't dismiss immediately, wait for confirmation
+                }
+                else -> false
+            }
+        }
+    )
+
+    SwipeToDismissBox(
+        state = dismissState,
+        backgroundContent = {
+            val color by animateColorAsState(
+                targetValue = when (dismissState.targetValue) {
+                    SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.error
+                    else -> Color.Transparent
+                },
+                label = "swipe background color"
+            )
+            
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(color)
+                    .padding(horizontal = 20.dp),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Delete",
+                    tint = MaterialTheme.colorScheme.onError
+                )
+            }
+        },
+        content = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .graphicsLayer {
+                        scaleX = scale.value
+                        scaleY = scale.value
+                    }
+            ) {
+                // Highlight overlay
+                if (highlightAlpha.value > 0f) {
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .background(
+                                MaterialTheme.colorScheme.primary.copy(alpha = highlightAlpha.value)
+                            )
+                    )
+                }
+                
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onEditClick() },
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = formatCurrency(expense.amount),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = formatDate(expense.timestamp),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Start
+                    ) {
+                        AssistChip(
+                            onClick = { },
+                            label = {
+                                Text(
+                                    text = expense.tag,
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            },
+                            modifier = Modifier.height(24.dp),
+                            colors = AssistChipDefaults.assistChipColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                labelColor = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        )
+                    }
+                }
+            }
+            }
+        },
+        enableDismissFromStartToEnd = false
+    )
 }

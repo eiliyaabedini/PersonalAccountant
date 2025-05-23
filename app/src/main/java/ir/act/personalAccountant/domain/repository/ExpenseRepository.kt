@@ -5,7 +5,10 @@ import ir.act.personalAccountant.data.local.model.TagWithCount
 import kotlinx.coroutines.flow.Flow
 
 interface ExpenseRepository {
-    suspend fun addExpense(expense: Expense)
+    suspend fun addExpense(expense: Expense): Long
+    suspend fun updateExpense(expense: Expense)
+    suspend fun deleteExpense(expenseId: Long)
+    suspend fun getExpenseById(id: Long): Expense?
     fun getAllExpenses(): Flow<List<Expense>>
     fun getTotalExpenses(): Flow<Double>
     fun getAllTagsWithCount(): Flow<List<TagWithCount>>

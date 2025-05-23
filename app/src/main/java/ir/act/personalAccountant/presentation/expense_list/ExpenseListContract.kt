@@ -8,14 +8,21 @@ data class ExpenseListUiState(
     val totalExpenses: Double = 0.0,
     val tagExpenseData: List<TagExpenseData> = emptyList(),
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val showDeleteConfirmation: Boolean = false,
+    val expenseToDelete: Expense? = null
 )
 
 sealed class ExpenseListEvent {
     object AddClicked : ExpenseListEvent()
     object ClearError : ExpenseListEvent()
+    data class EditClicked(val expense: Expense) : ExpenseListEvent()
+    data class DeleteClicked(val expense: Expense) : ExpenseListEvent()
+    object ConfirmDelete : ExpenseListEvent()
+    object CancelDelete : ExpenseListEvent()
 }
 
 sealed class ExpenseListUiInteraction {
     object NavigateToExpenseEntry : ExpenseListUiInteraction()
+    data class NavigateToExpenseEdit(val expenseId: Long) : ExpenseListUiInteraction()
 }

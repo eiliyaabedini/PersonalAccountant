@@ -29,5 +29,5 @@ sealed class ExpenseEntryEvent {
 }
 
 sealed class ExpenseEntryUiInteraction {
-    object NavigateToExpenseList : ExpenseEntryUiInteraction()
+    data class NavigateToExpenseList(val newExpenseId: Long? = null) : ExpenseEntryUiInteraction()
 }

@@ -15,8 +15,22 @@ class ExpenseRepositoryImpl @Inject constructor(
     private val expenseDao: ExpenseDao
 ) : ExpenseRepository {
 
-    override suspend fun addExpense(expense: Expense) {
-        expenseDao.insertExpense(expense.toEntity())
+    override suspend fun addExpense(expense: Expense): Long {
+        return expenseDao.insertExpense(expense.toEntity())
+    }
+
+    override suspend fun updateExpense(expense: Expense) {
+        expenseDao.updateExpense(expense.toEntity())
+    }
+
+    override suspend fun deleteExpense(expenseId: Long) {
+        expenseDao.getExpenseById(expenseId)?.let { entity ->
+            expenseDao.deleteExpense(entity)
+        }
+    }
+
+    override suspend fun getExpenseById(id: Long): Expense? {
+        return expenseDao.getExpenseById(id)?.toDomain()
     }
 
     override fun getAllExpenses(): Flow<List<Expense>> {
