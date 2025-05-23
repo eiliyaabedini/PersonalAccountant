@@ -1,6 +1,7 @@
 package ir.act.personalAccountant.presentation.expense_entry
 
 import ir.act.personalAccountant.data.local.model.TagWithCount
+import ir.act.personalAccountant.domain.model.TagExpenseData
 
 data class ExpenseEntryUiState(
     val currentAmount: String = "",
@@ -10,7 +11,8 @@ data class ExpenseEntryUiState(
     val availableTags: List<TagWithCount> = emptyList(),
     val selectedTag: String = "General",
     val showAddTagDialog: Boolean = false,
-    val newTagName: String = ""
+    val newTagName: String = "",
+    val tagExpenseData: List<TagExpenseData> = emptyList()
 )
 
 sealed class ExpenseEntryEvent {

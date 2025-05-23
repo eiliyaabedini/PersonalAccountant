@@ -6,6 +6,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import ir.act.personalAccountant.domain.usecase.AddExpenseUseCase
 import ir.act.personalAccountant.domain.usecase.GetTotalExpensesUseCase
 import ir.act.personalAccountant.domain.usecase.GetAllTagsUseCase
+import ir.act.personalAccountant.domain.usecase.GetExpensesByTagUseCase
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,7 +19,8 @@ import javax.inject.Inject
 class ExpenseEntryViewModel @Inject constructor(
     private val addExpenseUseCase: AddExpenseUseCase,
     private val getTotalExpensesUseCase: GetTotalExpensesUseCase,
-    private val getAllTagsUseCase: GetAllTagsUseCase
+    private val getAllTagsUseCase: GetAllTagsUseCase,
+    private val getExpensesByTagUseCase: GetExpensesByTagUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ExpenseEntryUiState())
@@ -30,6 +32,7 @@ class ExpenseEntryViewModel @Inject constructor(
     init {
         loadTotalExpenses()
         loadAvailableTags()
+        loadTagExpenseData()
     }
 
     fun onEvent(event: ExpenseEntryEvent) {
@@ -158,6 +161,7 @@ class ExpenseEntryViewModel @Inject constructor(
                     selectedTag = "General" // Reset to default
                 )
                 loadAvailableTags() // Refresh tags to update counts
+                loadTagExpenseData() // Refresh chart data
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
@@ -192,6 +196,14 @@ class ExpenseEntryViewModel @Inject constructor(
         viewModelScope.launch {
             getAllTagsUseCase().collect { tags ->
                 _uiState.value = _uiState.value.copy(availableTags = tags)
+            }
+        }
+    }
+
+    private fun loadTagExpenseData() {
+        viewModelScope.launch {
+            getExpensesByTagUseCase().collect { tagData ->
+                _uiState.value = _uiState.value.copy(tagExpenseData = tagData)
             }
         }
     }
