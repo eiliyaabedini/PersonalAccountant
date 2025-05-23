@@ -3,6 +3,8 @@ package ir.act.personalAccountant.presentation.expense_entry
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -42,13 +44,45 @@ fun ExpenseEntryScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Add Expense",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                navigationIcon = {
+                    IconButton(
+                        onClick = onNavigateToExpenseList,
+                        modifier = Modifier.padding(start = 4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                ),
+                modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
+            )
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(paddingValues)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
         // Total expenses at the top
         Card(
             modifier = Modifier
@@ -177,12 +211,13 @@ fun ExpenseEntryScreen(
                 )
             }
         }
-    }
+        }
 
-    // Show error snackbar
-    uiState.error?.let { error ->
-        LaunchedEffect(error) {
-            // This will be handled by the parent or show a snackbar
+        // Show error snackbar
+        uiState.error?.let { error ->
+            LaunchedEffect(error) {
+                // This will be handled by the parent or show a snackbar
+            }
         }
     }
 }

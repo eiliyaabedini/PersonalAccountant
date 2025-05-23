@@ -35,12 +35,31 @@ fun ExpenseListScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(16.dp)
-    ) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Personal Accountant",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary
+                ),
+                modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
+            )
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(paddingValues)
+                .padding(16.dp)
+        ) {
         // Total expenses at the top
         Card(
             modifier = Modifier
@@ -132,12 +151,13 @@ fun ExpenseListScreen(
                 fontWeight = FontWeight.Bold
             )
         }
-    }
+        }
 
-    // Show error snackbar
-    uiState.error?.let { error ->
-        LaunchedEffect(error) {
-            viewModel.onEvent(ExpenseListEvent.ClearError)
+        // Show error snackbar
+        uiState.error?.let { error ->
+            LaunchedEffect(error) {
+                viewModel.onEvent(ExpenseListEvent.ClearError)
+            }
         }
     }
 }
