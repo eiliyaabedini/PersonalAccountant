@@ -166,3 +166,7 @@ This app follows **MVVM + UseCase architecture** with **Jetpack Compose** and **
 - Maintain single responsibility for each class and function
 - Use interfaces for abstraction and easier testing
 - Apply SOLID principles throughout the codebase
+
+## Deployment Notes
+
+- When you finished implementation, build debug version and use adb to run the app on my device

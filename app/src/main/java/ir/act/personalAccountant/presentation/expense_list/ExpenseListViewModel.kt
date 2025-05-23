@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import ir.act.personalAccountant.domain.usecase.GetAllExpensesUseCase
 import ir.act.personalAccountant.domain.usecase.GetTotalExpensesUseCase
+import ir.act.personalAccountant.domain.usecase.GetExpensesByTagUseCase
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,7 +18,8 @@ import javax.inject.Inject
 @HiltViewModel
 class ExpenseListViewModel @Inject constructor(
     private val getAllExpensesUseCase: GetAllExpensesUseCase,
-    private val getTotalExpensesUseCase: GetTotalExpensesUseCase
+    private val getTotalExpensesUseCase: GetTotalExpensesUseCase,
+    private val getExpensesByTagUseCase: GetExpensesByTagUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ExpenseListUiState())
@@ -50,11 +52,13 @@ class ExpenseListViewModel @Inject constructor(
             try {
                 combine(
                     getAllExpensesUseCase(),
-                    getTotalExpensesUseCase()
-                ) { expenses, total ->
+                    getTotalExpensesUseCase(),
+                    getExpensesByTagUseCase()
+                ) { expenses, total, tagData ->
                     _uiState.value = _uiState.value.copy(
                         expenses = expenses,
                         totalExpenses = total,
+                        tagExpenseData = tagData,
                         isLoading = false,
                         error = null
                     )

@@ -13,6 +13,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import ir.act.personalAccountant.domain.model.Expense
+import ir.act.personalAccountant.presentation.components.DonutChart
+import ir.act.personalAccountant.presentation.components.DonutChartLegend
+import ir.act.personalAccountant.presentation.components.assignColorsToTagData
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
@@ -60,7 +63,7 @@ fun ExpenseListScreen(
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {
-        // Total expenses at the top
+        // Total expenses with donut chart
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -72,20 +75,63 @@ fun ExpenseListScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(16.dp)
             ) {
-                Text(
-                    text = "Total Expenses",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-                Text(
-                    text = formatCurrency(uiState.totalExpenses),
-                    style = MaterialTheme.typography.headlineLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                if (uiState.tagExpenseData.isNotEmpty() && uiState.totalExpenses > 0) {
+                    val coloredTagData = assignColorsToTagData(uiState.tagExpenseData)
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        DonutChart(
+                            data = coloredTagData,
+                            modifier = Modifier.size(100.dp)
+                        )
+                        
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "Total Expenses",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Text(
+                                text = formatCurrency(uiState.totalExpenses),
+                                style = MaterialTheme.typography.headlineLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    DonutChartLegend(
+                        data = coloredTagData,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                } else {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Total Expenses",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Text(
+                            text = formatCurrency(uiState.totalExpenses),
+                            style = MaterialTheme.typography.headlineLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
             }
         }
 
