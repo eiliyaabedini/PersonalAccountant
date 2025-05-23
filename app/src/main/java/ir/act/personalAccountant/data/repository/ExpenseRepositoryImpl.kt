@@ -2,6 +2,7 @@ package ir.act.personalAccountant.data.repository
 
 import ir.act.personalAccountant.data.local.dao.ExpenseDao
 import ir.act.personalAccountant.data.local.entity.ExpenseEntity
+import ir.act.personalAccountant.data.local.model.TagWithCount
 import ir.act.personalAccountant.domain.model.Expense
 import ir.act.personalAccountant.domain.repository.ExpenseRepository
 import kotlinx.coroutines.flow.Flow
@@ -30,11 +31,16 @@ class ExpenseRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun getAllTagsWithCount(): Flow<List<TagWithCount>> {
+        return expenseDao.getAllTagsWithCount()
+    }
+
     private fun Expense.toEntity(): ExpenseEntity {
         return ExpenseEntity(
             id = id,
             amount = amount,
-            timestamp = timestamp
+            timestamp = timestamp,
+            tag = tag
         )
     }
 
@@ -42,7 +48,8 @@ class ExpenseRepositoryImpl @Inject constructor(
         return Expense(
             id = id,
             amount = amount,
-            timestamp = timestamp
+            timestamp = timestamp,
+            tag = tag
         )
     }
 }

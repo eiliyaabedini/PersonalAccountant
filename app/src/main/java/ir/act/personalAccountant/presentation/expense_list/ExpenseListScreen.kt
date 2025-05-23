@@ -171,14 +171,16 @@ private fun ExpenseItem(expense: Expense) {
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .padding(16.dp)
         ) {
-            Column {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
                     text = formatCurrency(expense.amount),
                     style = MaterialTheme.typography.titleMedium,
@@ -191,6 +193,23 @@ private fun ExpenseItem(expense: Expense) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            AssistChip(
+                onClick = { },
+                label = {
+                    Text(
+                        text = expense.tag,
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                },
+                modifier = Modifier.height(24.dp),
+                colors = AssistChipDefaults.assistChipColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    labelColor = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            )
         }
     }
 }

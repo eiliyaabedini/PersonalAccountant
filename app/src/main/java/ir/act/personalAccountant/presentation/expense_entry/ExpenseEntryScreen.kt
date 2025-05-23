@@ -2,18 +2,26 @@ package ir.act.personalAccountant.presentation.expense_entry
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import java.text.NumberFormat
 import java.util.Locale
@@ -36,15 +44,18 @@ fun ExpenseEntryScreen(
         }
     }
 
+    val snackbarHostState = remember { SnackbarHostState() }
+    
     // Show error snackbar
     uiState.error?.let { error ->
         LaunchedEffect(error) {
-            // Clear error after showing
+            snackbarHostState.showSnackbar(error)
             viewModel.onEvent(ExpenseEntryEvent.ClearError)
         }
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -187,27 +198,80 @@ fun ExpenseEntryScreen(
             }
         }
 
-        // Add button
-        Button(
-            onClick = { viewModel.onEvent(ExpenseEntryEvent.AddClicked) },
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Tag selection chips
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp),
-            enabled = !uiState.isLoading,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary
+                .height(80.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
             )
         ) {
-            if (uiState.isLoading) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(8.dp)
+            ) {
+                Text(
+                    text = "Choose tag:",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+                
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(uiState.availableTags) { tagWithCount ->
+                        FilterChip(
+                            selected = uiState.selectedTag == tagWithCount.tag,
+                            onClick = { viewModel.onEvent(ExpenseEntryEvent.TagSelected(tagWithCount.tag)) },
+                            label = {
+                                Text(
+                                    text = "${tagWithCount.tag} (${tagWithCount.count})",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        )
+                    }
+                    
+                    item {
+                        AssistChip(
+                            onClick = { viewModel.onEvent(ExpenseEntryEvent.AddTagClicked) },
+                            label = {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = "Add new tag",
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            },
+                            colors = AssistChipDefaults.assistChipColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer
+                            )
+                        )
+                    }
+                }
+            }
+        }
+        
+        // Loading indicator
+        if (uiState.isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                contentAlignment = Alignment.Center
+            ) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(24.dp),
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
-            } else {
-                Text(
-                    text = "ADD",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
         }
@@ -218,6 +282,16 @@ fun ExpenseEntryScreen(
             LaunchedEffect(error) {
                 // This will be handled by the parent or show a snackbar
             }
+        }
+        
+        // Add new tag dialog
+        if (uiState.showAddTagDialog) {
+            AddTagDialog(
+                tagName = uiState.newTagName,
+                onTagNameChange = { viewModel.onEvent(ExpenseEntryEvent.NewTagNameChanged(it)) },
+                onConfirm = { viewModel.onEvent(ExpenseEntryEvent.ConfirmNewTag) },
+                onDismiss = { viewModel.onEvent(ExpenseEntryEvent.DismissAddTagDialog) }
+            )
         }
     }
 }
@@ -248,4 +322,73 @@ private fun KeypadButton(
 private fun formatCurrency(amount: Double): String {
     val formatter = NumberFormat.getCurrencyInstance(Locale.US)
     return formatter.format(amount)
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AddTagDialog(
+    tagName: String,
+    onTagNameChange: (String) -> Unit,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    val focusManager = LocalFocusManager.current
+    
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp)
+            ) {
+                Text(
+                    text = "Add New Tag",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                
+                OutlinedTextField(
+                    value = tagName,
+                    onValueChange = onTagNameChange,
+                    label = { Text("Tag name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            focusManager.clearFocus()
+                            onConfirm()
+                        }
+                    )
+                )
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Cancel")
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            focusManager.clearFocus()
+                            onConfirm()
+                        },
+                        enabled = tagName.trim().isNotEmpty()
+                    ) {
+                        Text("Add Tag")
+                    }
+                }
+            }
+        }
+    }
 }

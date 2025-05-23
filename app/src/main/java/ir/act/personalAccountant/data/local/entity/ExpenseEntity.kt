@@ -8,5 +8,6 @@ data class ExpenseEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val amount: Double,
-    val timestamp: Long
+    val timestamp: Long,
+    val tag: String = "General"
 )

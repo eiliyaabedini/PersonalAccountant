@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import ir.act.personalAccountant.domain.usecase.AddExpenseUseCase
 import ir.act.personalAccountant.domain.usecase.GetTotalExpensesUseCase
+import ir.act.personalAccountant.domain.usecase.GetAllTagsUseCase
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,7 +17,8 @@ import javax.inject.Inject
 @HiltViewModel
 class ExpenseEntryViewModel @Inject constructor(
     private val addExpenseUseCase: AddExpenseUseCase,
-    private val getTotalExpensesUseCase: GetTotalExpensesUseCase
+    private val getTotalExpensesUseCase: GetTotalExpensesUseCase,
+    private val getAllTagsUseCase: GetAllTagsUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ExpenseEntryUiState())
@@ -27,6 +29,7 @@ class ExpenseEntryViewModel @Inject constructor(
 
     init {
         loadTotalExpenses()
+        loadAvailableTags()
     }
 
     fun onEvent(event: ExpenseEntryEvent) {
@@ -45,6 +48,24 @@ class ExpenseEntryViewModel @Inject constructor(
             }
             ExpenseEntryEvent.ClearError -> {
                 _uiState.value = _uiState.value.copy(error = null)
+            }
+            is ExpenseEntryEvent.TagSelected -> {
+                handleTagSelection(event.tag)
+            }
+            ExpenseEntryEvent.AddTagClicked -> {
+                _uiState.value = _uiState.value.copy(showAddTagDialog = true)
+            }
+            is ExpenseEntryEvent.NewTagNameChanged -> {
+                _uiState.value = _uiState.value.copy(newTagName = event.name)
+            }
+            ExpenseEntryEvent.ConfirmNewTag -> {
+                handleConfirmNewTag()
+            }
+            ExpenseEntryEvent.DismissAddTagDialog -> {
+                _uiState.value = _uiState.value.copy(
+                    showAddTagDialog = false,
+                    newTagName = ""
+                )
             }
         }
     }
@@ -96,7 +117,7 @@ class ExpenseEntryViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-                addExpenseUseCase(amount)
+                addExpenseUseCase(amount, _uiState.value.selectedTag)
                 _uiState.value = _uiState.value.copy(
                     currentAmount = "",
                     isLoading = false
@@ -111,10 +132,66 @@ class ExpenseEntryViewModel @Inject constructor(
         }
     }
 
+    private fun handleTagSelection(tag: String) {
+        val currentAmount = _uiState.value.currentAmount
+        if (currentAmount.isEmpty()) {
+            _uiState.value = _uiState.value.copy(error = "Please enter an amount first")
+            return
+        }
+
+        val amount = currentAmount.toDoubleOrNull()
+        if (amount == null || amount <= 0) {
+            _uiState.value = _uiState.value.copy(error = "Please enter a valid amount")
+            return
+        }
+
+        _uiState.value = _uiState.value.copy(selectedTag = tag)
+        
+        // Automatically save the expense when tag is selected
+        viewModelScope.launch {
+            try {
+                _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+                addExpenseUseCase(amount, tag)
+                _uiState.value = _uiState.value.copy(
+                    currentAmount = "",
+                    isLoading = false,
+                    selectedTag = "General" // Reset to default
+                )
+                loadAvailableTags() // Refresh tags to update counts
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = e.message ?: "An error occurred"
+                )
+            }
+        }
+    }
+
+    private fun handleConfirmNewTag() {
+        val newTagName = _uiState.value.newTagName.trim()
+        if (newTagName.isNotEmpty()) {
+            _uiState.value = _uiState.value.copy(
+                showAddTagDialog = false,
+                newTagName = "",
+                selectedTag = newTagName
+            )
+            // Select the new tag, which will also save the expense
+            handleTagSelection(newTagName)
+        }
+    }
+
     private fun loadTotalExpenses() {
         viewModelScope.launch {
             getTotalExpensesUseCase().collect { total ->
                 _uiState.value = _uiState.value.copy(totalExpenses = total)
+            }
+        }
+    }
+
+    private fun loadAvailableTags() {
+        viewModelScope.launch {
+            getAllTagsUseCase().collect { tags ->
+                _uiState.value = _uiState.value.copy(availableTags = tags)
             }
         }
     }
