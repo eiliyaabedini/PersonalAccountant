@@ -4,6 +4,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -48,154 +52,207 @@ fun ExpenseEditScreen(
         }
     }
     
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Edit Expense") },
-                navigationIcon = {
-                    IconButton(onClick = { uiInteractions.navigateBack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                }
-            )
-        }
-    ) { paddingValues ->
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
         if (uiState.isLoading) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues),
+                    .background(MaterialTheme.colorScheme.background),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         } else {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .background(MaterialTheme.colorScheme.background)
             ) {
-                // Amount display
-                Card(
+                // Header with back arrow and title
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(120.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
+                        .padding(horizontal = 20.dp, vertical = 50.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(15.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
+                    IconButton(
+                        onClick = { uiInteractions.navigateBack() },
+                        modifier = Modifier.size(40.dp)
                     ) {
-                        val amount = uiState.amount.toDoubleOrNull() ?: 0.0
-                        Text(
-                            text = formatCurrency(amount),
-                            style = MaterialTheme.typography.displayMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            textAlign = TextAlign.Center
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
+                    
+                    Text(
+                        text = "Edit Expense",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
                 }
-
+                
+                // Amount section
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 40.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "$",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                        modifier = Modifier.padding(bottom = 10.dp)
+                    )
+                    
+                    val amount = uiState.amount.toDoubleOrNull() ?: 0.0
+                    Text(
+                        text = if (uiState.amount.isEmpty()) "0" else String.format("%.2f", amount),
+                        style = MaterialTheme.typography.displayLarge.copy(fontSize = 56.sp),
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 30.dp)
+                    )
+                }
                 // Number keypad
                 NumberKeypad(
                     onNumberClick = { viewModel.onEvent(Events.NumberClicked(it)) },
                     onDecimalClick = { viewModel.onEvent(Events.DecimalClicked) },
                     onBackspaceClick = { viewModel.onEvent(Events.BackspaceClicked) },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Tag selection
-                Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(80.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    )
+                        .padding(horizontal = 40.dp)
+                        .padding(bottom = 30.dp)
+                )
+
+                // Categories section
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp)
+                        .padding(bottom = 30.dp)
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(8.dp)
+                    Text(
+                        text = "CATEGORY",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                        modifier = Modifier.padding(bottom = 15.dp)
+                    )
+                    
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Text(
-                            text = "Choose tag:",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
-                        
-                        LazyRow(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            items(uiState.availableTags) { tagWithCount ->
-                                FilterChip(
-                                    selected = uiState.selectedTag == tagWithCount.tag,
-                                    onClick = { viewModel.onEvent(Events.TagSelected(tagWithCount.tag)) },
-                                    label = {
-                                        Text(
-                                            text = "${tagWithCount.tag} (${tagWithCount.count})",
-                                            style = MaterialTheme.typography.bodyMedium
-                                        )
-                                    },
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        items(uiState.availableTags) { tagWithCount ->
+                            val isSelected = uiState.selectedTag == tagWithCount.tag
+                            Card(
+                                onClick = { viewModel.onEvent(Events.TagSelected(tagWithCount.tag)) },
+                                modifier = Modifier
+                                    .height(50.dp)
+                                    .wrapContentWidth(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (isSelected) Color.Transparent else MaterialTheme.colorScheme.surface
+                                ),
+                                border = if (isSelected) 
+                                    BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+                                else null,
+                                shape = RoundedCornerShape(25.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(horizontal = 20.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "${tagWithCount.tag} (${tagWithCount.count})",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium,
+                                        color = if (isSelected) 
+                                            MaterialTheme.colorScheme.primary 
+                                        else 
+                                            MaterialTheme.colorScheme.onSurface
                                     )
-                                )
+                                }
                             }
-                            
-                            item {
-                                AssistChip(
-                                    onClick = { viewModel.onEvent(Events.AddTagClicked) },
-                                    label = {
-                                        Icon(
-                                            imageVector = Icons.Default.Add,
-                                            contentDescription = "Add tag",
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                    }
-                                )
+                        }
+                        
+                        item {
+                            Card(
+                                onClick = { viewModel.onEvent(Events.AddTagClicked) },
+                                modifier = Modifier.size(50.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color.Transparent
+                                ),
+                                border = BorderStroke(2.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)),
+                                shape = RoundedCornerShape(25.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "+",
+                                        style = MaterialTheme.typography.titleLarge,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                    )
+                                }
                             }
                         }
                     }
                 }
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                // Action buttons
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    OutlinedButton(
-                        onClick = { viewModel.onEvent(Events.DeleteClicked) },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = MaterialTheme.colorScheme.error
-                        )
-                    ) {
-                        Text("Delete")
-                    }
-                    
-                    Button(
-                        onClick = { viewModel.onEvent(Events.UpdateClicked) },
-                        modifier = Modifier.weight(1f),
-                        enabled = uiState.amount.isNotEmpty() && uiState.selectedTag.isNotEmpty()
-                    ) {
-                        Text("Update")
-                    }
-                }
+            }
+        }
+        
+        // Action buttons at bottom
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 30.dp)
+                .align(Alignment.BottomCenter),
+            horizontalArrangement = Arrangement.spacedBy(15.dp)
+        ) {
+            OutlinedButton(
+                onClick = { viewModel.onEvent(Events.DeleteClicked) },
+                modifier = Modifier.weight(1f).height(50.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.primary
+                ),
+                border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Text(
+                    text = "DELETE",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            
+            Button(
+                onClick = { viewModel.onEvent(Events.UpdateClicked) },
+                modifier = Modifier.weight(2f).height(50.dp),
+                enabled = uiState.amount.isNotEmpty() && uiState.selectedTag.isNotEmpty(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Text(
+                    text = "UPDATE",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
         

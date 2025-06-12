@@ -124,19 +124,21 @@ private fun LegendItem(
             text = label,
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Medium,
+            color = androidx.compose.ui.graphics.Color.Black,
             modifier = Modifier.weight(1f)
         )
         
         Text(
             text = "${percentage.toInt()}%",
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = androidx.compose.ui.graphics.Color.Gray
         )
         
         Text(
             text = formatCurrency(amount),
             style = MaterialTheme.typography.bodySmall,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = androidx.compose.ui.graphics.Color.Black
         )
     }
 }
@@ -173,7 +175,7 @@ private fun ExpandCollapseButton(
             },
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = androidx.compose.ui.graphics.Color.Gray
         )
         
         Spacer(modifier = Modifier.width(8.dp))
@@ -181,7 +183,7 @@ private fun ExpandCollapseButton(
         Icon(
             imageVector = Icons.Default.KeyboardArrowDown,
             contentDescription = if (isExpanded) "Collapse" else "Expand",
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            tint = androidx.compose.ui.graphics.Color.Gray,
             modifier = Modifier
                 .size(16.dp)
                 .rotate(arrowRotation)
