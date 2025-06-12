@@ -12,20 +12,24 @@ data class ExpenseEntryUiState(
     val selectedTag: String = "General",
     val showAddTagDialog: Boolean = false,
     val newTagName: String = "",
-    val tagExpenseData: List<TagExpenseData> = emptyList()
+    val tagExpenseData: List<TagExpenseData> = emptyList(),
+    val selectedDate: Long = System.currentTimeMillis(),
+    val showDatePicker: Boolean = false
 )
 
 sealed class ExpenseEntryEvent {
     data class NumberClicked(val number: String) : ExpenseEntryEvent()
     object DecimalClicked : ExpenseEntryEvent()
     object BackspaceClicked : ExpenseEntryEvent()
-    object AddClicked : ExpenseEntryEvent()
     object ClearError : ExpenseEntryEvent()
     data class TagSelected(val tag: String) : ExpenseEntryEvent()
     object AddTagClicked : ExpenseEntryEvent()
     data class NewTagNameChanged(val name: String) : ExpenseEntryEvent()
     object ConfirmNewTag : ExpenseEntryEvent()
     object DismissAddTagDialog : ExpenseEntryEvent()
+    object DatePickerClicked : ExpenseEntryEvent()
+    data class DateSelected(val dateMillis: Long) : ExpenseEntryEvent()
+    object DismissDatePicker : ExpenseEntryEvent()
 }
 
 sealed class ExpenseEntryUiInteraction {

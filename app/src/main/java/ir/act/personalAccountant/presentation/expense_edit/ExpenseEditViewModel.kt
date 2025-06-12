@@ -47,6 +47,9 @@ class ExpenseEditViewModel @Inject constructor(
             is Events.NewTagNameChanged -> updateNewTagName(event.name)
             Events.ConfirmNewTag -> addNewTag()
             Events.DismissAddTagDialog -> dismissAddTagDialog()
+            Events.DatePickerClicked -> showDatePicker()
+            is Events.DateSelected -> selectDate(event.dateMillis)
+            Events.DismissDatePicker -> dismissDatePicker()
         }
     }
 
@@ -67,6 +70,7 @@ class ExpenseEditViewModel @Inject constructor(
                             expenseId = expense.id,
                             amount = formattedAmount,
                             selectedTag = expense.tag,
+                            selectedDate = expense.timestamp,
                             isLoading = false
                         )
                     }
@@ -193,7 +197,8 @@ class ExpenseEditViewModel @Inject constructor(
                     updateExpenseUseCase(
                         original.copy(
                             amount = amount,
-                            tag = state.selectedTag
+                            tag = state.selectedTag,
+                            timestamp = state.selectedDate
                         )
                     )
                     _uiState.update { it.copy(navigateBack = true) }
@@ -262,5 +267,17 @@ class ExpenseEditViewModel @Inject constructor(
 
     private fun dismissAddTagDialog() {
         _uiState.update { it.copy(showAddTagDialog = false, newTagName = "") }
+    }
+
+    private fun showDatePicker() {
+        _uiState.update { it.copy(showDatePicker = true) }
+    }
+
+    private fun selectDate(dateMillis: Long) {
+        _uiState.update { it.copy(selectedDate = dateMillis, showDatePicker = false) }
+    }
+
+    private fun dismissDatePicker() {
+        _uiState.update { it.copy(showDatePicker = false) }
     }
 }

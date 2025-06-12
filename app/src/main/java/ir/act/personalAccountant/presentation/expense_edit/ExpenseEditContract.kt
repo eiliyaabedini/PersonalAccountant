@@ -15,7 +15,9 @@ object ExpenseEditContract {
         val navigateBack: Boolean = false,
         val showAddTagDialog: Boolean = false,
         val newTagName: String = "",
-        val isFirstEdit: Boolean = true // Track if this is the first edit
+        val isFirstEdit: Boolean = true, // Track if this is the first edit
+        val selectedDate: Long = System.currentTimeMillis(),
+        val showDatePicker: Boolean = false
     )
     
     sealed class Events {
@@ -33,6 +35,9 @@ object ExpenseEditContract {
         data class NewTagNameChanged(val name: String) : Events()
         object ConfirmNewTag : Events()
         object DismissAddTagDialog : Events()
+        object DatePickerClicked : Events()
+        data class DateSelected(val dateMillis: Long) : Events()
+        object DismissDatePicker : Events()
     }
     
     interface UiInteractions {

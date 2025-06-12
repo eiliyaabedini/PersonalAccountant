@@ -11,6 +11,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,7 +29,9 @@ import ir.act.personalAccountant.presentation.components.DonutChart
 import ir.act.personalAccountant.presentation.components.NumberKeypad
 import ir.act.personalAccountant.presentation.components.assignColorsToTagData
 import java.text.NumberFormat
+import java.text.SimpleDateFormat
 import java.util.Locale
+import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,7 +73,7 @@ fun ExpenseEntryScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 50.dp),
+                    .padding(horizontal = 20.dp, vertical = 24.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(15.dp)
             ) {
@@ -95,17 +98,18 @@ fun ExpenseEntryScreen(
             }
             
             // Amount section
-            Column(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 40.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(horizontal = 20.dp, vertical = 24.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = "$",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
-                    modifier = Modifier.padding(bottom = 10.dp)
+                    style = MaterialTheme.typography.displayLarge.copy(fontSize = 56.sp),
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
                 )
                 
                 Text(
@@ -113,10 +117,7 @@ fun ExpenseEntryScreen(
                     style = MaterialTheme.typography.displayLarge.copy(fontSize = 56.sp),
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.onBackground,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 30.dp)
+                    textAlign = TextAlign.Center
                 )
             }
             // Number keypad
@@ -127,21 +128,68 @@ fun ExpenseEntryScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 40.dp)
-                    .padding(bottom = 30.dp)
+                    .padding(bottom = 16.dp)
             )
+
+            // Date section
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = 16.dp)
+            ) {
+                Text(
+                    text = "DATE",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                
+                Card(
+                    onClick = { viewModel.onEvent(ExpenseEntryEvent.DatePickerClicked) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(Date(uiState.selectedDate)),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Icon(
+                            imageVector = Icons.Default.DateRange,
+                            contentDescription = "Select Date",
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+            }
 
             // Categories section
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
-                    .padding(bottom = 30.dp)
+                    .padding(bottom = 16.dp)
             ) {
                 Text(
                     text = "CATEGORY",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-                    modifier = Modifier.padding(bottom = 15.dp)
+                    modifier = Modifier.padding(bottom = 8.dp)
                 )
                 
                 LazyRow(
@@ -153,10 +201,6 @@ fun ExpenseEntryScreen(
                         Card(
                             onClick = { 
                                 viewModel.onEvent(ExpenseEntryEvent.TagSelected(tagWithCount.tag))
-                                // Auto-save when both amount and tag are present
-                                if (uiState.currentAmount.isNotEmpty() && uiState.currentAmount != "0") {
-                                    viewModel.onEvent(ExpenseEntryEvent.AddClicked)
-                                }
                             },
                             modifier = Modifier
                                 .height(50.dp)
@@ -246,6 +290,20 @@ fun ExpenseEntryScreen(
                 onDismiss = { viewModel.onEvent(ExpenseEntryEvent.DismissAddTagDialog) }
             )
         }
+        
+        // Date picker dialog
+        if (uiState.showDatePicker) {
+            val datePickerState = rememberDatePickerState(
+                initialSelectedDateMillis = uiState.selectedDate
+            )
+            DatePickerDialog(
+                onDateSelected = { dateMillis ->
+                    dateMillis?.let { viewModel.onEvent(ExpenseEntryEvent.DateSelected(it)) }
+                },
+                onDismiss = { viewModel.onEvent(ExpenseEntryEvent.DismissDatePicker) },
+                datePickerState = datePickerState
+            )
+        }
     }
 }
 
@@ -320,5 +378,34 @@ private fun AddTagDialog(
                 }
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DatePickerDialog(
+    onDateSelected: (Long?) -> Unit,
+    onDismiss: () -> Unit,
+    datePickerState: DatePickerState
+) {
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    onDateSelected(datePickerState.selectedDateMillis)
+                    onDismiss()
+                }
+            ) {
+                Text("OK")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    ) {
+        DatePicker(state = datePickerState)
     }
 }

@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -46,29 +47,42 @@ class ExpenseEntryViewModel @Inject constructor(
             ExpenseEntryEvent.BackspaceClicked -> {
                 handleBackspaceClick()
             }
-            ExpenseEntryEvent.AddClicked -> {
-                handleAddClick()
-            }
             ExpenseEntryEvent.ClearError -> {
-                _uiState.value = _uiState.value.copy(error = null)
+                _uiState.update { it.copy(error = null) }
             }
             is ExpenseEntryEvent.TagSelected -> {
                 handleTagSelection(event.tag)
             }
             ExpenseEntryEvent.AddTagClicked -> {
-                _uiState.value = _uiState.value.copy(showAddTagDialog = true)
+                _uiState.update { it.copy(showAddTagDialog = true) }
             }
             is ExpenseEntryEvent.NewTagNameChanged -> {
-                _uiState.value = _uiState.value.copy(newTagName = event.name)
+                _uiState.update { it.copy(newTagName = event.name) }
             }
             ExpenseEntryEvent.ConfirmNewTag -> {
                 handleConfirmNewTag()
             }
             ExpenseEntryEvent.DismissAddTagDialog -> {
-                _uiState.value = _uiState.value.copy(
-                    showAddTagDialog = false,
-                    newTagName = ""
-                )
+                _uiState.update {
+                    it.copy(
+                        showAddTagDialog = false,
+                        newTagName = ""
+                    )
+                }
+            }
+            ExpenseEntryEvent.DatePickerClicked -> {
+                _uiState.update { it.copy(showDatePicker = true) }
+            }
+            is ExpenseEntryEvent.DateSelected -> {
+                _uiState.update {
+                    it.copy(
+                        selectedDate = event.dateMillis,
+                        showDatePicker = false
+                    )
+                }
+            }
+            ExpenseEntryEvent.DismissDatePicker -> {
+                _uiState.update { it.copy(showDatePicker = false) }
             }
         }
     }
@@ -76,61 +90,30 @@ class ExpenseEntryViewModel @Inject constructor(
     private fun handleNumberClick(number: String) {
         val currentAmount = _uiState.value.currentAmount
         if (currentAmount.length < 10) { // Prevent very large numbers
-            _uiState.value = _uiState.value.copy(
-                currentAmount = currentAmount + number
-            )
+            _uiState.update {
+                it.copy(currentAmount = currentAmount + number)
+            }
         }
     }
 
     private fun handleDecimalClick() {
         val currentAmount = _uiState.value.currentAmount
         if (!currentAmount.contains(".") && currentAmount.isNotEmpty()) {
-            _uiState.value = _uiState.value.copy(
-                currentAmount = currentAmount + "."
-            )
+            _uiState.update {
+                it.copy(currentAmount = currentAmount + ".")
+            }
         } else if (currentAmount.isEmpty()) {
-            _uiState.value = _uiState.value.copy(
-                currentAmount = "0."
-            )
+            _uiState.update {
+                it.copy(currentAmount = "0.")
+            }
         }
     }
 
     private fun handleBackspaceClick() {
         val currentAmount = _uiState.value.currentAmount
         if (currentAmount.isNotEmpty()) {
-            _uiState.value = _uiState.value.copy(
-                currentAmount = currentAmount.dropLast(1)
-            )
-        }
-    }
-
-    private fun handleAddClick() {
-        val currentAmount = _uiState.value.currentAmount
-        if (currentAmount.isEmpty()) {
-            _uiState.value = _uiState.value.copy(error = "Please enter an amount")
-            return
-        }
-
-        val amount = currentAmount.toDoubleOrNull()
-        if (amount == null || amount <= 0) {
-            _uiState.value = _uiState.value.copy(error = "Please enter a valid amount")
-            return
-        }
-
-        viewModelScope.launch {
-            try {
-                _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-                val newExpenseId = addExpenseUseCase(amount, _uiState.value.selectedTag)
-                _uiState.value = _uiState.value.copy(
-                    currentAmount = "",
-                    isLoading = false
-                )
-                _uiInteraction.send(ExpenseEntryUiInteraction.NavigateToExpenseList(newExpenseId))
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    error = e.message ?: "An error occurred"
-                )
+            _uiState.update {
+                it.copy(currentAmount = currentAmount.dropLast(1))
             }
         }
     }
@@ -138,35 +121,40 @@ class ExpenseEntryViewModel @Inject constructor(
     private fun handleTagSelection(tag: String) {
         val currentAmount = _uiState.value.currentAmount
         if (currentAmount.isEmpty()) {
-            _uiState.value = _uiState.value.copy(error = "Please enter an amount first")
+            _uiState.update { it.copy(error = "Please enter an amount first") }
             return
         }
 
         val amount = currentAmount.toDoubleOrNull()
         if (amount == null || amount <= 0) {
-            _uiState.value = _uiState.value.copy(error = "Please enter a valid amount")
+            _uiState.update { it.copy(error = "Please enter a valid amount") }
             return
         }
 
-        _uiState.value = _uiState.value.copy(selectedTag = tag)
+        _uiState.update { it.copy(selectedTag = tag) }
         
         // Automatically save the expense when tag is selected
         viewModelScope.launch {
             try {
-                _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-                val newExpenseId = addExpenseUseCase(amount, tag)
-                _uiState.value = _uiState.value.copy(
-                    currentAmount = "",
-                    isLoading = false,
-                    selectedTag = "General" // Reset to default
-                )
-                // Navigate back to expense list after successful save
+                _uiState.update { it.copy(isLoading = true, error = null) }
+                val currentState = _uiState.value
+                val newExpenseId = addExpenseUseCase(amount, tag, currentState.selectedDate)
+                _uiState.update {
+                    it.copy(
+                        currentAmount = "",
+                        isLoading = false,
+                        selectedTag = "General", // Reset to default
+                        selectedDate = System.currentTimeMillis() // Reset date to current time
+                    )
+                }
                 _uiInteraction.send(ExpenseEntryUiInteraction.NavigateToExpenseList(newExpenseId))
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    error = e.message ?: "An error occurred"
-                )
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = e.message ?: "An error occurred"
+                    )
+                }
             }
         }
     }
@@ -174,11 +162,13 @@ class ExpenseEntryViewModel @Inject constructor(
     private fun handleConfirmNewTag() {
         val newTagName = _uiState.value.newTagName.trim()
         if (newTagName.isNotEmpty()) {
-            _uiState.value = _uiState.value.copy(
-                showAddTagDialog = false,
-                newTagName = "",
-                selectedTag = newTagName
-            )
+            _uiState.update {
+                it.copy(
+                    showAddTagDialog = false,
+                    newTagName = "",
+                    selectedTag = newTagName
+                )
+            }
             // Select the new tag, which will also save the expense
             handleTagSelection(newTagName)
         }
@@ -187,7 +177,7 @@ class ExpenseEntryViewModel @Inject constructor(
     private fun loadTotalExpenses() {
         viewModelScope.launch {
             getTotalExpensesUseCase().collect { total ->
-                _uiState.value = _uiState.value.copy(totalExpenses = total)
+                _uiState.update { it.copy(totalExpenses = total) }
             }
         }
     }
@@ -195,7 +185,7 @@ class ExpenseEntryViewModel @Inject constructor(
     private fun loadAvailableTags() {
         viewModelScope.launch {
             getAllTagsUseCase().collect { tags ->
-                _uiState.value = _uiState.value.copy(availableTags = tags)
+                _uiState.update { it.copy(availableTags = tags) }
             }
         }
     }
@@ -203,7 +193,7 @@ class ExpenseEntryViewModel @Inject constructor(
     private fun loadTagExpenseData() {
         viewModelScope.launch {
             getExpensesByTagUseCase().collect { tagData ->
-                _uiState.value = _uiState.value.copy(tagExpenseData = tagData)
+                _uiState.update { it.copy(tagExpenseData = tagData) }
             }
         }
     }
