@@ -68,37 +68,60 @@ fun ExpenseEntryScreen(
         modifier = Modifier.fillMaxSize()
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
+            modifier = Modifier.fillMaxSize()
         ) {
-            // Header with back arrow and title
-            Row(
+            // White header section with rounded bottom corners
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 24.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(15.dp)
+                    .background(
+                        MaterialTheme.colorScheme.primaryContainer,
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(
+                            bottomStart = 30.dp,
+                            bottomEnd = 30.dp
+                        )
+                    )
+                    .padding(bottom = 20.dp)
             ) {
-                IconButton(
-                    onClick = onNavigateToExpenseList,
-                    modifier = Modifier.size(40.dp)
+                // Status bar space
+                Spacer(modifier = Modifier.height(40.dp))
+                
+                // Header with back arrow and title
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 15.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(15.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Back",
-                        tint = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.size(24.dp)
+                    IconButton(
+                        onClick = onNavigateToExpenseList,
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    
+                    Text(
+                        text = "Add Expense",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
-                
-                Text(
-                    text = "Add Expense",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
             }
+            
+            // Dark content section  
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(top = 20.dp)
+            ) {
             
             // Amount section
             Row(
@@ -283,6 +306,7 @@ fun ExpenseEntryScreen(
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
+            }
             }
         }
 
