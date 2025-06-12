@@ -11,20 +11,8 @@ class GetAllTagsUseCase @Inject constructor(
 ) {
     operator fun invoke(): Flow<List<TagWithCount>> {
         return repository.getAllTagsWithCount().map { tags ->
-            val mutableTags = tags.toMutableList()
-            
-            // Ensure "General" tag is always present
-            if (mutableTags.none { it.tag == "General" }) {
-                mutableTags.add(TagWithCount("General", 0))
-            }
-            
-            // Sort: "General" first, then by count descending
-            mutableTags.sortWith(compareBy(
-                { it.tag != "General" },
-                { -it.count }
-            ))
-            
-            mutableTags
+            // Sort by count descending
+            tags.sortedByDescending { it.count }
         }
     }
 }

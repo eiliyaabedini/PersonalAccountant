@@ -9,7 +9,7 @@ data class ExpenseEntryUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val availableTags: List<TagWithCount> = emptyList(),
-    val selectedTag: String = "General",
+    val selectedTag: String = "",
     val showAddTagDialog: Boolean = false,
     val newTagName: String = "",
     val tagExpenseData: List<TagExpenseData> = emptyList(),

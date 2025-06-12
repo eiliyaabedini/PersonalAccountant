@@ -2,6 +2,7 @@ package ir.act.personalAccountant.presentation.expense_entry
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,6 +15,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
+import ir.act.personalAccountant.data.local.model.TagWithCount
 import ir.act.personalAccountant.presentation.components.DonutChart
 import ir.act.personalAccountant.presentation.components.NumberKeypad
 import ir.act.personalAccountant.presentation.components.assignColorsToTagData
@@ -192,67 +195,76 @@ fun ExpenseEntryScreen(
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 
-                LazyRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    items(uiState.availableTags) { tagWithCount ->
-                        val isSelected = uiState.selectedTag == tagWithCount.tag
-                        Card(
-                            onClick = { 
-                                viewModel.onEvent(ExpenseEntryEvent.TagSelected(tagWithCount.tag))
-                            },
-                            modifier = Modifier
-                                .height(50.dp)
-                                .wrapContentWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = if (isSelected) Color.Transparent else MaterialTheme.colorScheme.surface
-                            ),
-                            border = if (isSelected) 
-                                androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
-                            else null,
-                            shape = RoundedCornerShape(25.dp)
-                        ) {
-                            Box(
+                // Existing tags row
+                if (uiState.availableTags.isNotEmpty()) {
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        items(uiState.availableTags) { tagWithCount ->
+                            val isSelected = uiState.selectedTag == tagWithCount.tag
+                            Card(
+                                onClick = { 
+                                    viewModel.onEvent(ExpenseEntryEvent.TagSelected(tagWithCount.tag))
+                                },
                                 modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(horizontal = 20.dp),
-                                contentAlignment = Alignment.Center
+                                    .height(50.dp)
+                                    .wrapContentWidth(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (isSelected) Color.Transparent else MaterialTheme.colorScheme.surface
+                                ),
+                                border = if (isSelected) 
+                                    BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+                                else null,
+                                shape = RoundedCornerShape(25.dp)
                             ) {
-                                Text(
-                                    text = "${tagWithCount.tag} (${tagWithCount.count})",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Medium,
-                                    color = if (isSelected) 
-                                        MaterialTheme.colorScheme.primary 
-                                    else 
-                                        MaterialTheme.colorScheme.onSurface
-                                )
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(horizontal = 20.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "${tagWithCount.tag} (${tagWithCount.count})",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium,
+                                        color = if (isSelected) 
+                                            MaterialTheme.colorScheme.primary 
+                                        else 
+                                            MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
                             }
                         }
                     }
                     
-                    item {
-                        Card(
-                            onClick = { viewModel.onEvent(ExpenseEntryEvent.AddTagClicked) },
-                            modifier = Modifier
-                                .size(50.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = Color.Transparent
-                            ),
-                            border = androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)),
-                            shape = RoundedCornerShape(25.dp)
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+                
+                // + button on second line (centered)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Card(
+                        onClick = { viewModel.onEvent(ExpenseEntryEvent.AddTagClicked) },
+                        modifier = Modifier
+                            .size(50.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        ),
+                        shape = RoundedCornerShape(25.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "+",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                                )
-                            }
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Add or select tag",
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(24.dp)
+                            )
                         }
                     }
                 }
@@ -281,12 +293,14 @@ fun ExpenseEntryScreen(
             }
         }
         
-        // Add new tag dialog
+        // Enhanced tag menu dialog
         if (uiState.showAddTagDialog) {
-            AddTagDialog(
-                tagName = uiState.newTagName,
+            EnhancedTagDialog(
+                availableTags = uiState.availableTags,
+                newTagName = uiState.newTagName,
                 onTagNameChange = { viewModel.onEvent(ExpenseEntryEvent.NewTagNameChanged(it)) },
-                onConfirm = { viewModel.onEvent(ExpenseEntryEvent.ConfirmNewTag) },
+                onTagSelected = { tag -> viewModel.onEvent(ExpenseEntryEvent.TagSelected(tag)) },
+                onConfirmNewTag = { viewModel.onEvent(ExpenseEntryEvent.ConfirmNewTag) },
                 onDismiss = { viewModel.onEvent(ExpenseEntryEvent.DismissAddTagDialog) }
             )
         }
@@ -312,12 +326,14 @@ private fun formatCurrency(amount: Double): String {
     return formatter.format(amount)
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-private fun AddTagDialog(
-    tagName: String,
+private fun EnhancedTagDialog(
+    availableTags: List<TagWithCount>,
+    newTagName: String,
     onTagNameChange: (String) -> Unit,
-    onConfirm: () -> Unit,
+    onTagSelected: (String) -> Unit,
+    onConfirmNewTag: () -> Unit,
     onDismiss: () -> Unit
 ) {
     val focusManager = LocalFocusManager.current
@@ -335,23 +351,83 @@ private fun AddTagDialog(
                     .padding(24.dp)
             ) {
                 Text(
-                    text = "Add New Tag",
+                    text = "Select or Add Tag",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
                 
+                // Existing tags section
+                if (availableTags.isNotEmpty()) {
+                    Text(
+                        text = "Existing Tags",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+                    
+                    FlowRow(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 20.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        availableTags.forEach { tagWithCount ->
+                            Card(
+                                onClick = { 
+                                    onTagSelected(tagWithCount.tag)
+                                    onDismiss()
+                                },
+                                modifier = Modifier
+                                    .height(36.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surface
+                                ),
+                                shape = RoundedCornerShape(18.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .wrapContentWidth()
+                                        .fillMaxHeight()
+                                        .padding(horizontal = 16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "${tagWithCount.tag} (${tagWithCount.count})",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.Medium,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        maxLines = 1
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Add new tag section
+                Text(
+                    text = "Add New Tag",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+                
                 OutlinedTextField(
-                    value = tagName,
+                    value = newTagName,
                     onValueChange = onTagNameChange,
-                    label = { Text("Tag name") },
+                    label = { Text("New tag name") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(
                         onDone = {
                             focusManager.clearFocus()
-                            onConfirm()
+                            if (newTagName.trim().isNotEmpty()) {
+                                onConfirmNewTag()
+                                onDismiss()
+                            }
                         }
                     )
                 )
@@ -369,9 +445,10 @@ private fun AddTagDialog(
                     Button(
                         onClick = {
                             focusManager.clearFocus()
-                            onConfirm()
+                            onConfirmNewTag()
+                            onDismiss()
                         },
-                        enabled = tagName.trim().isNotEmpty()
+                        enabled = newTagName.trim().isNotEmpty()
                     ) {
                         Text("Add Tag")
                     }

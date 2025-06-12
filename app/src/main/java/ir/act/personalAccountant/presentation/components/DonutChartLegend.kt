@@ -160,7 +160,7 @@ private fun ExpandCollapseButton(
             .fillMaxWidth()
             .clickable { onClick() }
             .background(
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                color = MaterialTheme.colorScheme.surface,
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
             )
             .padding(12.dp),
@@ -175,7 +175,7 @@ private fun ExpandCollapseButton(
             },
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Medium,
-            color = androidx.compose.ui.graphics.Color.Gray
+            color = MaterialTheme.colorScheme.onSurface
         )
         
         Spacer(modifier = Modifier.width(8.dp))
@@ -183,7 +183,7 @@ private fun ExpandCollapseButton(
         Icon(
             imageVector = Icons.Default.KeyboardArrowDown,
             contentDescription = if (isExpanded) "Collapse" else "Expand",
-            tint = androidx.compose.ui.graphics.Color.Gray,
+            tint = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier
                 .size(16.dp)
                 .rotate(arrowRotation)

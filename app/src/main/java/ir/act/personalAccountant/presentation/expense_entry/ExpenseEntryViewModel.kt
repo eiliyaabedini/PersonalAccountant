@@ -143,7 +143,7 @@ class ExpenseEntryViewModel @Inject constructor(
                     it.copy(
                         currentAmount = "",
                         isLoading = false,
-                        selectedTag = "General", // Reset to default
+                        selectedTag = "", // Reset to no selection
                         selectedDate = System.currentTimeMillis() // Reset date to current time
                     )
                 }
