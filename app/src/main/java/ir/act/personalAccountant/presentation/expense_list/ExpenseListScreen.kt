@@ -19,6 +19,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import ir.act.personalAccountant.core.util.CurrencyFormatter
+import ir.act.personalAccountant.core.util.DateUtils
 import ir.act.personalAccountant.domain.model.CurrencySettings
 import ir.act.personalAccountant.domain.model.Expense
 import ir.act.personalAccountant.presentation.components.DonutChart
@@ -116,6 +117,61 @@ fun ExpenseListScreen(
                         Text(
                             text = "⚙️",
                             style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                }
+                
+                // Month navigation header
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Previous month arrow
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .background(
+                                Color.White.copy(alpha = 0.8f),
+                                shape = androidx.compose.foundation.shape.CircleShape
+                            )
+                            .clickable { viewModel.onEvent(ExpenseListEvent.PreviousMonthClicked) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "←",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    
+                    // Month/Year display
+                    Text(
+                        text = DateUtils.formatMonthYear(uiState.currentYear, uiState.currentMonth),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    
+                    // Next month arrow
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .background(
+                                Color.White.copy(alpha = 0.8f),
+                                shape = androidx.compose.foundation.shape.CircleShape
+                            )
+                            .clickable { viewModel.onEvent(ExpenseListEvent.NextMonthClicked) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "→",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }

@@ -1,5 +1,6 @@
 package ir.act.personalAccountant.data.repository
 
+import ir.act.personalAccountant.core.util.DateUtils
 import ir.act.personalAccountant.data.local.dao.ExpenseDao
 import ir.act.personalAccountant.data.local.entity.ExpenseEntity
 import ir.act.personalAccountant.data.local.model.TagWithCount
@@ -47,6 +48,22 @@ class ExpenseRepositoryImpl @Inject constructor(
 
     override fun getAllTagsWithCount(): Flow<List<TagWithCount>> {
         return expenseDao.getAllTagsWithCount()
+    }
+
+    override fun getExpensesByMonth(year: Int, month: Int): Flow<List<Expense>> {
+        val startOfMonth = DateUtils.getStartOfMonth(year, month)
+        val endOfMonth = DateUtils.getEndOfMonth(year, month)
+        return expenseDao.getExpensesByMonth(startOfMonth, endOfMonth).map { entities ->
+            entities.map { it.toDomain() }
+        }
+    }
+
+    override fun getTotalExpensesByMonth(year: Int, month: Int): Flow<Double> {
+        val startOfMonth = DateUtils.getStartOfMonth(year, month)
+        val endOfMonth = DateUtils.getEndOfMonth(year, month)
+        return expenseDao.getTotalExpensesByMonth(startOfMonth, endOfMonth).map { total ->
+            total ?: 0.0
+        }
     }
 
     private fun Expense.toEntity(): ExpenseEntity {

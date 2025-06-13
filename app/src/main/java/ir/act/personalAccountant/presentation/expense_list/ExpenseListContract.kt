@@ -12,7 +12,9 @@ data class ExpenseListUiState(
     val error: String? = null,
     val showDeleteConfirmation: Boolean = false,
     val expenseToDelete: Expense? = null,
-    val currencySettings: CurrencySettings = CurrencySettings()
+    val currencySettings: CurrencySettings = CurrencySettings(),
+    val currentYear: Int = 0,
+    val currentMonth: Int = 0
 )
 
 sealed class ExpenseListEvent {
@@ -22,6 +24,8 @@ sealed class ExpenseListEvent {
     data class DeleteClicked(val expense: Expense) : ExpenseListEvent()
     object ConfirmDelete : ExpenseListEvent()
     object CancelDelete : ExpenseListEvent()
+    object NextMonthClicked : ExpenseListEvent()
+    object PreviousMonthClicked : ExpenseListEvent()
 }
 
 sealed class ExpenseListUiInteraction {

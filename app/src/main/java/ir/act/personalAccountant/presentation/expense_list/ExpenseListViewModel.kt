@@ -3,11 +3,15 @@ package ir.act.personalAccountant.presentation.expense_list
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import ir.act.personalAccountant.core.util.DateUtils
 import ir.act.personalAccountant.domain.usecase.DeleteExpenseUseCase
 import ir.act.personalAccountant.domain.usecase.GetAllExpensesUseCase
 import ir.act.personalAccountant.domain.usecase.GetTotalExpensesUseCase
 import ir.act.personalAccountant.domain.usecase.GetExpensesByTagUseCase
 import ir.act.personalAccountant.domain.usecase.GetCurrencySettingsUseCase
+import ir.act.personalAccountant.domain.usecase.GetExpensesByMonthUseCase
+import ir.act.personalAccountant.domain.usecase.GetTotalExpensesByMonthUseCase
+import ir.act.personalAccountant.domain.usecase.GetExpensesByTagForMonthUseCase
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +27,10 @@ class ExpenseListViewModel @Inject constructor(
     private val getTotalExpensesUseCase: GetTotalExpensesUseCase,
     private val getExpensesByTagUseCase: GetExpensesByTagUseCase,
     private val deleteExpenseUseCase: DeleteExpenseUseCase,
-    private val getCurrencySettingsUseCase: GetCurrencySettingsUseCase
+    private val getCurrencySettingsUseCase: GetCurrencySettingsUseCase,
+    private val getExpensesByMonthUseCase: GetExpensesByMonthUseCase,
+    private val getTotalExpensesByMonthUseCase: GetTotalExpensesByMonthUseCase,
+    private val getExpensesByTagForMonthUseCase: GetExpensesByTagForMonthUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ExpenseListUiState())
@@ -33,8 +40,16 @@ class ExpenseListViewModel @Inject constructor(
     val uiInteraction = _uiInteraction.receiveAsFlow()
 
     init {
+        initializeCurrentMonth()
         loadExpenses()
         loadCurrencySettings()
+    }
+
+    private fun initializeCurrentMonth() {
+        _uiState.value = _uiState.value.copy(
+            currentYear = DateUtils.getCurrentYear(),
+            currentMonth = DateUtils.getCurrentMonth()
+        )
     }
 
     fun onEvent(event: ExpenseListEvent) {
@@ -75,6 +90,22 @@ class ExpenseListViewModel @Inject constructor(
                     expenseToDelete = null
                 )
             }
+            ExpenseListEvent.NextMonthClicked -> {
+                val (newYear, newMonth) = DateUtils.getNextMonth(_uiState.value.currentYear, _uiState.value.currentMonth)
+                _uiState.value = _uiState.value.copy(
+                    currentYear = newYear,
+                    currentMonth = newMonth
+                )
+                loadExpenses()
+            }
+            ExpenseListEvent.PreviousMonthClicked -> {
+                val (newYear, newMonth) = DateUtils.getPreviousMonth(_uiState.value.currentYear, _uiState.value.currentMonth)
+                _uiState.value = _uiState.value.copy(
+                    currentYear = newYear,
+                    currentMonth = newMonth
+                )
+                loadExpenses()
+            }
         }
     }
 
@@ -83,10 +114,11 @@ class ExpenseListViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(isLoading = true)
             
             try {
+                val currentState = _uiState.value
                 combine(
-                    getAllExpensesUseCase(),
-                    getTotalExpensesUseCase(),
-                    getExpensesByTagUseCase()
+                    getExpensesByMonthUseCase(currentState.currentYear, currentState.currentMonth),
+                    getTotalExpensesByMonthUseCase(currentState.currentYear, currentState.currentMonth),
+                    getExpensesByTagForMonthUseCase(currentState.currentYear, currentState.currentMonth)
                 ) { expenses, total, tagData ->
                     _uiState.value = _uiState.value.copy(
                         expenses = expenses,

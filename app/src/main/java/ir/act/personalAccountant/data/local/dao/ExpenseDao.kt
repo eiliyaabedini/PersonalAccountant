@@ -51,4 +51,10 @@ interface ExpenseDao {
         ORDER BY usageCount DESC, lastUsed DESC
     """)
     fun getTagStatistics(): Flow<List<TagStatistics>>
+    
+    @Query("SELECT * FROM expenses WHERE timestamp >= :startOfMonth AND timestamp <= :endOfMonth ORDER BY timestamp DESC")
+    fun getExpensesByMonth(startOfMonth: Long, endOfMonth: Long): Flow<List<ExpenseEntity>>
+    
+    @Query("SELECT SUM(amount) FROM expenses WHERE timestamp >= :startOfMonth AND timestamp <= :endOfMonth")
+    fun getTotalExpensesByMonth(startOfMonth: Long, endOfMonth: Long): Flow<Double?>
 }
