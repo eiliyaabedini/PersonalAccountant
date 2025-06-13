@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -81,48 +82,7 @@ fun ExpenseListScreen(
                 // Status bar space
                 Spacer(modifier = Modifier.height(40.dp))
 
-                // Header with total and profile
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 15.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "Total Expenses",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = TextSecondary,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Text(
-                            text = CurrencyFormatter.formatCurrency(uiState.totalExpenses, currencySettings),
-                            style = MaterialTheme.typography.displaySmall,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-                    
-                    // Settings icon
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .background(
-                                Color(0xFFF0F0F0),
-                                shape = androidx.compose.foundation.shape.CircleShape
-                            )
-                            .clickable { onNavigateToSettings() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "⚙️",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
-                }
-
-                // Month navigation header
+                // Month navigation header (moved to top)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -177,55 +137,106 @@ fun ExpenseListScreen(
                     }
                 }
 
-                // Donut chart section
+                // Main content row: Donut chart on left, total expenses on right
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 15.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Left side: Donut chart
+                        if (uiState.tagExpenseData.isNotEmpty() && uiState.totalExpenses > 0) {
+                            val coloredTagData = assignColorsToTagData(uiState.tagExpenseData)
+                            
+                            // Donut chart
+                            Box(
+                                modifier = Modifier
+                                    .size(120.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                DonutChart(
+                                    data = coloredTagData,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+
+                                // Center content
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = "${uiState.expenses.size}",
+                                        style = MaterialTheme.typography.headlineMedium,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                    Text(
+                                        text = "expenses",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = TextSecondary
+                                    )
+                                }
+                            }
+                        } else {
+                            // When no chart data, show empty space on left
+                            Spacer(modifier = Modifier.size(120.dp))
+                        }
+                        
+                        // Right side: Total expenses (centered vertically)
+                        Column(
+                            horizontalAlignment = Alignment.End
+                        ) {
+                            Text(
+                                text = "Total Expenses",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = TextSecondary,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Text(
+                                text = CurrencyFormatter.formatCurrency(uiState.totalExpenses, currencySettings),
+                                style = MaterialTheme.typography.displaySmall,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    }
+                    
+                    // Settings icon positioned at top-right of the entire box
+                    IconButton(
+                        onClick = { onNavigateToSettings() },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .size(20.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Settings",
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+
+                // Legend section (only show if chart exists)
                 if (uiState.tagExpenseData.isNotEmpty() && uiState.totalExpenses > 0) {
                     val coloredTagData = assignColorsToTagData(uiState.tagExpenseData)
-
-                    Column(
+                    
+                    Spacer(modifier = Modifier.height(10.dp))
+                    
+                    // Legend
+                    DonutChartLegend(
+                        data = coloredTagData,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 20.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Box(
-                            modifier = Modifier.size(160.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            DonutChart(
-                                data = coloredTagData,
-                                modifier = Modifier.fillMaxSize()
-                            )
-
-                            // Center content
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text(
-                                    text = "${uiState.expenses.size}",
-                                    style = MaterialTheme.typography.headlineLarge,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                                Text(
-                                    text = "expenses",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = TextSecondary
-                                )
-                            }
+                        currencySettings = currencySettings,
+                        onTagClick = { tag ->
+                            onNavigateToViewAllExpenses(tag)
                         }
-
-                        Spacer(modifier = Modifier.height(20.dp))
-
-                        // Legend
-                        DonutChartLegend(
-                            data = coloredTagData,
-                            modifier = Modifier.fillMaxWidth(),
-                            currencySettings = currencySettings,
-                            onTagClick = { tag ->
-                                onNavigateToViewAllExpenses(tag)
-                            }
-                        )
-                    }
+                    )
                 }
             }
 
