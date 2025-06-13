@@ -35,6 +35,7 @@ fun ExpenseListScreen(
     onNavigateToExpenseEntry: () -> Unit,
     onNavigateToExpenseEdit: (Long) -> Unit,
     onNavigateToSettings: () -> Unit,
+    onNavigateToViewAllExpenses: (String?) -> Unit,
     viewModel: ExpenseListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -79,7 +80,7 @@ fun ExpenseListScreen(
             ) {
                 // Status bar space
                 Spacer(modifier = Modifier.height(40.dp))
-                
+
                 // Header with total and profile
                 Row(
                     modifier = Modifier
@@ -120,7 +121,7 @@ fun ExpenseListScreen(
                         )
                     }
                 }
-                
+
                 // Month navigation header
                 Row(
                     modifier = Modifier
@@ -147,7 +148,7 @@ fun ExpenseListScreen(
                             fontWeight = FontWeight.Bold
                         )
                     }
-                    
+
                     // Month/Year display
                     Text(
                         text = DateUtils.formatMonthYear(uiState.currentYear, uiState.currentMonth),
@@ -155,7 +156,7 @@ fun ExpenseListScreen(
                         fontWeight = FontWeight.ExtraBold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
-                    
+
                     // Next month arrow
                     Box(
                         modifier = Modifier
@@ -175,11 +176,11 @@ fun ExpenseListScreen(
                         )
                     }
                 }
-                
+
                 // Donut chart section
                 if (uiState.tagExpenseData.isNotEmpty() && uiState.totalExpenses > 0) {
                     val coloredTagData = assignColorsToTagData(uiState.tagExpenseData)
-                    
+
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -194,7 +195,7 @@ fun ExpenseListScreen(
                                 data = coloredTagData,
                                 modifier = Modifier.fillMaxSize()
                             )
-                            
+
                             // Center content
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally
@@ -212,14 +213,17 @@ fun ExpenseListScreen(
                                 )
                             }
                         }
-                        
+
                         Spacer(modifier = Modifier.height(20.dp))
-                        
+
                         // Legend
                         DonutChartLegend(
                             data = coloredTagData,
                             modifier = Modifier.fillMaxWidth(),
-                            currencySettings = currencySettings
+                            currencySettings = currencySettings,
+                            onTagClick = { tag ->
+                                onNavigateToViewAllExpenses(tag)
+                            }
                         )
                     }
                 }
@@ -294,7 +298,10 @@ fun ExpenseListScreen(
                                     Text(
                                         text = "View all →",
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                        modifier = Modifier.clickable {
+                                            onNavigateToViewAllExpenses(null)
+                                        }
                                     )
                                 }
                                 

@@ -31,6 +31,9 @@ This is an Android application called "Personal Accountant" built with Kotlin an
 
 # Install debug APK to connected device/emulator
 ./gradlew installDebug
+
+# Launch the app after installation
+adb shell am start -n ir.act.personalAccountant/.MainActivity
 ```
 
 ### Testing Commands
@@ -170,3 +173,4 @@ This app follows **MVVM + UseCase architecture** with **Jetpack Compose** and **
 ## Deployment Notes
 
 - When you finished implementation, build debug version and use adb to run the app on my device
+- After building and installing, launch the app with: `adb shell am start -n ir.act.personalAccountant/.MainActivity`

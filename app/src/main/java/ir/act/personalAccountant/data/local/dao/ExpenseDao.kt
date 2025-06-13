@@ -57,4 +57,7 @@ interface ExpenseDao {
     
     @Query("SELECT SUM(amount) FROM expenses WHERE timestamp >= :startOfMonth AND timestamp <= :endOfMonth")
     fun getTotalExpensesByMonth(startOfMonth: Long, endOfMonth: Long): Flow<Double?>
+    
+    @Query("SELECT * FROM expenses WHERE tag = :tag AND timestamp >= :startOfMonth AND timestamp <= :endOfMonth ORDER BY timestamp DESC")
+    fun getExpensesByTagAndMonth(tag: String, startOfMonth: Long, endOfMonth: Long): Flow<List<ExpenseEntity>>
 }

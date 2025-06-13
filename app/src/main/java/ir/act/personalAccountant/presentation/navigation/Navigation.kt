@@ -12,14 +12,21 @@ import ir.act.personalAccountant.presentation.expense_entry.ExpenseEntryScreen
 import ir.act.personalAccountant.presentation.expense_list.ExpenseListScreen
 import ir.act.personalAccountant.presentation.settings.SettingsContract
 import ir.act.personalAccountant.presentation.settings.SettingsScreen
+import ir.act.personalAccountant.presentation.view_all_expenses.ViewAllExpensesScreen
 
 object Routes {
     const val EXPENSE_ENTRY = "expense_entry"
     const val EXPENSE_LIST = "expense_list"
     const val EXPENSE_EDIT = "expense_edit/{expenseId}"
     const val SETTINGS = "settings"
+    const val VIEW_ALL_EXPENSES = "view_all_expenses?filterTag={filterTag}"
     
     fun expenseEdit(expenseId: Long) = "expense_edit/$expenseId"
+    fun viewAllExpenses(filterTag: String? = null) = if (filterTag != null) {
+        "view_all_expenses?filterTag=$filterTag"
+    } else {
+        "view_all_expenses"
+    }
 }
 
 @Composable
@@ -48,6 +55,9 @@ fun PersonalAccountantNavigation(
                 },
                 onNavigateToSettings = {
                     navController.navigate(Routes.SETTINGS)
+                },
+                onNavigateToViewAllExpenses = { filterTag ->
+                    navController.navigate(Routes.viewAllExpenses(filterTag))
                 }
             )
         }
@@ -75,6 +85,26 @@ fun PersonalAccountantNavigation(
                     override fun navigateBack() {
                         navController.popBackStack()
                     }
+                }
+            )
+        }
+        
+        composable(
+            route = Routes.VIEW_ALL_EXPENSES,
+            arguments = listOf(
+                navArgument("filterTag") { 
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) {
+            ViewAllExpensesScreen(
+                onNavigateToExpenseEdit = { expenseId ->
+                    navController.navigate(Routes.expenseEdit(expenseId))
+                },
+                onNavigateBack = {
+                    navController.popBackStack()
                 }
             )
         }

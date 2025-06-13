@@ -33,7 +33,8 @@ fun DonutChartLegend(
     data: List<TagExpenseData>,
     modifier: Modifier = Modifier,
     showTopCountOnly: Int = 3,
-    currencySettings: CurrencySettings = CurrencySettings.DEFAULT
+    currencySettings: CurrencySettings = CurrencySettings.DEFAULT,
+    onTagClick: ((String) -> Unit)? = null
 ) {
     var isExpanded by remember { mutableStateOf(false) }
     
@@ -55,7 +56,8 @@ fun DonutChartLegend(
                 label = item.tag,
                 amount = item.totalAmount,
                 percentage = item.percentage,
-                currencySettings = currencySettings
+                currencySettings = currencySettings,
+                onClick = { onTagClick?.invoke(item.tag) }
             )
         }
         
@@ -82,7 +84,8 @@ fun DonutChartLegend(
                         label = item.tag,
                         amount = item.totalAmount,
                         percentage = item.percentage,
-                        currencySettings = currencySettings
+                        currencySettings = currencySettings,
+                        onClick = { onTagClick?.invoke(item.tag) }
                     )
                 }
             }
@@ -104,7 +107,8 @@ private fun LegendItem(
     label: String,
     amount: Double,
     percentage: Float,
-    currencySettings: CurrencySettings
+    currencySettings: CurrencySettings,
+    onClick: () -> Unit = {}
 ) {
     Row(
         modifier = Modifier
@@ -113,6 +117,7 @@ private fun LegendItem(
                 color = color.copy(alpha = 0.1f),
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
             )
+            .clickable { onClick() }
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)

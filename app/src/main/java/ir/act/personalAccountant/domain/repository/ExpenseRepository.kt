@@ -14,4 +14,5 @@ interface ExpenseRepository {
     fun getAllTagsWithCount(): Flow<List<TagWithCount>>
     fun getExpensesByMonth(year: Int, month: Int): Flow<List<Expense>>
     fun getTotalExpensesByMonth(year: Int, month: Int): Flow<Double>
+    fun getExpensesByTagAndMonth(tag: String, year: Int, month: Int): Flow<List<Expense>>
 }

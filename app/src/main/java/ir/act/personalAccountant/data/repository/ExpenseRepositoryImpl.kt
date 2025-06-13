@@ -66,6 +66,14 @@ class ExpenseRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun getExpensesByTagAndMonth(tag: String, year: Int, month: Int): Flow<List<Expense>> {
+        val startOfMonth = DateUtils.getStartOfMonth(year, month)
+        val endOfMonth = DateUtils.getEndOfMonth(year, month)
+        return expenseDao.getExpensesByTagAndMonth(tag, startOfMonth, endOfMonth).map { entities ->
+            entities.map { it.toDomain() }
+        }
+    }
+
     private fun Expense.toEntity(): ExpenseEntity {
         return ExpenseEntity(
             id = id,
