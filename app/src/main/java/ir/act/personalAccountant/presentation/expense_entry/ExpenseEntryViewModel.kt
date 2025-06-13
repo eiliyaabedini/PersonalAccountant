@@ -7,6 +7,7 @@ import ir.act.personalAccountant.domain.usecase.AddExpenseUseCase
 import ir.act.personalAccountant.domain.usecase.GetTotalExpensesUseCase
 import ir.act.personalAccountant.domain.usecase.GetAllTagsUseCase
 import ir.act.personalAccountant.domain.usecase.GetExpensesByTagUseCase
+import ir.act.personalAccountant.domain.usecase.GetCurrencySettingsUseCase
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,7 +22,8 @@ class ExpenseEntryViewModel @Inject constructor(
     private val addExpenseUseCase: AddExpenseUseCase,
     private val getTotalExpensesUseCase: GetTotalExpensesUseCase,
     private val getAllTagsUseCase: GetAllTagsUseCase,
-    private val getExpensesByTagUseCase: GetExpensesByTagUseCase
+    private val getExpensesByTagUseCase: GetExpensesByTagUseCase,
+    private val getCurrencySettingsUseCase: GetCurrencySettingsUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ExpenseEntryUiState())
@@ -34,6 +36,7 @@ class ExpenseEntryViewModel @Inject constructor(
         loadTotalExpenses()
         loadAvailableTags()
         loadTagExpenseData()
+        loadCurrencySettings()
     }
 
     fun onEvent(event: ExpenseEntryEvent) {
@@ -194,6 +197,14 @@ class ExpenseEntryViewModel @Inject constructor(
         viewModelScope.launch {
             getExpensesByTagUseCase().collect { tagData ->
                 _uiState.update { it.copy(tagExpenseData = tagData) }
+            }
+        }
+    }
+
+    private fun loadCurrencySettings() {
+        viewModelScope.launch {
+            getCurrencySettingsUseCase().collect { currencySettings ->
+                _uiState.update { it.copy(currencySettings = currencySettings) }
             }
         }
     }

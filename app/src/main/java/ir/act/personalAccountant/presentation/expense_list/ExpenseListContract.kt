@@ -2,6 +2,7 @@ package ir.act.personalAccountant.presentation.expense_list
 
 import ir.act.personalAccountant.domain.model.Expense
 import ir.act.personalAccountant.domain.model.TagExpenseData
+import ir.act.personalAccountant.domain.model.CurrencySettings
 
 data class ExpenseListUiState(
     val expenses: List<Expense> = emptyList(),
@@ -10,7 +11,8 @@ data class ExpenseListUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val showDeleteConfirmation: Boolean = false,
-    val expenseToDelete: Expense? = null
+    val expenseToDelete: Expense? = null,
+    val currencySettings: CurrencySettings = CurrencySettings()
 )
 
 sealed class ExpenseListEvent {

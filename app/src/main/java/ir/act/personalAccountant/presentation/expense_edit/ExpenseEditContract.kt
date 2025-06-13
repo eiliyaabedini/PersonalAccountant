@@ -1,6 +1,7 @@
 package ir.act.personalAccountant.presentation.expense_edit
 
 import ir.act.personalAccountant.data.local.model.TagWithCount
+import ir.act.personalAccountant.domain.model.CurrencySettings
 
 object ExpenseEditContract {
     
@@ -17,7 +18,8 @@ object ExpenseEditContract {
         val newTagName: String = "",
         val isFirstEdit: Boolean = true, // Track if this is the first edit
         val selectedDate: Long = System.currentTimeMillis(),
-        val showDatePicker: Boolean = false
+        val showDatePicker: Boolean = false,
+        val currencySettings: CurrencySettings = CurrencySettings()
     )
     
     sealed class Events {

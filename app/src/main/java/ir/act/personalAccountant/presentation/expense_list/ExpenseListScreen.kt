@@ -18,12 +18,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import ir.act.personalAccountant.core.util.CurrencyFormatter
+import ir.act.personalAccountant.domain.model.CurrencySettings
 import ir.act.personalAccountant.domain.model.Expense
 import ir.act.personalAccountant.presentation.components.DonutChart
 import ir.act.personalAccountant.presentation.components.DonutChartLegend
 import ir.act.personalAccountant.presentation.components.assignColorsToTagData
 import ir.act.personalAccountant.ui.theme.TextSecondary
-import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -32,9 +33,13 @@ import java.util.*
 fun ExpenseListScreen(
     onNavigateToExpenseEntry: () -> Unit,
     onNavigateToExpenseEdit: (Long) -> Unit,
+    onNavigateToSettings: () -> Unit,
     viewModel: ExpenseListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    
+    // Use default currency settings for now - will be properly integrated with ViewModel later
+    val currencySettings = uiState.currencySettings
     
     // Track the timestamp of when the screen was first shown
     val screenOpenTime = remember { System.currentTimeMillis() }
@@ -90,25 +95,26 @@ fun ExpenseListScreen(
                             fontWeight = FontWeight.Medium
                         )
                         Text(
-                            text = formatCurrency(uiState.totalExpenses),
+                            text = CurrencyFormatter.formatCurrency(uiState.totalExpenses, currencySettings),
                             style = MaterialTheme.typography.displaySmall,
                             fontWeight = FontWeight.ExtraBold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
                     
-                    // Profile icon
+                    // Settings icon
                     Box(
                         modifier = Modifier
                             .size(40.dp)
                             .background(
                                 Color(0xFFF0F0F0),
                                 shape = androidx.compose.foundation.shape.CircleShape
-                            ),
+                            )
+                            .clickable { onNavigateToSettings() },
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "👤",
+                            text = "⚙️",
                             style = MaterialTheme.typography.titleMedium
                         )
                     }
@@ -156,7 +162,8 @@ fun ExpenseListScreen(
                         // Legend
                         DonutChartLegend(
                             data = coloredTagData,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            currencySettings = currencySettings
                         )
                     }
                 }
@@ -246,6 +253,7 @@ fun ExpenseListScreen(
                                         SwipeToDeleteExpenseItem(
                                             expense = expense,
                                             isNewlyAdded = expense.timestamp > screenOpenTime,
+                                            currencySettings = currencySettings,
                                             onEditClick = { viewModel.onEvent(ExpenseListEvent.EditClicked(expense)) },
                                             onDeleteClick = { viewModel.onEvent(ExpenseListEvent.DeleteClicked(expense)) }
                                         )
@@ -290,7 +298,7 @@ fun ExpenseListScreen(
                 title = { Text("Delete Expense") },
                 text = { 
                     uiState.expenseToDelete?.let { expense ->
-                        Text("Are you sure you want to delete this ${formatCurrency(expense.amount)} expense?")
+                        Text("Are you sure you want to delete this ${CurrencyFormatter.formatCurrency(expense.amount, currencySettings)} expense?")
                     }
                 },
                 confirmButton = {
@@ -314,7 +322,7 @@ fun ExpenseListScreen(
 }
 
 @Composable
-private fun ExpenseItem(expense: Expense) {
+private fun ExpenseItem(expense: Expense, currencySettings: CurrencySettings) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -333,7 +341,7 @@ private fun ExpenseItem(expense: Expense) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = formatCurrency(expense.amount),
+                    text = CurrencyFormatter.formatCurrency(expense.amount, currencySettings),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -365,10 +373,6 @@ private fun ExpenseItem(expense: Expense) {
     }
 }
 
-private fun formatCurrency(amount: Double): String {
-    val formatter = NumberFormat.getCurrencyInstance(Locale.US)
-    return formatter.format(amount)
-}
 
 private fun formatDate(timestamp: Long): String {
     val now = System.currentTimeMillis()
@@ -402,6 +406,7 @@ private fun formatDate(timestamp: Long): String {
 private fun SwipeToDeleteExpenseItem(
     expense: Expense,
     isNewlyAdded: Boolean,
+    currencySettings: CurrencySettings,
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
@@ -545,7 +550,7 @@ private fun SwipeToDeleteExpenseItem(
                     }
                     
                     Text(
-                        text = formatCurrency(expense.amount),
+                        text = CurrencyFormatter.formatCurrency(expense.amount, currencySettings),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface

@@ -28,10 +28,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
+import ir.act.personalAccountant.core.util.CurrencyFormatter
+import ir.act.personalAccountant.domain.model.CurrencySettings
 import ir.act.personalAccountant.presentation.components.NumberKeypad
 import ir.act.personalAccountant.presentation.expense_edit.ExpenseEditContract.Events
 import ir.act.personalAccountant.presentation.expense_edit.ExpenseEditContract.UiInteractions
-import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.Date
@@ -44,6 +45,9 @@ fun ExpenseEditScreen(
     uiInteractions: UiInteractions
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    
+    // Use currency settings from ViewModel
+    val currencySettings = uiState.currencySettings
     
     LaunchedEffect(expenseId) {
         viewModel.onEvent(Events.LoadExpense(expenseId))
@@ -133,7 +137,7 @@ fun ExpenseEditScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "$",
+                        text = CurrencyFormatter.getCurrencySymbol(currencySettings),
                         style = MaterialTheme.typography.displayLarge.copy(fontSize = 56.sp),
                         fontWeight = FontWeight.ExtraBold,
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
@@ -392,10 +396,6 @@ fun ExpenseEditScreen(
     }
 }
 
-private fun formatCurrency(amount: Double): String {
-    val formatter = NumberFormat.getCurrencyInstance(Locale.US)
-    return formatter.format(amount)
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

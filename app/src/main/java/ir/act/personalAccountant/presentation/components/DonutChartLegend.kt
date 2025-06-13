@@ -24,15 +24,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import ir.act.personalAccountant.core.util.CurrencyFormatter
+import ir.act.personalAccountant.domain.model.CurrencySettings
 import ir.act.personalAccountant.domain.model.TagExpenseData
-import java.text.NumberFormat
-import java.util.*
 
 @Composable
 fun DonutChartLegend(
     data: List<TagExpenseData>,
     modifier: Modifier = Modifier,
-    showTopCountOnly: Int = 3
+    showTopCountOnly: Int = 3,
+    currencySettings: CurrencySettings = CurrencySettings.DEFAULT
 ) {
     var isExpanded by remember { mutableStateOf(false) }
     
@@ -53,7 +54,8 @@ fun DonutChartLegend(
                 color = item.color,
                 label = item.tag,
                 amount = item.totalAmount,
-                percentage = item.percentage
+                percentage = item.percentage,
+                currencySettings = currencySettings
             )
         }
         
@@ -79,7 +81,8 @@ fun DonutChartLegend(
                         color = item.color,
                         label = item.tag,
                         amount = item.totalAmount,
-                        percentage = item.percentage
+                        percentage = item.percentage,
+                        currencySettings = currencySettings
                     )
                 }
             }
@@ -100,7 +103,8 @@ private fun LegendItem(
     color: androidx.compose.ui.graphics.Color,
     label: String,
     amount: Double,
-    percentage: Float
+    percentage: Float,
+    currencySettings: CurrencySettings
 ) {
     Row(
         modifier = Modifier
@@ -135,7 +139,7 @@ private fun LegendItem(
         )
         
         Text(
-            text = formatCurrency(amount),
+            text = CurrencyFormatter.formatCurrency(amount, currencySettings),
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Bold,
             color = androidx.compose.ui.graphics.Color.Black
@@ -191,7 +195,3 @@ private fun ExpandCollapseButton(
     }
 }
 
-private fun formatCurrency(amount: Double): String {
-    val formatter = NumberFormat.getCurrencyInstance(Locale.US)
-    return formatter.format(amount)
-}

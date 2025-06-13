@@ -8,6 +8,7 @@ import ir.act.personalAccountant.domain.repository.ExpenseRepository
 import ir.act.personalAccountant.domain.usecase.DeleteExpenseUseCase
 import ir.act.personalAccountant.domain.usecase.GetExpenseByIdUseCase
 import ir.act.personalAccountant.domain.usecase.UpdateExpenseUseCase
+import ir.act.personalAccountant.domain.usecase.GetCurrencySettingsUseCase
 import ir.act.personalAccountant.presentation.expense_edit.ExpenseEditContract.Events
 import ir.act.personalAccountant.presentation.expense_edit.ExpenseEditContract.UiState
 import kotlinx.coroutines.flow.*
@@ -19,7 +20,8 @@ class ExpenseEditViewModel @Inject constructor(
     private val getExpenseByIdUseCase: GetExpenseByIdUseCase,
     private val updateExpenseUseCase: UpdateExpenseUseCase,
     private val deleteExpenseUseCase: DeleteExpenseUseCase,
-    private val repository: ExpenseRepository
+    private val repository: ExpenseRepository,
+    private val getCurrencySettingsUseCase: GetCurrencySettingsUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(UiState())
@@ -29,6 +31,7 @@ class ExpenseEditViewModel @Inject constructor(
 
     init {
         loadAvailableTags()
+        loadCurrencySettings()
     }
 
     fun onEvent(event: Events) {
@@ -279,5 +282,13 @@ class ExpenseEditViewModel @Inject constructor(
 
     private fun dismissDatePicker() {
         _uiState.update { it.copy(showDatePicker = false) }
+    }
+
+    private fun loadCurrencySettings() {
+        viewModelScope.launch {
+            getCurrencySettingsUseCase().collect { currencySettings ->
+                _uiState.update { it.copy(currencySettings = currencySettings) }
+            }
+        }
     }
 }

@@ -2,6 +2,7 @@ package ir.act.personalAccountant.presentation.expense_entry
 
 import ir.act.personalAccountant.data.local.model.TagWithCount
 import ir.act.personalAccountant.domain.model.TagExpenseData
+import ir.act.personalAccountant.domain.model.CurrencySettings
 
 data class ExpenseEntryUiState(
     val currentAmount: String = "",
@@ -14,7 +15,8 @@ data class ExpenseEntryUiState(
     val newTagName: String = "",
     val tagExpenseData: List<TagExpenseData> = emptyList(),
     val selectedDate: Long = System.currentTimeMillis(),
-    val showDatePicker: Boolean = false
+    val showDatePicker: Boolean = false,
+    val currencySettings: CurrencySettings = CurrencySettings()
 )
 
 sealed class ExpenseEntryEvent {

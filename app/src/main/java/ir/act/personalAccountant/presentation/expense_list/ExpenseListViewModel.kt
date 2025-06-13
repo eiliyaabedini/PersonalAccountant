@@ -7,6 +7,7 @@ import ir.act.personalAccountant.domain.usecase.DeleteExpenseUseCase
 import ir.act.personalAccountant.domain.usecase.GetAllExpensesUseCase
 import ir.act.personalAccountant.domain.usecase.GetTotalExpensesUseCase
 import ir.act.personalAccountant.domain.usecase.GetExpensesByTagUseCase
+import ir.act.personalAccountant.domain.usecase.GetCurrencySettingsUseCase
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,7 +22,8 @@ class ExpenseListViewModel @Inject constructor(
     private val getAllExpensesUseCase: GetAllExpensesUseCase,
     private val getTotalExpensesUseCase: GetTotalExpensesUseCase,
     private val getExpensesByTagUseCase: GetExpensesByTagUseCase,
-    private val deleteExpenseUseCase: DeleteExpenseUseCase
+    private val deleteExpenseUseCase: DeleteExpenseUseCase,
+    private val getCurrencySettingsUseCase: GetCurrencySettingsUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ExpenseListUiState())
@@ -32,6 +34,7 @@ class ExpenseListViewModel @Inject constructor(
 
     init {
         loadExpenses()
+        loadCurrencySettings()
     }
 
     fun onEvent(event: ExpenseListEvent) {
@@ -98,6 +101,14 @@ class ExpenseListViewModel @Inject constructor(
                     isLoading = false,
                     error = e.message ?: "An error occurred while loading expenses"
                 )
+            }
+        }
+    }
+
+    private fun loadCurrencySettings() {
+        viewModelScope.launch {
+            getCurrencySettingsUseCase().collect { currencySettings ->
+                _uiState.value = _uiState.value.copy(currencySettings = currencySettings)
             }
         }
     }
