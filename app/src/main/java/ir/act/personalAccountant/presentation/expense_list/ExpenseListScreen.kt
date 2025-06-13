@@ -9,6 +9,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -91,21 +93,20 @@ fun ExpenseListScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Previous month arrow
-                    Box(
+                    IconButton(
+                        onClick = { viewModel.onEvent(ExpenseListEvent.PreviousMonthClicked) },
                         modifier = Modifier
                             .size(36.dp)
                             .background(
                                 Color.White.copy(alpha = 0.8f),
                                 shape = androidx.compose.foundation.shape.CircleShape
                             )
-                            .clickable { viewModel.onEvent(ExpenseListEvent.PreviousMonthClicked) },
-                        contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "←",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            fontWeight = FontWeight.Bold
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                            contentDescription = "Previous month",
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
 
@@ -118,21 +119,20 @@ fun ExpenseListScreen(
                     )
 
                     // Next month arrow
-                    Box(
+                    IconButton(
+                        onClick = { viewModel.onEvent(ExpenseListEvent.NextMonthClicked) },
                         modifier = Modifier
                             .size(36.dp)
                             .background(
                                 Color.White.copy(alpha = 0.8f),
                                 shape = androidx.compose.foundation.shape.CircleShape
                             )
-                            .clickable { viewModel.onEvent(ExpenseListEvent.NextMonthClicked) },
-                        contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "→",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            fontWeight = FontWeight.Bold
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = "Next month",
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 }
@@ -258,7 +258,7 @@ fun ExpenseListScreen(
                     }
                     uiState.expenses.isEmpty() -> {
                         Box(
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
                             Column(
