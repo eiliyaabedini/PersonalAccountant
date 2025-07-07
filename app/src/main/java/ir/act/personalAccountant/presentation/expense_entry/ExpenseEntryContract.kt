@@ -16,7 +16,8 @@ data class ExpenseEntryUiState(
     val tagExpenseData: List<TagExpenseData> = emptyList(),
     val selectedDate: Long = System.currentTimeMillis(),
     val showDatePicker: Boolean = false,
-    val currencySettings: CurrencySettings = CurrencySettings()
+    val currencySettings: CurrencySettings = CurrencySettings(),
+    val addMultipleExpenses: Boolean = false
 )
 
 sealed class ExpenseEntryEvent {
@@ -32,6 +33,7 @@ sealed class ExpenseEntryEvent {
     object DatePickerClicked : ExpenseEntryEvent()
     data class DateSelected(val dateMillis: Long) : ExpenseEntryEvent()
     object DismissDatePicker : ExpenseEntryEvent()
+    object AddMultipleExpensesToggled : ExpenseEntryEvent()
 }
 
 sealed class ExpenseEntryUiInteraction {

@@ -87,6 +87,9 @@ class ExpenseEntryViewModel @Inject constructor(
             ExpenseEntryEvent.DismissDatePicker -> {
                 _uiState.update { it.copy(showDatePicker = false) }
             }
+            ExpenseEntryEvent.AddMultipleExpensesToggled -> {
+                _uiState.update { it.copy(addMultipleExpenses = !it.addMultipleExpenses) }
+            }
         }
     }
 
@@ -142,15 +145,29 @@ class ExpenseEntryViewModel @Inject constructor(
                 _uiState.update { it.copy(isLoading = true, error = null) }
                 val currentState = _uiState.value
                 val newExpenseId = addExpenseUseCase(amount, tag, currentState.selectedDate)
-                _uiState.update {
-                    it.copy(
-                        currentAmount = "",
-                        isLoading = false,
-                        selectedTag = "", // Reset to no selection
-                        selectedDate = System.currentTimeMillis() // Reset date to current time
-                    )
+                
+                if (currentState.addMultipleExpenses) {
+                    // Stay on the page, just clear the form
+                    _uiState.update {
+                        it.copy(
+                            currentAmount = "",
+                            isLoading = false,
+                            selectedTag = "", // Reset to no selection
+                            selectedDate = System.currentTimeMillis() // Reset date to current time
+                        )
+                    }
+                } else {
+                    // Navigate away as before
+                    _uiState.update {
+                        it.copy(
+                            currentAmount = "",
+                            isLoading = false,
+                            selectedTag = "", // Reset to no selection
+                            selectedDate = System.currentTimeMillis() // Reset date to current time
+                        )
+                    }
+                    _uiInteraction.send(ExpenseEntryUiInteraction.NavigateToExpenseList(newExpenseId))
                 }
-                _uiInteraction.send(ExpenseEntryUiInteraction.NavigateToExpenseList(newExpenseId))
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(

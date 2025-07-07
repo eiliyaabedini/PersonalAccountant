@@ -268,10 +268,11 @@ fun ExpenseEntryScreen(
                     Spacer(modifier = Modifier.height(12.dp))
                 }
                 
-                // + button on second line (centered)
-                Row(
+                // Add button with toggle button
+                Column (
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Card(
                         onClick = { viewModel.onEvent(ExpenseEntryEvent.AddTagClicked) },
@@ -294,6 +295,43 @@ fun ExpenseEntryScreen(
                             )
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Card(
+                        onClick = { viewModel.onEvent(ExpenseEntryEvent.AddMultipleExpensesToggled) },
+                        modifier = Modifier
+                            .height(30.dp)
+                            .width(100.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (uiState.addMultipleExpenses)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.surface
+                        ),
+                        border = if (!uiState.addMultipleExpenses)
+                            BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+                        else null,
+                        shape = RoundedCornerShape(25.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Multiple",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = if (uiState.addMultipleExpenses)
+                                    MaterialTheme.colorScheme.onPrimary
+                                else
+                                    MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+
                 }
             }
             
