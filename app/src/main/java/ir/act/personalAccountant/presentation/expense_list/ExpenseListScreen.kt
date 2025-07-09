@@ -17,10 +17,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import ir.act.personalAccountant.R
 import ir.act.personalAccountant.core.util.CurrencyFormatter
 import ir.act.personalAccountant.core.util.DateUtils
 import ir.act.personalAccountant.domain.model.CurrencySettings
@@ -609,12 +611,26 @@ private fun SwipeToDeleteExpenseItem(
                         Column(
                             verticalArrangement = Arrangement.spacedBy(3.dp)
                         ) {
-                            Text(
-                                text = expense.tag,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text(
+                                    text = expense.tag,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                // Show attachment icon if expense has image
+                                if (!expense.imagePath.isNullOrEmpty()) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_attachment),
+                                        contentDescription = "Has attachment",
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
                             Text(
                                 text = formatDate(expense.timestamp),
                                 style = MaterialTheme.typography.bodySmall,
