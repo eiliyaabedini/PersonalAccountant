@@ -11,7 +11,7 @@ import ir.act.personalAccountant.data.local.entity.ExpenseEntity
 
 @Database(
     entities = [ExpenseEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -24,6 +24,12 @@ abstract class AppDatabase : RoomDatabase() {
         val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 database.execSQL("ALTER TABLE expenses ADD COLUMN tag TEXT NOT NULL DEFAULT 'General'")
+            }
+        }
+        
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE expenses ADD COLUMN imagePath TEXT")
             }
         }
     }

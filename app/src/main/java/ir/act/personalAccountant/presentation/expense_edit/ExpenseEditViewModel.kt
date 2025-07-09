@@ -2,7 +2,11 @@ package ir.act.personalAccountant.presentation.expense_edit
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import android.content.Context
+import android.net.Uri
+import ir.act.personalAccountant.core.util.ImageFileManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import ir.act.personalAccountant.domain.model.Expense
 import ir.act.personalAccountant.domain.repository.ExpenseRepository
 import ir.act.personalAccountant.domain.usecase.DeleteExpenseUseCase
@@ -21,7 +25,8 @@ class ExpenseEditViewModel @Inject constructor(
     private val updateExpenseUseCase: UpdateExpenseUseCase,
     private val deleteExpenseUseCase: DeleteExpenseUseCase,
     private val repository: ExpenseRepository,
-    private val getCurrencySettingsUseCase: GetCurrencySettingsUseCase
+    private val getCurrencySettingsUseCase: GetCurrencySettingsUseCase,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(UiState())
@@ -53,6 +58,14 @@ class ExpenseEditViewModel @Inject constructor(
             Events.DatePickerClicked -> showDatePicker()
             is Events.DateSelected -> selectDate(event.dateMillis)
             Events.DismissDatePicker -> dismissDatePicker()
+            Events.ImagePickerClicked -> showImagePicker()
+            is Events.ImageSelected -> selectImage(event.uri)
+            Events.ImageCaptured -> handleImageCaptured()
+            is Events.CameraLaunchRequested -> handleCameraLaunchRequested(event.uri)
+            Events.RemoveImage -> removeImage()
+            Events.DismissImagePicker -> dismissImagePicker()
+            Events.ShowImageViewer -> showImageViewer()
+            Events.DismissImageViewer -> dismissImageViewer()
         }
     }
 
@@ -68,12 +81,19 @@ class ExpenseEditViewModel @Inject constructor(
                     } else {
                         String.format("%.2f", expense.amount).trimEnd('0').trimEnd('.')
                     }
+                    
+                    // Convert image path to URI if exists
+                    val imageUri = expense.imagePath?.let { path ->
+                        Uri.fromFile(java.io.File(path))
+                    }
+                    
                     _uiState.update { state ->
                         state.copy(
                             expenseId = expense.id,
                             amount = formattedAmount,
                             selectedTag = expense.tag,
                             selectedDate = expense.timestamp,
+                            selectedImageUri = imageUri,
                             isLoading = false
                         )
                     }
@@ -197,11 +217,47 @@ class ExpenseEditViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
             try {
                 originalExpense?.let { original ->
+                    val imageFileManager = ImageFileManager()
+                    
+                    // Handle image path
+                    val imagePath = when {
+                        state.selectedImageUri != null -> {
+                            // If there's a new image selected
+                            val destinationFile = imageFileManager.createImageFile(context)
+                            val success = imageFileManager.copyImageFromUri(context, state.selectedImageUri, destinationFile)
+                            if (success) {
+                                // Delete old image if it exists
+                                original.imagePath?.let { path ->
+                                    viewModelScope.launch {
+                                        imageFileManager.deleteImage(path)
+                                    }
+                                }
+                                destinationFile.absolutePath
+                            } else {
+                                original.imagePath // Keep existing if copy failed
+                            }
+                        }
+                        state.imageRemoved -> {
+                            // User explicitly removed the image
+                            original.imagePath?.let { path ->
+                                viewModelScope.launch {
+                                    imageFileManager.deleteImage(path)
+                                }
+                            }
+                            null // Set to null to remove from database
+                        }
+                        else -> {
+                            // No change to image
+                            original.imagePath
+                        }
+                    }
+                    
                     updateExpenseUseCase(
                         original.copy(
                             amount = amount,
                             tag = state.selectedTag,
-                            timestamp = state.selectedDate
+                            timestamp = state.selectedDate,
+                            imagePath = imagePath
                         )
                     )
                     _uiState.update { it.copy(navigateBack = true) }
@@ -282,6 +338,59 @@ class ExpenseEditViewModel @Inject constructor(
 
     private fun dismissDatePicker() {
         _uiState.update { it.copy(showDatePicker = false) }
+    }
+
+    private fun showImagePicker() {
+        _uiState.update { it.copy(showImagePicker = true) }
+    }
+
+    private fun selectImage(uri: Uri) {
+        _uiState.update { 
+            it.copy(
+                selectedImageUri = uri,
+                showImagePicker = false,
+                imageRemoved = false
+            )
+        }
+    }
+
+    private fun handleImageCaptured() {
+        val tempUri = _uiState.value.tempCameraUri
+        if (tempUri != null) {
+            _uiState.update { 
+                it.copy(
+                    selectedImageUri = tempUri,
+                    tempCameraUri = null,
+                    showImagePicker = false,
+                    imageRemoved = false
+                )
+            }
+        }
+    }
+
+    private fun handleCameraLaunchRequested(uri: Uri) {
+        _uiState.update { 
+            it.copy(
+                tempCameraUri = uri,
+                showImagePicker = false
+            )
+        }
+    }
+
+    private fun removeImage() {
+        _uiState.update { it.copy(selectedImageUri = null, imageRemoved = true) }
+    }
+
+    private fun dismissImagePicker() {
+        _uiState.update { it.copy(showImagePicker = false) }
+    }
+
+    private fun showImageViewer() {
+        _uiState.update { it.copy(showImageViewer = true) }
+    }
+
+    private fun dismissImageViewer() {
+        _uiState.update { it.copy(showImageViewer = false) }
     }
 
     private fun loadCurrencySettings() {

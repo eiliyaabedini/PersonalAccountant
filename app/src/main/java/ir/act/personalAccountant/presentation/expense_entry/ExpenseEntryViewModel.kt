@@ -1,8 +1,12 @@
 package ir.act.personalAccountant.presentation.expense_entry
 
+import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import ir.act.personalAccountant.core.util.ImageFileManager
 import ir.act.personalAccountant.domain.usecase.AddExpenseUseCase
 import ir.act.personalAccountant.domain.usecase.GetTotalExpensesUseCase
 import ir.act.personalAccountant.domain.usecase.GetAllTagsUseCase
@@ -19,11 +23,13 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ExpenseEntryViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val addExpenseUseCase: AddExpenseUseCase,
     private val getTotalExpensesUseCase: GetTotalExpensesUseCase,
     private val getAllTagsUseCase: GetAllTagsUseCase,
     private val getExpensesByTagUseCase: GetExpensesByTagUseCase,
-    private val getCurrencySettingsUseCase: GetCurrencySettingsUseCase
+    private val getCurrencySettingsUseCase: GetCurrencySettingsUseCase,
+    private val imageFileManager: ImageFileManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ExpenseEntryUiState())
@@ -90,6 +96,30 @@ class ExpenseEntryViewModel @Inject constructor(
             ExpenseEntryEvent.AddMultipleExpensesToggled -> {
                 _uiState.update { it.copy(addMultipleExpenses = !it.addMultipleExpenses) }
             }
+            ExpenseEntryEvent.ImagePickerClicked -> {
+                _uiState.update { it.copy(showImagePicker = true) }
+            }
+            is ExpenseEntryEvent.ImageSelected -> {
+                handleImageSelected(event.uri)
+            }
+            ExpenseEntryEvent.ImageCaptured -> {
+                handleImageCaptured()
+            }
+            is ExpenseEntryEvent.CameraLaunchRequested -> {
+                handleCameraLaunchRequested(event.uri)
+            }
+            ExpenseEntryEvent.RemoveImage -> {
+                handleRemoveImage()
+            }
+            ExpenseEntryEvent.DismissImagePicker -> {
+                _uiState.update { it.copy(showImagePicker = false) }
+            }
+            ExpenseEntryEvent.ShowImageViewer -> {
+                _uiState.update { it.copy(showImageViewer = true) }
+            }
+            ExpenseEntryEvent.DismissImageViewer -> {
+                _uiState.update { it.copy(showImageViewer = false) }
+            }
         }
     }
 
@@ -144,7 +174,13 @@ class ExpenseEntryViewModel @Inject constructor(
             try {
                 _uiState.update { it.copy(isLoading = true, error = null) }
                 val currentState = _uiState.value
-                val newExpenseId = addExpenseUseCase(amount, tag, currentState.selectedDate)
+                
+                // Save image if selected
+                val imagePath = currentState.selectedImageUri?.let { uri ->
+                    saveSelectedImage(uri)
+                }
+                
+                val newExpenseId = addExpenseUseCase(amount, tag, currentState.selectedDate, imagePath)
                 
                 if (currentState.addMultipleExpenses) {
                     // Stay on the page, just clear the form
@@ -153,7 +189,10 @@ class ExpenseEntryViewModel @Inject constructor(
                             currentAmount = "",
                             isLoading = false,
                             selectedTag = "", // Reset to no selection
-                            selectedDate = System.currentTimeMillis() // Reset date to current time
+                            selectedDate = System.currentTimeMillis(), // Reset date to current time
+                            selectedImageUri = null, // Clear selected image
+                            tempCameraUri = null, // Clear temp camera URI
+                            isProcessingImage = false
                         )
                     }
                 } else {
@@ -163,7 +202,10 @@ class ExpenseEntryViewModel @Inject constructor(
                             currentAmount = "",
                             isLoading = false,
                             selectedTag = "", // Reset to no selection
-                            selectedDate = System.currentTimeMillis() // Reset date to current time
+                            selectedDate = System.currentTimeMillis(), // Reset date to current time
+                            selectedImageUri = null, // Clear selected image
+                            tempCameraUri = null, // Clear temp camera URI
+                            isProcessingImage = false
                         )
                     }
                     _uiInteraction.send(ExpenseEntryUiInteraction.NavigateToExpenseList(newExpenseId))
@@ -223,6 +265,68 @@ class ExpenseEntryViewModel @Inject constructor(
             getCurrencySettingsUseCase().collect { currencySettings ->
                 _uiState.update { it.copy(currencySettings = currencySettings) }
             }
+        }
+    }
+    
+    private fun handleImageSelected(uri: Uri) {
+        _uiState.update {
+            it.copy(
+                selectedImageUri = uri,
+                showImagePicker = false,
+                isProcessingImage = false
+            )
+        }
+    }
+    
+    private fun handleImageCaptured() {
+        // Use the temp camera URI as the selected image
+        val tempUri = _uiState.value.tempCameraUri
+        if (tempUri != null) {
+            _uiState.update {
+                it.copy(
+                    selectedImageUri = tempUri,
+                    showImagePicker = false,
+                    isProcessingImage = false
+                )
+            }
+        }
+    }
+    
+    private fun handleCameraLaunchRequested(uri: Uri) {
+        _uiState.update {
+            it.copy(
+                tempCameraUri = uri,
+                showImagePicker = false,
+                isProcessingImage = false
+            )
+        }
+    }
+    
+    private fun handleRemoveImage() {
+        _uiState.update {
+            it.copy(
+                selectedImageUri = null,
+                tempCameraUri = null,
+                isProcessingImage = false
+            )
+        }
+    }
+    
+    private suspend fun saveSelectedImage(sourceUri: Uri): String? {
+        return try {
+            _uiState.update { it.copy(isProcessingImage = true) }
+            val destinationFile = imageFileManager.createImageFile(context)
+            val success = imageFileManager.copyImageFromUri(context, sourceUri, destinationFile)
+            if (success) {
+                destinationFile.absolutePath
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        } finally {
+            _uiState.update { it.copy(isProcessingImage = false) }
         }
     }
 }

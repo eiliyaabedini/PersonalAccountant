@@ -1,20 +1,34 @@
 package ir.act.personalAccountant.presentation.expense_edit
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import coil.compose.AsyncImage
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -29,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import ir.act.personalAccountant.core.util.CurrencyFormatter
+import ir.act.personalAccountant.core.util.ImageFileManager
 import ir.act.personalAccountant.domain.model.CurrencySettings
 import ir.act.personalAccountant.presentation.components.NumberKeypad
 import ir.act.personalAccountant.presentation.expense_edit.ExpenseEditContract.Events
@@ -45,9 +60,25 @@ fun ExpenseEditScreen(
     uiInteractions: UiInteractions
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
     
     // Use currency settings from ViewModel
     val currencySettings = uiState.currencySettings
+    
+    // Activity Result Launchers for image capture and selection
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri: Uri? ->
+        uri?.let { viewModel.onEvent(Events.ImageSelected(it)) }
+    }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success: Boolean ->
+        if (success) {
+            viewModel.onEvent(Events.ImageCaptured)
+        }
+    }
     
     LaunchedEffect(expenseId) {
         viewModel.onEvent(Events.LoadExpense(expenseId))
@@ -206,6 +237,111 @@ fun ExpenseEditScreen(
                                 tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                                 modifier = Modifier.size(20.dp)
                             )
+                        }
+                    }
+                }
+
+                // Image section
+                Column(
+                    modifier = Modifier
+                        .padding(horizontal = 20.dp)
+                        .padding(bottom = 16.dp)
+                ) {
+                    Text(
+                        text = "RECEIPT IMAGE (OPTIONAL)",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+
+                    // Image preview or capture button
+                    if (uiState.selectedImageUri != null) {
+                        // Show image preview with remove option
+                        Card(
+                            modifier = Modifier
+                                .width(100.dp)
+                                .height(120.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surface
+                            ),
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                // Actual image preview using AsyncImage
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clickable { viewModel.onEvent(Events.ShowImageViewer) },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    AsyncImage(
+                                        model = uiState.selectedImageUri,
+                                        contentDescription = "Receipt Image",
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Crop,
+                                        fallback = painterResource(android.R.drawable.ic_menu_gallery),
+                                        error = painterResource(android.R.drawable.ic_menu_gallery)
+                                    )
+                                }
+
+                                // Remove button
+                                IconButton(
+                                    onClick = { viewModel.onEvent(Events.RemoveImage) },
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(8.dp)
+                                        .background(
+                                            Color.Black.copy(alpha = 0.6f),
+                                            CircleShape
+                                        )
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = "Remove Image",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        // Show capture button
+                        Card(
+                            onClick = { viewModel.onEvent(Events.ImagePickerClicked) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(80.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surface
+                            ),
+                            shape = RoundedCornerShape(16.dp),
+                            border = BorderStroke(
+                                1.dp,
+                                MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = "Add Image",
+                                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    text = "Add Receipt Image",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                            }
                         }
                     }
                 }
@@ -393,6 +529,38 @@ fun ExpenseEditScreen(
                 datePickerState = datePickerState
             )
         }
+        
+        // Image picker dialog
+        if (uiState.showImagePicker) {
+            ImagePickerDialog(
+                onCameraSelected = {
+                    val imageFileManager = ImageFileManager()
+                    val tempFile = imageFileManager.createTempImageFile(context)
+                    val uri = imageFileManager.getFileProviderUri(context, tempFile)
+                    viewModel.onEvent(Events.CameraLaunchRequested(uri))
+                    cameraLauncher.launch(uri)
+                },
+                onGallerySelected = {
+                    photoPickerLauncher.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    )
+                    viewModel.onEvent(Events.DismissImagePicker)
+                },
+                onDismiss = { viewModel.onEvent(Events.DismissImagePicker) }
+            )
+        }
+        
+        // Full-screen image viewer dialog
+        uiState.selectedImageUri?.let { imageUri ->
+            if (uiState.showImageViewer) {
+                FullScreenImageViewer(
+                    imageUri = imageUri,
+                    onDismiss = { viewModel.onEvent(Events.DismissImageViewer) },
+                    onEdit = { viewModel.onEvent(Events.ImagePickerClicked) },
+                    onRemove = { viewModel.onEvent(Events.RemoveImage) }
+                )
+            }
+        }
     }
 }
 
@@ -489,5 +657,258 @@ private fun DatePickerDialog(
         }
     ) {
         DatePicker(state = datePickerState)
+    }
+}
+
+@Composable
+private fun ImagePickerDialog(
+    onCameraSelected: () -> Unit,
+    onGallerySelected: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp)
+            ) {
+                Text(
+                    text = "Add Receipt Image",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                // Camera option
+                Card(
+                    onClick = onCameraSelected,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    border = BorderStroke(
+                        1.dp,
+                        MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Camera",
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Text(
+                            text = "Take Photo",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+
+                // Gallery option
+                Card(
+                    onClick = onGallerySelected,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 20.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    border = BorderStroke(
+                        1.dp,
+                        MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Gallery",
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Text(
+                            text = "Choose from Gallery",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+
+                // Cancel button
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Cancel")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FullScreenImageViewer(
+    imageUri: Uri,
+    onDismiss: () -> Unit,
+    onEdit: () -> Unit,
+    onRemove: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismiss
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxSize(),
+            shape = RoundedCornerShape(0.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            )
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                // Header with title and close button
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Receipt Image",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .background(
+                                MaterialTheme.colorScheme.surfaceVariant,
+                                CircleShape
+                            )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                
+                // Image container with rounded corners
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(horizontal = 16.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                    )
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        AsyncImage(
+                            model = imageUri,
+                            contentDescription = "Full Screen Image",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(8.dp),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
+                }
+                
+                // Action buttons at bottom
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Edit button
+                    OutlinedButton(
+                        onClick = {
+                            onDismiss()
+                            onEdit()
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.primary
+                        ),
+                        border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Replace",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                    
+                    // Remove button
+                    OutlinedButton(
+                        onClick = {
+                            onDismiss()
+                            onRemove()
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        ),
+                        border = BorderStroke(2.dp, MaterialTheme.colorScheme.error),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Remove",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+        }
     }
 }

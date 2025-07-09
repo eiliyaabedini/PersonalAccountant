@@ -7,7 +7,7 @@ import javax.inject.Inject
 class AddExpenseUseCase @Inject constructor(
     private val repository: ExpenseRepository
 ) {
-    suspend operator fun invoke(amount: Double, tag: String, timestamp: Long = System.currentTimeMillis()): Long {
+    suspend operator fun invoke(amount: Double, tag: String, timestamp: Long = System.currentTimeMillis(), imagePath: String? = null): Long {
         if (amount <= 0) {
             throw IllegalArgumentException("Amount must be greater than 0")
         }
@@ -15,7 +15,8 @@ class AddExpenseUseCase @Inject constructor(
         val expense = Expense(
             amount = amount,
             timestamp = timestamp,
-            tag = tag
+            tag = tag,
+            imagePath = imagePath
         )
         
         return repository.addExpense(expense)

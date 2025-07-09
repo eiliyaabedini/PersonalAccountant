@@ -9,5 +9,6 @@ data class ExpenseEntity(
     val id: Long = 0,
     val amount: Double,
     val timestamp: Long,
-    val tag: String
+    val tag: String,
+    val imagePath: String? = null
 )

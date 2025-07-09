@@ -1,5 +1,6 @@
 package ir.act.personalAccountant.presentation.expense_edit
 
+import android.net.Uri
 import ir.act.personalAccountant.data.local.model.TagWithCount
 import ir.act.personalAccountant.domain.model.CurrencySettings
 
@@ -19,7 +20,13 @@ object ExpenseEditContract {
         val isFirstEdit: Boolean = true, // Track if this is the first edit
         val selectedDate: Long = System.currentTimeMillis(),
         val showDatePicker: Boolean = false,
-        val currencySettings: CurrencySettings = CurrencySettings()
+        val currencySettings: CurrencySettings = CurrencySettings(),
+        val selectedImageUri: Uri? = null,
+        val tempCameraUri: Uri? = null,
+        val showImagePicker: Boolean = false,
+        val isProcessingImage: Boolean = false,
+        val showImageViewer: Boolean = false,
+        val imageRemoved: Boolean = false
     )
     
     sealed class Events {
@@ -40,6 +47,14 @@ object ExpenseEditContract {
         object DatePickerClicked : Events()
         data class DateSelected(val dateMillis: Long) : Events()
         object DismissDatePicker : Events()
+        object ImagePickerClicked : Events()
+        data class ImageSelected(val uri: Uri) : Events()
+        object ImageCaptured : Events()
+        data class CameraLaunchRequested(val uri: Uri) : Events()
+        object RemoveImage : Events()
+        object DismissImagePicker : Events()
+        object ShowImageViewer : Events()
+        object DismissImageViewer : Events()
     }
     
     interface UiInteractions {

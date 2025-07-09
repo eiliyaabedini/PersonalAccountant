@@ -1,5 +1,6 @@
 package ir.act.personalAccountant.presentation.expense_entry
 
+import android.net.Uri
 import ir.act.personalAccountant.data.local.model.TagWithCount
 import ir.act.personalAccountant.domain.model.TagExpenseData
 import ir.act.personalAccountant.domain.model.CurrencySettings
@@ -17,7 +18,12 @@ data class ExpenseEntryUiState(
     val selectedDate: Long = System.currentTimeMillis(),
     val showDatePicker: Boolean = false,
     val currencySettings: CurrencySettings = CurrencySettings(),
-    val addMultipleExpenses: Boolean = false
+    val addMultipleExpenses: Boolean = false,
+    val selectedImageUri: Uri? = null,
+    val tempCameraUri: Uri? = null,
+    val showImagePicker: Boolean = false,
+    val isProcessingImage: Boolean = false,
+    val showImageViewer: Boolean = false
 )
 
 sealed class ExpenseEntryEvent {
@@ -34,6 +40,14 @@ sealed class ExpenseEntryEvent {
     data class DateSelected(val dateMillis: Long) : ExpenseEntryEvent()
     object DismissDatePicker : ExpenseEntryEvent()
     object AddMultipleExpensesToggled : ExpenseEntryEvent()
+    object ImagePickerClicked : ExpenseEntryEvent()
+    data class ImageSelected(val uri: Uri) : ExpenseEntryEvent()
+    object ImageCaptured : ExpenseEntryEvent()
+    data class CameraLaunchRequested(val uri: Uri) : ExpenseEntryEvent()
+    object RemoveImage : ExpenseEntryEvent()
+    object DismissImagePicker : ExpenseEntryEvent()
+    object ShowImageViewer : ExpenseEntryEvent()
+    object DismissImageViewer : ExpenseEntryEvent()
 }
 
 sealed class ExpenseEntryUiInteraction {

@@ -79,7 +79,8 @@ class ExpenseRepositoryImpl @Inject constructor(
             id = id,
             amount = amount,
             timestamp = timestamp,
-            tag = tag
+            tag = tag,
+            imagePath = imagePath
         )
     }
 
@@ -88,7 +89,8 @@ class ExpenseRepositoryImpl @Inject constructor(
             id = id,
             amount = amount,
             timestamp = timestamp,
-            tag = tag
+            tag = tag,
+            imagePath = imagePath
         )
     }
 }
