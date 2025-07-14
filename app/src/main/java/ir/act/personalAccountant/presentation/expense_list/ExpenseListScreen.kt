@@ -29,6 +29,8 @@ import ir.act.personalAccountant.domain.model.CurrencySettings
 import ir.act.personalAccountant.domain.model.Expense
 import ir.act.personalAccountant.presentation.components.DonutChart
 import ir.act.personalAccountant.presentation.components.DonutChartLegend
+import ir.act.personalAccountant.presentation.components.LayeredProgressBar
+import ir.act.personalAccountant.presentation.components.ProgressLayer
 import ir.act.personalAccountant.presentation.components.assignColorsToTagData
 import ir.act.personalAccountant.ui.theme.TextSecondary
 import java.text.SimpleDateFormat
@@ -41,6 +43,7 @@ fun ExpenseListScreen(
     onNavigateToExpenseEdit: (Long) -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToViewAllExpenses: (String?) -> Unit,
+    onNavigateToBudgetConfig: () -> Unit,
     viewModel: ExpenseListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -59,6 +62,9 @@ fun ExpenseListScreen(
                 }
                 is ExpenseListUiInteraction.NavigateToExpenseEdit -> {
                     onNavigateToExpenseEdit(interaction.expenseId)
+                }
+                ExpenseListUiInteraction.NavigateToBudgetConfig -> {
+                    onNavigateToBudgetConfig()
                 }
             }
         }
@@ -86,11 +92,33 @@ fun ExpenseListScreen(
                 // Status bar space
                 Spacer(modifier = Modifier.height(40.dp))
 
-                // Month navigation header (moved to top)
+                // Top row with settings icon
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 10.dp),
+                        .padding(horizontal = 20.dp, vertical = 5.dp),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Settings icon
+                    IconButton(
+                        onClick = { onNavigateToSettings() },
+                        modifier = Modifier.size(20.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Settings",
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+
+                // Month navigation header
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 5.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -139,91 +167,114 @@ fun ExpenseListScreen(
                     }
                 }
 
-                // Main content row: Donut chart on left, total expenses on right
-                Box(
+                // Budget toggle button centered
+                Row(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 15.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Left side: Donut chart
-                        if (uiState.tagExpenseData.isNotEmpty() && uiState.totalExpenses > 0) {
-                            val coloredTagData = assignColorsToTagData(uiState.tagExpenseData)
-                            
-                            // Donut chart
-                            Box(
-                                modifier = Modifier
-                                    .size(120.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                DonutChart(
-                                    data = coloredTagData,
-                                    modifier = Modifier.fillMaxSize()
-                                )
-
-                                // Center content
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(
-                                        text = "${uiState.expenses.size}",
-                                        style = MaterialTheme.typography.headlineMedium,
-                                        fontWeight = FontWeight.ExtraBold,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                                    )
-                                    Text(
-                                        text = "expenses",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = TextSecondary
-                                    )
-                                }
-                            }
-                        } else {
-                            // When no chart data, show empty space on left
-                            Spacer(modifier = Modifier.size(120.dp))
-                        }
-                        
-                        // Right side: Total expenses (centered vertically)
-                        Column(
-                            horizontalAlignment = Alignment.End
-                        ) {
-                            Text(
-                                text = "Total Expenses",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = TextSecondary,
-                                fontWeight = FontWeight.Medium
-                            )
-                            Text(
-                                text = CurrencyFormatter.formatCurrency(uiState.totalExpenses, currencySettings),
-                                style = MaterialTheme.typography.displaySmall,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
-                    }
-                    
-                    // Settings icon positioned at top-right of the entire box
-                    IconButton(
-                        onClick = { onNavigateToSettings() },
+                    TextButton(
+                        onClick = { viewModel.onEvent(ExpenseListEvent.BudgetModeToggled) },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            containerColor = Color.White.copy(alpha = 0.2f)
+                        ),
                         modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .size(20.dp)
+                            .background(
+                                Color.White.copy(alpha = 0.2f),
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
+                            )
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.size(18.dp)
+                        Text(
+                            text = if (uiState.isBudgetMode) "Expense" else "Budget",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium
                         )
                     }
                 }
 
-                // Legend section (only show if chart exists)
-                if (uiState.tagExpenseData.isNotEmpty() && uiState.totalExpenses > 0) {
+                // Main content row: Donut chart on left, total expenses on right
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp)
+                ) {
+                    if (uiState.isBudgetMode) {
+                        // Budget mode content
+                        BudgetModeContent(
+                            budgetData = uiState.budgetData,
+                            currencySettings = currencySettings,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    } else {
+                        // Expense mode content (original)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Left side: Donut chart
+                            if (uiState.tagExpenseData.isNotEmpty() && uiState.totalExpenses > 0) {
+                                val coloredTagData = assignColorsToTagData(uiState.tagExpenseData)
+                                
+                                // Donut chart
+                                Box(
+                                    modifier = Modifier
+                                        .size(120.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    DonutChart(
+                                        data = coloredTagData,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+
+                                    // Center content
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Text(
+                                            text = "${uiState.expenses.size}",
+                                            style = MaterialTheme.typography.headlineMedium,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                                        )
+                                        Text(
+                                            text = "expenses",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = TextSecondary
+                                        )
+                                    }
+                                }
+                            } else {
+                                // When no chart data, show empty space on left
+                                Spacer(modifier = Modifier.size(120.dp))
+                            }
+                            
+                            // Right side: Total expenses (centered vertically)
+                            Column(
+                                horizontalAlignment = Alignment.End
+                            ) {
+                                Text(
+                                    text = "Total Expenses",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = TextSecondary,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Text(
+                                    text = CurrencyFormatter.formatCurrency(uiState.totalExpenses, currencySettings),
+                                    style = MaterialTheme.typography.displaySmall,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                        }
+                    }
+                    
+                }
+
+                // Legend section (only show if chart exists AND not in budget mode)
+                if (!uiState.isBudgetMode && uiState.tagExpenseData.isNotEmpty() && uiState.totalExpenses > 0) {
                     val coloredTagData = assignColorsToTagData(uiState.tagExpenseData)
                     
                     Spacer(modifier = Modifier.height(10.dp))
@@ -650,4 +701,254 @@ private fun SwipeToDeleteExpenseItem(
         },
         enableDismissFromStartToEnd = false
     )
+}
+
+@Composable
+private fun BudgetModeContent(
+    budgetData: ir.act.personalAccountant.domain.model.BudgetData?,
+    currencySettings: CurrencySettings,
+    modifier: Modifier = Modifier
+) {
+    if (budgetData == null) {
+        // No budget data available
+        Column(
+            modifier = modifier,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Budget Not Configured",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+            Text(
+                text = "Please configure your budget settings",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+            )
+        }
+        return
+    }
+
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        // Date progress with month name
+        val calendar = Calendar.getInstance()
+        val monthName = calendar.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.getDefault()) ?: ""
+        
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Month Progress",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+            )
+            Text(
+                text = "$monthName ${budgetData.currentDay}/${budgetData.totalDaysInMonth}",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        }
+
+        // Combined progress bar with three sections
+        BudgetProgressBar(
+            budgetData = budgetData,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        // Budget status gauge
+        BudgetStatusGauge(
+            budgetStatus = budgetData.budgetStatus,
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        )
+
+        // Budget summary with remaining budget in center
+        val remainingBudget = budgetData.totalIncomeToDate - budgetData.totalExpensesToDate - budgetData.totalRentToDate
+        val remainingBudgetColor = when (budgetData.budgetStatus) {
+            ir.act.personalAccountant.domain.model.BudgetStatus.GOOD -> Color.Green
+            ir.act.personalAccountant.domain.model.BudgetStatus.MIDDLE -> Color(0xFFFF9800)
+            ir.act.personalAccountant.domain.model.BudgetStatus.RED -> Color.Red
+        }
+        
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                horizontalAlignment = Alignment.Start
+            ) {
+                Text(
+                    text = "Total Income So Far",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                )
+                Text(
+                    text = CurrencyFormatter.formatCurrency(budgetData.totalIncomeToDate, currencySettings),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.Green
+                )
+            }
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Remaining",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                )
+                Text(
+                    text = CurrencyFormatter.formatCurrency(remainingBudget, currencySettings),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = remainingBudgetColor
+                )
+            }
+            Column(
+                horizontalAlignment = Alignment.End
+            ) {
+                Text(
+                    text = "Expenses + Rent",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                )
+                Text(
+                    text = CurrencyFormatter.formatCurrency(budgetData.totalExpensesToDate + budgetData.totalRentToDate, currencySettings),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.Red
+                )
+            }
+        }
+        
+        // Additional detailed breakdown
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(
+                horizontalAlignment = Alignment.Start
+            ) {
+                Text(
+                    text = "Daily Income",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                )
+                Text(
+                    text = CurrencyFormatter.formatCurrency(budgetData.dailyIncome, currencySettings),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                )
+            }
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Daily Rent",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                )
+                Text(
+                    text = CurrencyFormatter.formatCurrency(budgetData.dailyRent, currencySettings),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF9C27B0)
+                )
+            }
+            Column(
+                horizontalAlignment = Alignment.End
+            ) {
+                Text(
+                    text = "Other Expenses",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                )
+                Text(
+                    text = CurrencyFormatter.formatCurrency(budgetData.totalExpensesToDate, currencySettings),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Red.copy(alpha = 0.8f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun BudgetProgressBar(
+    budgetData: ir.act.personalAccountant.domain.model.BudgetData,
+    modifier: Modifier = Modifier
+) {
+    val totalSalary = budgetData.dailyIncome * budgetData.totalDaysInMonth
+    
+    // Calculate percentages (0-100)
+    val incomePercentage = if (totalSalary > 0) 
+        ((budgetData.totalIncomeToDate / totalSalary) * 100.0).toFloat().coerceIn(0f, 100f) else 0f
+    val totalExpensePercentage = if (totalSalary > 0) 
+        (((budgetData.totalExpensesToDate + budgetData.totalRentToDate) / totalSalary) * 100.0).toFloat().coerceIn(0f, 100f) else 0f
+    val rentPercentage = if (totalSalary > 0) 
+        ((budgetData.totalRentToDate / totalSalary) * 100.0).toFloat().coerceIn(0f, 100f) else 0f
+
+    // Create layers - drawn from largest to smallest (back to front)
+    val layers = listOf(
+        ProgressLayer(
+            value = incomePercentage,
+            color = Color.Green.copy(alpha = 0.7f),
+            label = "Income"
+        ),
+        ProgressLayer(
+            value = totalExpensePercentage,
+            color = Color.Red.copy(alpha = 0.8f),
+            label = "Total Expenses"
+        ),
+        ProgressLayer(
+            value = rentPercentage,
+            color = Color(0xFF9C27B0),
+            label = "Rent"
+        )
+    )
+
+    LayeredProgressBar(
+        layers = layers,
+        modifier = modifier,
+        height = 24.dp,
+        backgroundColor = Color.Gray.copy(alpha = 0.3f),
+        cornerRadius = 12.dp
+    )
+}
+
+@Composable
+private fun BudgetStatusGauge(
+    budgetStatus: ir.act.personalAccountant.domain.model.BudgetStatus,
+    modifier: Modifier = Modifier
+) {
+    val (color, text) = when (budgetStatus) {
+        ir.act.personalAccountant.domain.model.BudgetStatus.GOOD -> Color.Green to "Good"
+        ir.act.personalAccountant.domain.model.BudgetStatus.MIDDLE -> Color(0xFFFF9800) to "Moderate"
+        ir.act.personalAccountant.domain.model.BudgetStatus.RED -> Color.Red to "Over Budget"
+    }
+
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = when (budgetStatus) {
+                ir.act.personalAccountant.domain.model.BudgetStatus.GOOD -> Color.Green.copy(alpha = 0.1f)
+                ir.act.personalAccountant.domain.model.BudgetStatus.MIDDLE -> Color(0xFFFF9800).copy(alpha = 0.1f)
+                ir.act.personalAccountant.domain.model.BudgetStatus.RED -> Color.Red.copy(alpha = 0.1f)
+            }
+        )
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium,
+            color = color,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        )
+    }
 }

@@ -1,5 +1,7 @@
 package ir.act.personalAccountant.presentation.expense_list
 
+import ir.act.personalAccountant.domain.model.BudgetData
+import ir.act.personalAccountant.domain.model.BudgetSettings
 import ir.act.personalAccountant.domain.model.Expense
 import ir.act.personalAccountant.domain.model.TagExpenseData
 import ir.act.personalAccountant.domain.model.CurrencySettings
@@ -14,7 +16,10 @@ data class ExpenseListUiState(
     val expenseToDelete: Expense? = null,
     val currencySettings: CurrencySettings = CurrencySettings(),
     val currentYear: Int = 0,
-    val currentMonth: Int = 0
+    val currentMonth: Int = 0,
+    val isBudgetMode: Boolean = false,
+    val budgetSettings: BudgetSettings = BudgetSettings(),
+    val budgetData: BudgetData? = null
 )
 
 sealed class ExpenseListEvent {
@@ -26,9 +31,11 @@ sealed class ExpenseListEvent {
     object CancelDelete : ExpenseListEvent()
     object NextMonthClicked : ExpenseListEvent()
     object PreviousMonthClicked : ExpenseListEvent()
+    object BudgetModeToggled : ExpenseListEvent()
 }
 
 sealed class ExpenseListUiInteraction {
     object NavigateToExpenseEntry : ExpenseListUiInteraction()
     data class NavigateToExpenseEdit(val expenseId: Long) : ExpenseListUiInteraction()
+    object NavigateToBudgetConfig : ExpenseListUiInteraction()
 }

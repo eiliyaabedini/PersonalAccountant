@@ -6,6 +6,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import ir.act.personalAccountant.presentation.budget_config.BudgetConfigScreen
 import ir.act.personalAccountant.presentation.expense_edit.ExpenseEditContract
 import ir.act.personalAccountant.presentation.expense_edit.ExpenseEditScreen
 import ir.act.personalAccountant.presentation.expense_entry.ExpenseEntryScreen
@@ -20,6 +21,7 @@ object Routes {
     const val EXPENSE_EDIT = "expense_edit/{expenseId}"
     const val SETTINGS = "settings"
     const val VIEW_ALL_EXPENSES = "view_all_expenses?filterTag={filterTag}"
+    const val BUDGET_CONFIG = "budget_config"
     
     fun expenseEdit(expenseId: Long) = "expense_edit/$expenseId"
     fun viewAllExpenses(filterTag: String? = null) = if (filterTag != null) {
@@ -58,6 +60,9 @@ fun PersonalAccountantNavigation(
                 },
                 onNavigateToViewAllExpenses = { filterTag ->
                     navController.navigate(Routes.viewAllExpenses(filterTag))
+                },
+                onNavigateToBudgetConfig = {
+                    navController.navigate(Routes.BUDGET_CONFIG)
                 }
             )
         }
@@ -85,6 +90,10 @@ fun PersonalAccountantNavigation(
                     override fun navigateBack() {
                         navController.popBackStack()
                     }
+                    
+                    override fun navigateToBudgetConfig() {
+                        navController.navigate(Routes.BUDGET_CONFIG)
+                    }
                 }
             )
         }
@@ -103,6 +112,14 @@ fun PersonalAccountantNavigation(
                 onNavigateToExpenseEdit = { expenseId ->
                     navController.navigate(Routes.expenseEdit(expenseId))
                 },
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        
+        composable(Routes.BUDGET_CONFIG) {
+            BudgetConfigScreen(
                 onNavigateBack = {
                     navController.popBackStack()
                 }

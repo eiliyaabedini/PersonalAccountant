@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import ir.act.personalAccountant.core.util.DateUtils
+import ir.act.personalAccountant.domain.usecase.BudgetUseCase
 import ir.act.personalAccountant.domain.usecase.DeleteExpenseUseCase
 import ir.act.personalAccountant.domain.usecase.GetAllExpensesUseCase
 import ir.act.personalAccountant.domain.usecase.GetTotalExpensesUseCase
@@ -30,7 +31,8 @@ class ExpenseListViewModel @Inject constructor(
     private val getCurrencySettingsUseCase: GetCurrencySettingsUseCase,
     private val getExpensesByMonthUseCase: GetExpensesByMonthUseCase,
     private val getTotalExpensesByMonthUseCase: GetTotalExpensesByMonthUseCase,
-    private val getExpensesByTagForMonthUseCase: GetExpensesByTagForMonthUseCase
+    private val getExpensesByTagForMonthUseCase: GetExpensesByTagForMonthUseCase,
+    private val budgetUseCase: BudgetUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ExpenseListUiState())
@@ -43,6 +45,7 @@ class ExpenseListViewModel @Inject constructor(
         initializeCurrentMonth()
         loadExpenses()
         loadCurrencySettings()
+        loadBudgetSettings()
     }
 
     private fun initializeCurrentMonth() {
@@ -106,6 +109,18 @@ class ExpenseListViewModel @Inject constructor(
                 )
                 loadExpenses()
             }
+            ExpenseListEvent.BudgetModeToggled -> {
+                val currentBudgetMode = _uiState.value.isBudgetMode
+                if (!currentBudgetMode && !_uiState.value.budgetSettings.isConfigured) {
+                    // Navigate to budget configuration
+                    viewModelScope.launch {
+                        _uiInteraction.send(ExpenseListUiInteraction.NavigateToBudgetConfig)
+                    }
+                } else {
+                    // Toggle budget mode
+                    _uiState.value = _uiState.value.copy(isBudgetMode = !currentBudgetMode)
+                }
+            }
         }
     }
 
@@ -142,6 +157,20 @@ class ExpenseListViewModel @Inject constructor(
             getCurrencySettingsUseCase().collect { currencySettings ->
                 _uiState.value = _uiState.value.copy(currencySettings = currencySettings)
             }
+        }
+    }
+
+    private fun loadBudgetSettings() {
+        viewModelScope.launch {
+            combine(
+                budgetUseCase.getBudgetSettings(),
+                budgetUseCase.getBudgetData()
+            ) { budgetSettings, budgetData ->
+                _uiState.value = _uiState.value.copy(
+                    budgetSettings = budgetSettings,
+                    budgetData = budgetData
+                )
+            }.collect { }
         }
     }
 }
