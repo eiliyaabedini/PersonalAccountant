@@ -19,11 +19,13 @@ object SettingsContract {
         object DismissCurrencyPicker : Events()
         data class CurrencySelected(val currencySettings: CurrencySettings) : Events()
         object BudgetConfigClicked : Events()
+        object CategorySettingsClicked : Events()
         object ClearError : Events()
     }
     
     interface UiInteractions {
         fun navigateBack()
         fun navigateToBudgetConfig()
+        fun navigateToCategorySettings()
     }
 }

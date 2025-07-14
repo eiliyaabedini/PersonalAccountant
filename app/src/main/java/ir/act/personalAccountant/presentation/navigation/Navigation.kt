@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import ir.act.personalAccountant.presentation.budget_config.BudgetConfigScreen
+import ir.act.personalAccountant.presentation.category_settings.CategorySettingsScreen
 import ir.act.personalAccountant.presentation.expense_edit.ExpenseEditContract
 import ir.act.personalAccountant.presentation.expense_edit.ExpenseEditScreen
 import ir.act.personalAccountant.presentation.expense_entry.ExpenseEntryScreen
@@ -22,6 +23,7 @@ object Routes {
     const val SETTINGS = "settings"
     const val VIEW_ALL_EXPENSES = "view_all_expenses?filterTag={filterTag}"
     const val BUDGET_CONFIG = "budget_config"
+    const val CATEGORY_SETTINGS = "category_settings"
     
     fun expenseEdit(expenseId: Long) = "expense_edit/$expenseId"
     fun viewAllExpenses(filterTag: String? = null) = if (filterTag != null) {
@@ -94,6 +96,10 @@ fun PersonalAccountantNavigation(
                     override fun navigateToBudgetConfig() {
                         navController.navigate(Routes.BUDGET_CONFIG)
                     }
+
+                    override fun navigateToCategorySettings() {
+                        navController.navigate(Routes.CATEGORY_SETTINGS)
+                    }
                 }
             )
         }
@@ -120,6 +126,14 @@ fun PersonalAccountantNavigation(
         
         composable(Routes.BUDGET_CONFIG) {
             BudgetConfigScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Routes.CATEGORY_SETTINGS) {
+            CategorySettingsScreen(
                 onNavigateBack = {
                     navController.popBackStack()
                 }

@@ -74,6 +74,10 @@ class ExpenseRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun mergeTags(oldTags: List<String>, newTag: String): Int {
+        return expenseDao.updateExpenseTagsBatch(oldTags, newTag)
+    }
+
     private fun Expense.toEntity(): ExpenseEntity {
         return ExpenseEntity(
             id = id,

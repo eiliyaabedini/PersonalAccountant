@@ -33,6 +33,7 @@ class SettingsViewModel @Inject constructor(
 
     sealed class NavigationEvent {
         object NavigateToBudgetConfig : NavigationEvent()
+        object NavigateToCategorySettings : NavigationEvent()
     }
 
     init {
@@ -56,6 +57,12 @@ class SettingsViewModel @Inject constructor(
             is Events.BudgetConfigClicked -> {
                 viewModelScope.launch {
                     _navigationEvents.send(NavigationEvent.NavigateToBudgetConfig)
+                }
+            }
+
+            is Events.CategorySettingsClicked -> {
+                viewModelScope.launch {
+                    _navigationEvents.send(NavigationEvent.NavigateToCategorySettings)
                 }
             }
             

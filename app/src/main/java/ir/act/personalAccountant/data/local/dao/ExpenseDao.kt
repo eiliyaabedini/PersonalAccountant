@@ -6,8 +6,8 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
 import ir.act.personalAccountant.data.local.entity.ExpenseEntity
-import ir.act.personalAccountant.data.local.model.TagWithCount
 import ir.act.personalAccountant.data.local.model.TagStatistics
+import ir.act.personalAccountant.data.local.model.TagWithCount
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -60,4 +60,7 @@ interface ExpenseDao {
     
     @Query("SELECT * FROM expenses WHERE tag = :tag AND timestamp >= :startOfMonth AND timestamp <= :endOfMonth ORDER BY timestamp DESC")
     fun getExpensesByTagAndMonth(tag: String, startOfMonth: Long, endOfMonth: Long): Flow<List<ExpenseEntity>>
+
+    @Query("UPDATE expenses SET tag = :newTag WHERE tag IN (:oldTags)")
+    suspend fun updateExpenseTagsBatch(oldTags: List<String>, newTag: String): Int
 }
