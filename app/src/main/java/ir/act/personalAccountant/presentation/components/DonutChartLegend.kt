@@ -10,7 +10,9 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -23,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import ir.act.personalAccountant.core.util.CurrencyFormatter
 import ir.act.personalAccountant.domain.model.CurrencySettings
@@ -56,12 +59,13 @@ fun DonutChartLegend(
                 label = item.tag,
                 amount = item.totalAmount,
                 percentage = item.percentage,
+                averageDailyAmount = item.averageDailyAmount,
                 currencySettings = currencySettings,
                 onClick = { onTagClick?.invoke(item.tag) }
             )
         }
         
-        // Animated visibility for remaining items
+        // Animated visibility for remaining items with scrolling
         AnimatedVisibility(
             visible = isExpanded,
             enter = expandVertically(
@@ -76,6 +80,9 @@ fun DonutChartLegend(
             )
         ) {
             Column(
+                modifier = Modifier
+                    .heightIn(max = 200.dp) // Limit height to enable scrolling
+                    .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 remainingItems.forEach { item ->
@@ -84,6 +91,7 @@ fun DonutChartLegend(
                         label = item.tag,
                         amount = item.totalAmount,
                         percentage = item.percentage,
+                        averageDailyAmount = item.averageDailyAmount,
                         currencySettings = currencySettings,
                         onClick = { onTagClick?.invoke(item.tag) }
                     )
@@ -107,6 +115,7 @@ private fun LegendItem(
     label: String,
     amount: Double,
     percentage: Float,
+    averageDailyAmount: Double,
     currencySettings: CurrencySettings,
     onClick: () -> Unit = {}
 ) {
@@ -134,8 +143,18 @@ private fun LegendItem(
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Medium,
             color = androidx.compose.ui.graphics.Color.Black,
-            modifier = Modifier.weight(1f)
         )
+
+        if (averageDailyAmount > 0) {
+            Text(
+                text = "(${CurrencyFormatter.formatCurrency(averageDailyAmount, currencySettings)}/day)",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
         
         Text(
             text = "${percentage.toInt()}%",

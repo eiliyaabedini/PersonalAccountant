@@ -72,6 +72,16 @@ class BudgetUseCaseImpl @Inject constructor(
             val totalExpensesToDate = currentMonthExpenses.sumOf { it.amount }
             val totalExpensesWithRent = totalExpensesToDate + totalRentToDate
             
+            // Calculate average daily expenses (excluding rent)
+            val averageDailyExpenses = if (currentDay > 0) totalExpensesToDate / currentDay else 0.0
+            
+            // Calculate estimated end of month balance
+            // (Total monthly income) - (projected expenses for full month) - (total monthly rent)
+            val projectedMonthlyExpenses = averageDailyExpenses * totalDaysInMonth
+            val totalMonthlyIncome = dailyIncome * totalDaysInMonth
+            val totalMonthlyRent = dailyRent * totalDaysInMonth
+            val estimatedEndOfMonthBalance = totalMonthlyIncome - projectedMonthlyExpenses - totalMonthlyRent
+            
             val budgetStatus = when {
                 totalExpensesWithRent > totalIncomeToDate -> BudgetStatus.RED
                 totalExpensesWithRent > totalIncomeToDate * 0.8 -> BudgetStatus.MIDDLE
@@ -86,6 +96,8 @@ class BudgetUseCaseImpl @Inject constructor(
                 totalIncomeToDate = totalIncomeToDate,
                 totalRentToDate = totalRentToDate,
                 totalExpensesToDate = totalExpensesToDate,
+                averageDailyExpenses = averageDailyExpenses,
+                estimatedEndOfMonthBalance = estimatedEndOfMonthBalance,
                 budgetStatus = budgetStatus
             )
         }

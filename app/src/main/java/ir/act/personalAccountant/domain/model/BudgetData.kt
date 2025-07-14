@@ -8,6 +8,8 @@ data class BudgetData(
     val totalIncomeToDate: Double,
     val totalRentToDate: Double,
     val totalExpensesToDate: Double,
+    val averageDailyExpenses: Double,
+    val estimatedEndOfMonthBalance: Double,
     val budgetStatus: BudgetStatus
 )
 

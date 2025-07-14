@@ -25,6 +25,7 @@ class GetExpensesByTagUseCase @Inject constructor(
                     tag = tag,
                     totalAmount = tagTotal,
                     percentage = percentage,
+                    averageDailyAmount = 0.0, // Not applicable for all-time data
                     color = androidx.compose.ui.graphics.Color.Transparent // Color will be assigned in UI
                 )
             }.sortedByDescending { it.totalAmount }

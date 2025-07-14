@@ -876,6 +876,46 @@ private fun BudgetModeContent(
                 )
             }
         }
+        
+        // Additional metrics row: Estimated balance and average daily expenses
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(
+                horizontalAlignment = Alignment.Start
+            ) {
+                Text(
+                    text = "Est. End-Month Balance",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                )
+                Text(
+                    text = CurrencyFormatter.formatCurrency(budgetData.estimatedEndOfMonthBalance, currencySettings),
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Medium,
+                    color = when (budgetData.budgetStatus) {
+                        ir.act.personalAccountant.domain.model.BudgetStatus.GOOD -> Color.Green
+                        ir.act.personalAccountant.domain.model.BudgetStatus.MIDDLE -> Color(0xFFFF9800)
+                        ir.act.personalAccountant.domain.model.BudgetStatus.RED -> Color.Red
+                    }
+                )
+            }
+            Column(
+                horizontalAlignment = Alignment.End
+            ) {
+                Text(
+                    text = "Avg Daily Expenses",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                )
+                Text(
+                    text = CurrencyFormatter.formatCurrency(budgetData.averageDailyExpenses, currencySettings),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                )
+            }
+        }
     }
 }
 
