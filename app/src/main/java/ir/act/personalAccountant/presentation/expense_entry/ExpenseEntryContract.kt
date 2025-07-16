@@ -2,8 +2,8 @@ package ir.act.personalAccountant.presentation.expense_entry
 
 import android.net.Uri
 import ir.act.personalAccountant.data.local.model.TagWithCount
-import ir.act.personalAccountant.domain.model.TagExpenseData
 import ir.act.personalAccountant.domain.model.CurrencySettings
+import ir.act.personalAccountant.domain.model.TagExpenseData
 
 data class ExpenseEntryUiState(
     val currentAmount: String = "",
@@ -23,7 +23,9 @@ data class ExpenseEntryUiState(
     val tempCameraUri: Uri? = null,
     val showImagePicker: Boolean = false,
     val isProcessingImage: Boolean = false,
-    val showImageViewer: Boolean = false
+    val showImageViewer: Boolean = false,
+    val isAnalyzingReceipt: Boolean = false,
+    val aiAnalysisError: String? = null
 )
 
 sealed class ExpenseEntryEvent {
@@ -48,6 +50,8 @@ sealed class ExpenseEntryEvent {
     object DismissImagePicker : ExpenseEntryEvent()
     object ShowImageViewer : ExpenseEntryEvent()
     object DismissImageViewer : ExpenseEntryEvent()
+    object AnalyzeReceiptClicked : ExpenseEntryEvent()
+    object ClearAIAnalysisError : ExpenseEntryEvent()
 }
 
 sealed class ExpenseEntryUiInteraction {

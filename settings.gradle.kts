@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Personal Accountant"
 include(":app")
+include(":ai")

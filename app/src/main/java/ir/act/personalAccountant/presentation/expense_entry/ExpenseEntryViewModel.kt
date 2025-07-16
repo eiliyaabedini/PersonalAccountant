@@ -6,16 +6,20 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import ir.act.personalAccountant.ai.AIEngine
+import ir.act.personalAccountant.ai.data.repository.AIRepository
 import ir.act.personalAccountant.core.util.ImageFileManager
+import ir.act.personalAccountant.domain.model.CurrencySettings
 import ir.act.personalAccountant.domain.usecase.AddExpenseUseCase
-import ir.act.personalAccountant.domain.usecase.GetTotalExpensesUseCase
 import ir.act.personalAccountant.domain.usecase.GetAllTagsUseCase
-import ir.act.personalAccountant.domain.usecase.GetExpensesByTagUseCase
 import ir.act.personalAccountant.domain.usecase.GetCurrencySettingsUseCase
+import ir.act.personalAccountant.domain.usecase.GetExpensesByTagUseCase
+import ir.act.personalAccountant.domain.usecase.GetTotalExpensesUseCase
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -29,7 +33,9 @@ class ExpenseEntryViewModel @Inject constructor(
     private val getAllTagsUseCase: GetAllTagsUseCase,
     private val getExpensesByTagUseCase: GetExpensesByTagUseCase,
     private val getCurrencySettingsUseCase: GetCurrencySettingsUseCase,
-    private val imageFileManager: ImageFileManager
+    private val imageFileManager: ImageFileManager,
+    private val aiEngine: AIEngine,
+    private val aiRepository: AIRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ExpenseEntryUiState())
@@ -119,6 +125,13 @@ class ExpenseEntryViewModel @Inject constructor(
             }
             ExpenseEntryEvent.DismissImageViewer -> {
                 _uiState.update { it.copy(showImageViewer = false) }
+            }
+            ExpenseEntryEvent.AnalyzeReceiptClicked -> {
+                analyzeReceipt()
+            }
+
+            ExpenseEntryEvent.ClearAIAnalysisError -> {
+                _uiState.update { it.copy(aiAnalysisError = null) }
             }
         }
     }
@@ -327,6 +340,131 @@ class ExpenseEntryViewModel @Inject constructor(
             null
         } finally {
             _uiState.update { it.copy(isProcessingImage = false) }
+        }
+    }
+
+    private fun analyzeReceipt() {
+        val currentState = _uiState.value
+        val selectedImageUri = currentState.selectedImageUri
+
+        if (selectedImageUri == null) {
+            _uiState.update {
+                it.copy(aiAnalysisError = "No image selected for analysis")
+            }
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                _uiState.update { it.copy(isAnalyzingReceipt = true, aiAnalysisError = null) }
+
+                // Get API key
+                val apiKey = aiRepository.apiKey.first()
+                if (apiKey.isEmpty()) {
+                    _uiState.update {
+                        it.copy(
+                            isAnalyzingReceipt = false,
+                            aiAnalysisError = "OpenAI API key not configured. Please go to Settings > AI Settings to set up your API key."
+                        )
+                    }
+                    return@launch
+                }
+
+                // Get available categories
+                val availableCategories = currentState.availableTags.map { it.tag }
+                if (availableCategories.isEmpty()) {
+                    _uiState.update {
+                        it.copy(
+                            isAnalyzingReceipt = false,
+                            aiAnalysisError = "No categories available for analysis"
+                        )
+                    }
+                    return@launch
+                }
+
+                // Get currency symbol
+                val currencySymbol =
+                    CurrencySettings.getCurrencySymbol(currentState.currencySettings.currencyCode)
+
+                // Analyze receipt
+                aiEngine.analyzeReceiptImage(
+                    imageUri = selectedImageUri,
+                    availableCategories = availableCategories,
+                    apiKey = apiKey,
+                    currencySymbol = currencySymbol,
+                    inputStreamProvider = { uri ->
+                        try {
+                            context.contentResolver.openInputStream(uri)
+                        } catch (e: Exception) {
+                            null
+                        }
+                    }
+                ).collect { result ->
+                    _uiState.update { it.copy(isAnalyzingReceipt = false) }
+
+                    if (result.success) {
+                        // Update UI with analysis results
+                        result.totalAmount?.let { amount ->
+                            _uiState.update {
+                                it.copy(currentAmount = amount.toString())
+                            }
+                        }
+
+                        result.category?.let { category ->
+                            _uiState.update {
+                                it.copy(selectedTag = category)
+                            }
+                        }
+
+                        // If we have both amount and category, auto-save
+                        val totalAmount = result.totalAmount
+                        if (totalAmount != null && result.category != null && result.confidence > 0.7f) {
+                            // Auto-save the expense
+                            saveExpense(amount = totalAmount)
+                        }
+                    } else {
+                        _uiState.update {
+                            it.copy(aiAnalysisError = result.errorMessage ?: "Analysis failed")
+                        }
+                    }
+                }
+
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isAnalyzingReceipt = false,
+                        aiAnalysisError = "Analysis failed: ${e.message}"
+                    )
+                }
+            }
+        }
+    }
+
+    private suspend fun saveExpense(amount: Double) {
+        val currentState = _uiState.value
+        val selectedTag = currentState.selectedTag
+
+        if (selectedTag.isEmpty()) {
+            return
+        }
+
+        try {
+            val newExpenseId = addExpenseUseCase(
+                amount = amount,
+                tag = selectedTag,
+                timestamp = currentState.selectedDate,
+                imagePath = currentState.selectedImageUri?.let { uri ->
+                    saveSelectedImage(uri)
+                }
+            )
+
+            // Navigate back to expense list
+            _uiInteraction.send(ExpenseEntryUiInteraction.NavigateToExpenseList(newExpenseId))
+
+        } catch (e: Exception) {
+            _uiState.update {
+                it.copy(aiAnalysisError = "Failed to save expense: ${e.message}")
+            }
         }
     }
 }

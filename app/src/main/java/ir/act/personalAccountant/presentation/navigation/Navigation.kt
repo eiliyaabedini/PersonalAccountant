@@ -6,6 +6,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import ir.act.personalAccountant.ai.presentation.settings.AISettingsScreen
 import ir.act.personalAccountant.presentation.budget_config.BudgetConfigScreen
 import ir.act.personalAccountant.presentation.category_settings.CategorySettingsScreen
 import ir.act.personalAccountant.presentation.expense_edit.ExpenseEditContract
@@ -29,6 +30,7 @@ object Routes {
     const val CATEGORY_SETTINGS = "category_settings"
     const val GOOGLE_SHEETS = "google_sheets"
     const val SYNC_PROGRESS = "sync_progress"
+    const val AI_SETTINGS = "ai_settings"
 
     fun expenseEdit(expenseId: Long) = "expense_edit/$expenseId"
     fun viewAllExpenses(filterTag: String? = null) = if (filterTag != null) {
@@ -114,6 +116,10 @@ fun PersonalAccountantNavigation(
                     override fun navigateToGoogleSheets() {
                         navController.navigate(Routes.GOOGLE_SHEETS)
                     }
+
+                    override fun navigateToAISettings() {
+                        navController.navigate(Routes.AI_SETTINGS)
+                    }
                 }
             )
         }
@@ -169,6 +175,14 @@ fun PersonalAccountantNavigation(
 
         composable(Routes.CATEGORY_SETTINGS) {
             CategorySettingsScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Routes.AI_SETTINGS) {
+            AISettingsScreen(
                 onNavigateBack = {
                     navController.popBackStack()
                 }
