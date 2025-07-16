@@ -12,8 +12,11 @@ import ir.act.personalAccountant.presentation.expense_edit.ExpenseEditContract
 import ir.act.personalAccountant.presentation.expense_edit.ExpenseEditScreen
 import ir.act.personalAccountant.presentation.expense_entry.ExpenseEntryScreen
 import ir.act.personalAccountant.presentation.expense_list.ExpenseListScreen
+import ir.act.personalAccountant.presentation.googlesheets.GoogleSheetsScreen
+import ir.act.personalAccountant.presentation.googlesheets.GoogleSheetsViewModel
 import ir.act.personalAccountant.presentation.settings.SettingsContract
 import ir.act.personalAccountant.presentation.settings.SettingsScreen
+import ir.act.personalAccountant.presentation.sync.SyncProgressScreen
 import ir.act.personalAccountant.presentation.view_all_expenses.ViewAllExpensesScreen
 
 object Routes {
@@ -24,7 +27,9 @@ object Routes {
     const val VIEW_ALL_EXPENSES = "view_all_expenses?filterTag={filterTag}"
     const val BUDGET_CONFIG = "budget_config"
     const val CATEGORY_SETTINGS = "category_settings"
-    
+    const val GOOGLE_SHEETS = "google_sheets"
+    const val SYNC_PROGRESS = "sync_progress"
+
     fun expenseEdit(expenseId: Long) = "expense_edit/$expenseId"
     fun viewAllExpenses(filterTag: String? = null) = if (filterTag != null) {
         "view_all_expenses?filterTag=$filterTag"
@@ -35,7 +40,9 @@ object Routes {
 
 @Composable
 fun PersonalAccountantNavigation(
-    navController: NavHostController
+    navController: NavHostController,
+    googleSheetsViewModel: GoogleSheetsViewModel,
+    onGoogleSignInClick: () -> Unit
 ) {
     NavHost(
         navController = navController,
@@ -65,6 +72,9 @@ fun PersonalAccountantNavigation(
                 },
                 onNavigateToBudgetConfig = {
                     navController.navigate(Routes.BUDGET_CONFIG)
+                },
+                onNavigateToGoogleSheets = {
+                    navController.navigate(Routes.GOOGLE_SHEETS)
                 }
             )
         }
@@ -92,7 +102,7 @@ fun PersonalAccountantNavigation(
                     override fun navigateBack() {
                         navController.popBackStack()
                     }
-                    
+
                     override fun navigateToBudgetConfig() {
                         navController.navigate(Routes.BUDGET_CONFIG)
                     }
@@ -100,10 +110,35 @@ fun PersonalAccountantNavigation(
                     override fun navigateToCategorySettings() {
                         navController.navigate(Routes.CATEGORY_SETTINGS)
                     }
+
+                    override fun navigateToGoogleSheets() {
+                        navController.navigate(Routes.GOOGLE_SHEETS)
+                    }
                 }
             )
         }
-        
+
+        composable(Routes.GOOGLE_SHEETS) {
+            GoogleSheetsScreen(
+                viewModel = googleSheetsViewModel,
+                onSignInClick = onGoogleSignInClick,
+                onNavigateToSyncProgress = {
+                    navController.navigate(Routes.SYNC_PROGRESS)
+                },
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Routes.SYNC_PROGRESS) {
+            SyncProgressScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
         composable(
             route = Routes.VIEW_ALL_EXPENSES,
             arguments = listOf(
@@ -123,7 +158,7 @@ fun PersonalAccountantNavigation(
                 }
             )
         }
-        
+
         composable(Routes.BUDGET_CONFIG) {
             BudgetConfigScreen(
                 onNavigateBack = {

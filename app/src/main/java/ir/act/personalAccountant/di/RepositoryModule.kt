@@ -6,8 +6,12 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import ir.act.personalAccountant.data.repository.BudgetRepositoryImpl
 import ir.act.personalAccountant.data.repository.ExpenseRepositoryImpl
+import ir.act.personalAccountant.data.repository.GoogleSheetsRepositoryImpl
+import ir.act.personalAccountant.data.repository.SyncStateRepositoryImpl
 import ir.act.personalAccountant.domain.repository.BudgetRepository
 import ir.act.personalAccountant.domain.repository.ExpenseRepository
+import ir.act.personalAccountant.domain.repository.GoogleSheetsRepository
+import ir.act.personalAccountant.domain.repository.SyncStateRepository
 import ir.act.personalAccountant.domain.usecase.BudgetUseCase
 import ir.act.personalAccountant.domain.usecase.BudgetUseCaseImpl
 import javax.inject.Singleton
@@ -33,4 +37,16 @@ abstract class RepositoryModule {
     abstract fun bindBudgetUseCase(
         budgetUseCaseImpl: BudgetUseCaseImpl
     ): BudgetUseCase
+
+    @Binds
+    @Singleton
+    abstract fun bindGoogleSheetsRepository(
+        googleSheetsRepositoryImpl: GoogleSheetsRepositoryImpl
+    ): GoogleSheetsRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindSyncStateRepository(
+        syncStateRepositoryImpl: SyncStateRepositoryImpl
+    ): SyncStateRepository
 }

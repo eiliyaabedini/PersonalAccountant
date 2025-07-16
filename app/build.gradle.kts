@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt)
     alias(libs.plugins.kotlin.kapt)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -39,6 +40,17 @@ android {
     buildFeatures {
         compose = true
     }
+
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "META-INF/DEPENDENCIES"
+            excludes += "META-INF/LICENSE"
+            excludes += "META-INF/LICENSE.txt"
+            excludes += "META-INF/NOTICE"
+            excludes += "META-INF/NOTICE.txt"
+        }
+    }
 }
 
 dependencies {
@@ -69,6 +81,9 @@ dependencies {
     // ViewModel
     implementation(libs.androidx.lifecycle.viewmodel.compose)
 
+    // Kotlinx Serialization
+    implementation(libs.kotlinx.serialization.json)
+
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
 
@@ -77,6 +92,14 @@ dependencies {
     
     // Image loading
     implementation(libs.coil.compose)
+
+    // Google APIs
+    implementation(libs.play.services.auth)
+    implementation(libs.google.api.client.android)
+    implementation(libs.google.api.services.sheets)
+    implementation(libs.google.api.services.drive)
+    implementation(libs.google.http.client.android)
+    implementation(libs.google.http.client.jackson2)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

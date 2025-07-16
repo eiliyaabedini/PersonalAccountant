@@ -27,5 +27,6 @@ object SettingsContract {
         fun navigateBack()
         fun navigateToBudgetConfig()
         fun navigateToCategorySettings()
+        fun navigateToGoogleSheets()
     }
 }

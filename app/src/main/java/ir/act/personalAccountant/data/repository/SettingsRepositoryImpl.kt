@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import ir.act.personalAccountant.domain.model.CurrencySettings
 import ir.act.personalAccountant.domain.repository.SettingsRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -35,5 +36,17 @@ class SettingsRepositoryImpl @Inject constructor(
             preferences[PreferencesKeys.CURRENCY_CODE] = currencySettings.currencyCode
             preferences[PreferencesKeys.LOCALE] = currencySettings.locale
         }
+    }
+
+    override suspend fun saveStringSetting(key: String, value: String) {
+        val preferencesKey = stringPreferencesKey(key)
+        dataStore.edit { preferences ->
+            preferences[preferencesKey] = value
+        }
+    }
+
+    override suspend fun getStringSetting(key: String): String? {
+        val preferencesKey = stringPreferencesKey(key)
+        return dataStore.data.first()[preferencesKey]
     }
 }
