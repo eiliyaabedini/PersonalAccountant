@@ -1,10 +1,11 @@
 package ir.act.personalAccountant.presentation.expense_list
 
+import android.net.Uri
 import ir.act.personalAccountant.domain.model.BudgetData
 import ir.act.personalAccountant.domain.model.BudgetSettings
+import ir.act.personalAccountant.domain.model.CurrencySettings
 import ir.act.personalAccountant.domain.model.Expense
 import ir.act.personalAccountant.domain.model.TagExpenseData
-import ir.act.personalAccountant.domain.model.CurrencySettings
 
 data class ExpenseListUiState(
     val expenses: List<Expense> = emptyList(),
@@ -19,7 +20,10 @@ data class ExpenseListUiState(
     val currentMonth: Int = 0,
     val isBudgetMode: Boolean = false,
     val budgetSettings: BudgetSettings = BudgetSettings(),
-    val budgetData: BudgetData? = null
+    val budgetData: BudgetData? = null,
+    val tempCameraUri: Uri? = null,
+    val isAnalyzingReceipt: Boolean = false,
+    val aiAnalysisError: String? = null
 )
 
 sealed class ExpenseListEvent {
@@ -32,10 +36,14 @@ sealed class ExpenseListEvent {
     object NextMonthClicked : ExpenseListEvent()
     object PreviousMonthClicked : ExpenseListEvent()
     object BudgetModeToggled : ExpenseListEvent()
+    data class CameraClicked(val uri: Uri) : ExpenseListEvent()
+    object CameraImageCaptured : ExpenseListEvent()
+    object ClearAIAnalysisError : ExpenseListEvent()
 }
 
 sealed class ExpenseListUiInteraction {
     object NavigateToExpenseEntry : ExpenseListUiInteraction()
     data class NavigateToExpenseEdit(val expenseId: Long) : ExpenseListUiInteraction()
     object NavigateToBudgetConfig : ExpenseListUiInteraction()
+    data class ShowSuccessMessage(val message: String) : ExpenseListUiInteraction()
 }

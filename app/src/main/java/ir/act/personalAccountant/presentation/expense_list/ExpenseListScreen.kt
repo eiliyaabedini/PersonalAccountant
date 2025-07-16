@@ -1,5 +1,7 @@
 package ir.act.personalAccountant.presentation.expense_list
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -33,6 +35,10 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SmallFloatingActionButton
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
@@ -47,6 +53,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -55,6 +62,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import ir.act.personalAccountant.R
 import ir.act.personalAccountant.core.util.CurrencyFormatter
 import ir.act.personalAccountant.core.util.DateUtils
+import ir.act.personalAccountant.core.util.ImageFileManager
 import ir.act.personalAccountant.domain.model.CurrencySettings
 import ir.act.personalAccountant.domain.model.Expense
 import ir.act.personalAccountant.presentation.components.DonutChart
@@ -80,12 +88,26 @@ fun ExpenseListScreen(
     viewModel: ExpenseListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
     
     // Use default currency settings for now - will be properly integrated with ViewModel later
     val currencySettings = uiState.currencySettings
     
     // Track the timestamp of when the screen was first shown
     val screenOpenTime = remember { System.currentTimeMillis() }
+
+    // Snackbar state for showing messages
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Camera launcher for direct receipt capture
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success: Boolean ->
+        if (success) {
+            // Handle successful camera capture
+            viewModel.onEvent(ExpenseListEvent.CameraImageCaptured)
+        }
+    }
 
     LaunchedEffect(viewModel.uiInteraction) {
         viewModel.uiInteraction.collect { interaction ->
@@ -99,13 +121,25 @@ fun ExpenseListScreen(
                 ExpenseListUiInteraction.NavigateToBudgetConfig -> {
                     onNavigateToBudgetConfig()
                 }
+                is ExpenseListUiInteraction.ShowSuccessMessage -> {
+                    snackbarHostState.showSnackbar(
+                        message = interaction.message,
+                        withDismissAction = true
+                    )
+                }
             }
         }
     }
 
-    Box(
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = Modifier.fillMaxSize()
-    ) {
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
@@ -441,30 +475,81 @@ fun ExpenseListScreen(
             }
         }
 
-        // FAB Button
-        FloatingActionButton(
-            onClick = { viewModel.onEvent(ExpenseListEvent.AddClicked) },
+            // FAB Buttons
+            Column(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(30.dp)
-                .size(56.dp),
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary,
-            shape = androidx.compose.foundation.shape.CircleShape
-        ) {
-            Text(
-                text = "+",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Normal
-            )
+                .padding(30.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Camera FAB (smaller, on top)
+                SmallFloatingActionButton(
+                    onClick = {
+                        if (!uiState.isAnalyzingReceipt) {
+                            val imageFileManager = ImageFileManager()
+                            val tempFile = imageFileManager.createTempImageFile(context)
+                            val uri = imageFileManager.getFileProviderUri(context, tempFile)
+                            viewModel.onEvent(ExpenseListEvent.CameraClicked(uri))
+                            cameraLauncher.launch(uri)
+                        }
+                    },
+                    containerColor = if (uiState.isAnalyzingReceipt)
+                        MaterialTheme.colorScheme.secondary.copy(alpha = 0.6f)
+                    else
+                        MaterialTheme.colorScheme.secondary,
+                    contentColor = MaterialTheme.colorScheme.onSecondary
+                ) {
+                    if (uiState.isAnalyzingReceipt) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            color = MaterialTheme.colorScheme.onSecondary,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(
+                            text = "📷",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                }
+
+                // Add expense FAB (main, larger)
+                FloatingActionButton(
+                    onClick = { viewModel.onEvent(ExpenseListEvent.AddClicked) },
+                    modifier = Modifier.size(56.dp),
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    shape = androidx.compose.foundation.shape.CircleShape
+                ) {
+                    Text(
+                        text = "+",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Normal
+                    )
+                }
         }
 
         // Show error snackbar
         uiState.error?.let { error ->
             LaunchedEffect(error) {
+                snackbarHostState.showSnackbar(
+                    message = error,
+                    withDismissAction = true
+                )
                 viewModel.onEvent(ExpenseListEvent.ClearError)
             }
         }
+
+            // Show AI analysis error snackbar
+            uiState.aiAnalysisError?.let { error ->
+                LaunchedEffect(error) {
+                    snackbarHostState.showSnackbar(
+                        message = error,
+                        withDismissAction = true
+                    )
+                    viewModel.onEvent(ExpenseListEvent.ClearAIAnalysisError)
+                }
+            }
         
         // Delete confirmation dialog
         if (uiState.showDeleteConfirmation) {
@@ -492,6 +577,7 @@ fun ExpenseListScreen(
                     }
                 }
             )
+        }
         }
     }
 }
