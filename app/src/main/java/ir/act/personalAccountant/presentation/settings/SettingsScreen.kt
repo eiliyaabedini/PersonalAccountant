@@ -13,7 +13,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
@@ -58,6 +60,7 @@ fun SettingsScreen(
                 is SettingsViewModel.NavigationEvent.NavigateToBudgetConfig -> {
                     uiInteractions.navigateToBudgetConfig()
                 }
+
                 is SettingsViewModel.NavigationEvent.NavigateToCategorySettings -> {
                     uiInteractions.navigateToCategorySettings()
                 }
@@ -96,7 +99,7 @@ fun SettingsScreen(
                 ) {
                     // Status bar space
                     Spacer(modifier = Modifier.height(40.dp))
-                    
+
                     // Header with back arrow and title
                     Row(
                         modifier = Modifier
@@ -116,7 +119,7 @@ fun SettingsScreen(
                                 modifier = Modifier.size(24.dp)
                             )
                         }
-                        
+
                         Text(
                             text = "Settings",
                             style = MaterialTheme.typography.titleLarge,
@@ -125,7 +128,7 @@ fun SettingsScreen(
                         )
                     }
                 }
-                
+
                 // Dark content section  
                 Column(
                     modifier = Modifier
@@ -137,7 +140,8 @@ fun SettingsScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 20.dp),
+                            .padding(horizontal = 20.dp)
+                            .verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         Text(
@@ -146,7 +150,7 @@ fun SettingsScreen(
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onBackground
                         )
-                        
+
                         Card(
                             onClick = { viewModel.onEvent(Events.CurrencyPickerClicked) },
                             modifier = Modifier.fillMaxWidth(),
@@ -175,7 +179,7 @@ fun SettingsScreen(
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
                                 }
-                                
+
                                 Icon(
                                     imageVector = Icons.Default.KeyboardArrowRight,
                                     contentDescription = "Select Currency",
@@ -183,7 +187,7 @@ fun SettingsScreen(
                                 )
                             }
                         }
-                        
+
                         // Budget Settings
                         Text(
                             text = "Budget Settings",
@@ -192,7 +196,7 @@ fun SettingsScreen(
                             color = MaterialTheme.colorScheme.onBackground,
                             modifier = Modifier.padding(top = 8.dp)
                         )
-                        
+
                         Card(
                             onClick = { viewModel.onEvent(Events.BudgetConfigClicked) },
                             modifier = Modifier.fillMaxWidth(),
@@ -225,7 +229,7 @@ fun SettingsScreen(
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
                                 }
-                                
+
                                 Icon(
                                     imageVector = Icons.Default.KeyboardArrowRight,
                                     contentDescription = "Configure Budget",
@@ -421,7 +425,7 @@ fun SettingsScreen(
                 }
             }
         }
-        
+
         // Currency picker dialog
         if (uiState.showCurrencyPicker) {
             CurrencyPickerDialog(
@@ -433,8 +437,8 @@ fun SettingsScreen(
                 onDismiss = { viewModel.onEvent(Events.DismissCurrencyPicker) }
             )
         }
-        
-        
+
+
         // Error handling
         uiState.error?.let { error ->
             AlertDialog(
@@ -476,14 +480,14 @@ private fun CurrencyPickerDialog(
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
-                
+
                 LazyColumn(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(availableCurrencies) { currency ->
                         val isSelected = currency.currencyCode == currentCurrency.currencyCode
-                        
+
                         Card(
                             onClick = {
                                 onCurrencySelected(currency)
@@ -516,7 +520,7 @@ private fun CurrencyPickerDialog(
                                         MaterialTheme.colorScheme.onSurface
                                     }
                                 )
-                                
+
                                 if (isSelected) {
                                     Icon(
                                         imageVector = Icons.Default.Check,
@@ -529,9 +533,9 @@ private fun CurrencyPickerDialog(
                         }
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
