@@ -140,7 +140,6 @@ class ExpenseListViewModel @Inject constructor(
             is ExpenseListEvent.CameraClicked -> {
                 _uiState.value = _uiState.value.copy(
                     tempCameraUri = event.uri,
-                    isAnalyzingReceipt = true,
                     aiAnalysisError = null
                 )
             }
@@ -231,6 +230,9 @@ class ExpenseListViewModel @Inject constructor(
                 val currencySymbol =
                     CurrencySettings.getCurrencySymbol(currencySettings.currencyCode)
 
+                _uiState.value = _uiState.value.copy(
+                    isAnalyzingReceipt = true,
+                )
                 aiEngine.analyzeReceiptImage(
                     imageUri = tempCameraUri,
                     availableCategories = availableCategories,
@@ -281,16 +283,19 @@ class ExpenseListViewModel @Inject constructor(
 
                             } catch (e: Exception) {
                                 _uiState.value = _uiState.value.copy(
+                                    isAnalyzingReceipt = false,
                                     aiAnalysisError = "Failed to save expense: ${e.message}"
                                 )
                             }
                         } else {
                             _uiState.value = _uiState.value.copy(
+                                isAnalyzingReceipt = false,
                                 aiAnalysisError = "Analysis confidence too low (${(result.confidence * 100).toInt()}%). Please add manually."
                             )
                         }
                     } else {
                         _uiState.value = _uiState.value.copy(
+                            isAnalyzingReceipt = false,
                             aiAnalysisError = result.errorMessage ?: "Analysis failed"
                         )
                     }

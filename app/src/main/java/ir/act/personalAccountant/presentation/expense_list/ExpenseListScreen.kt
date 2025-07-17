@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -90,10 +92,10 @@ fun ExpenseListScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
-    
+
     // Use default currency settings for now - will be properly integrated with ViewModel later
     val currencySettings = uiState.currencySettings
-    
+
     // Track the timestamp of when the screen was first shown
     val screenOpenTime = remember { System.currentTimeMillis() }
 
@@ -116,12 +118,15 @@ fun ExpenseListScreen(
                 ExpenseListUiInteraction.NavigateToExpenseEntry -> {
                     onNavigateToExpenseEntry()
                 }
+
                 is ExpenseListUiInteraction.NavigateToExpenseEdit -> {
                     onNavigateToExpenseEdit(interaction.expenseId)
                 }
+
                 ExpenseListUiInteraction.NavigateToBudgetConfig -> {
                     onNavigateToBudgetConfig()
                 }
+
                 is ExpenseListUiInteraction.ShowSuccessMessage -> {
                     snackbarHostState.showSnackbar(
                         message = interaction.message,
@@ -141,346 +146,298 @@ fun ExpenseListScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            // White top section with status bar, header and donut chart
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        MaterialTheme.colorScheme.primaryContainer,
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(
-                            bottomStart = 30.dp,
-                            bottomEnd = 30.dp
-                        )
-                    )
-                    .padding(bottom = 20.dp)
+                modifier = Modifier.fillMaxSize()
             ) {
-                // Status bar space
-                Spacer(modifier = Modifier.height(40.dp))
-
-                // Top row with AI advisor, sync and settings icons
-                Row(
+                // White top section with status bar, header and donut chart
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 5.dp),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Financial Advisor AI icon
-                    IconButton(
-                        onClick = { onNavigateToFinancialAdvisor() },
-                        modifier = Modifier.size(40.dp)
-                    ) {
-                        Text(
-                            text = "🤖",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-                    
-                    // Sync icon
-                    IconButton(
-                        onClick = { onNavigateToGoogleSheets() },
-                        modifier = Modifier.size(40.dp)
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.outline_sync_24),
-                            contentDescription = "Sync with Google Sheets",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-                    
-                    // Settings icon
-                    IconButton(
-                        onClick = { onNavigateToSettings() },
-                        modifier = Modifier.size(40.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
-
-                // Month navigation header
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 5.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Previous month arrow
-                    IconButton(
-                        onClick = { viewModel.onEvent(ExpenseListEvent.PreviousMonthClicked) },
-                        modifier = Modifier
-                            .size(36.dp)
-                            .background(
-                                Color.White.copy(alpha = 0.8f),
-                                shape = androidx.compose.foundation.shape.CircleShape
+                        .background(
+                            MaterialTheme.colorScheme.primaryContainer,
+                            shape = androidx.compose.foundation.shape.RoundedCornerShape(
+                                bottomStart = 30.dp,
+                                bottomEnd = 30.dp
                             )
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                            contentDescription = "Previous month",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.size(24.dp)
                         )
-                    }
+                        .padding(bottom = 20.dp)
+                ) {
+                    // Status bar space
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                    // Month/Year display
-                    Text(
-                        text = DateUtils.formatMonthYear(uiState.currentYear, uiState.currentMonth),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    // Top row with AI advisor, sync and settings icons
+                    TopBar(
+                        viewModel,
+                        uiState,
+                        onNavigateToFinancialAdvisor,
+                        onNavigateToGoogleSheets,
+                        onNavigateToSettings
                     )
-
-                    // Next month arrow
-                    IconButton(
-                        onClick = { viewModel.onEvent(ExpenseListEvent.NextMonthClicked) },
-                        modifier = Modifier
-                            .size(36.dp)
-                            .background(
-                                Color.White.copy(alpha = 0.8f),
-                                shape = androidx.compose.foundation.shape.CircleShape
-                            )
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                            contentDescription = "Next month",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                }
-
-                // Budget toggle button centered
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    TextButton(
-                        onClick = { viewModel.onEvent(ExpenseListEvent.BudgetModeToggled) },
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                            containerColor = Color.White.copy(alpha = 0.2f)
-                        ),
-                        modifier = Modifier
-                            .background(
-                                Color.White.copy(alpha = 0.2f),
-                                shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
-                            )
-                    ) {
-                        Text(
-                            text = if (uiState.isBudgetMode) "Expense" else "Budget",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                }
-
-                // Main content row: Donut chart on left, total expenses on right
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp)
-                ) {
-                    if (uiState.isBudgetMode) {
-                        // Budget mode content
-                        BudgetModeContent(
-                            budgetData = uiState.budgetData,
-                            currencySettings = currencySettings,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    } else {
-                        // Expense mode content (original)
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            // Left side: Donut chart
-                            if (uiState.tagExpenseData.isNotEmpty() && uiState.totalExpenses > 0) {
-                                val coloredTagData = assignColorsToTagData(uiState.tagExpenseData)
-                                
-                                // Donut chart
-                                Box(
-                                    modifier = Modifier
-                                        .size(120.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    DonutChart(
-                                        data = coloredTagData,
-                                        modifier = Modifier.fillMaxSize()
-                                    )
-
-                                    // Center content
-                                    Column(
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    ) {
-                                        Text(
-                                            text = "${uiState.expenses.size}",
-                                            style = MaterialTheme.typography.headlineMedium,
-                                            fontWeight = FontWeight.ExtraBold,
-                                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                                        )
-                                        Text(
-                                            text = "expenses",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = TextSecondary
-                                        )
-                                    }
-                                }
-                            } else {
-                                // When no chart data, show empty space on left
-                                Spacer(modifier = Modifier.size(120.dp))
-                            }
-                            
-                            // Right side: Total expenses (centered vertically)
-                            Column(
-                                horizontalAlignment = Alignment.End
-                            ) {
-                                Text(
-                                    text = "Total Expenses",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = TextSecondary,
-                                    fontWeight = FontWeight.Medium
-                                )
-                                Text(
-                                    text = CurrencyFormatter.formatCurrency(uiState.totalExpenses, currencySettings),
-                                    style = MaterialTheme.typography.displaySmall,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                            }
-                        }
-                    }
-                    
-                }
-
-                // Legend section (only show if chart exists AND not in budget mode)
-                if (!uiState.isBudgetMode && uiState.tagExpenseData.isNotEmpty() && uiState.totalExpenses > 0) {
-                    val coloredTagData = assignColorsToTagData(uiState.tagExpenseData)
-                    
-                    Spacer(modifier = Modifier.height(10.dp))
-                    
-                    // Legend
-                    DonutChartLegend(
-                        data = coloredTagData,
+                    // Month navigation header
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 20.dp),
-                        currencySettings = currencySettings,
-                        onTagClick = { tag ->
-                            onNavigateToViewAllExpenses(tag)
-                        }
-                    )
-                }
-            }
-
-            // Dark bottom section with expense list
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background)
-                    .padding(horizontal = 20.dp, vertical = 20.dp)
-            ) {
-                when {
-                    uiState.isLoading -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
+                            .padding(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Previous month arrow
+                        IconButton(
+                            onClick = { viewModel.onEvent(ExpenseListEvent.PreviousMonthClicked) },
+                            modifier = Modifier
+                                .size(36.dp)
+                                .background(
+                                    Color.White.copy(alpha = 0.8f),
+                                    shape = CircleShape
+                                )
                         ) {
-                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                                contentDescription = "Previous month",
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+
+                        // Month/Year display
+                        Text(
+                            text = DateUtils.formatMonthYear(
+                                uiState.currentYear,
+                                uiState.currentMonth
+                            ),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+
+                        // Next month arrow
+                        IconButton(
+                            onClick = { viewModel.onEvent(ExpenseListEvent.NextMonthClicked) },
+                            modifier = Modifier
+                                .size(36.dp)
+                                .background(
+                                    Color.White.copy(alpha = 0.8f),
+                                    shape = CircleShape
+                                )
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = "Next month",
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.size(24.dp)
+                            )
                         }
                     }
-                    uiState.expenses.isEmpty() -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp)
+                    ) {
+                        if (uiState.isBudgetMode) {
+                            // Budget mode content
+                            BudgetModeContent(
+                                budgetData = uiState.budgetData,
+                                currencySettings = currencySettings,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        } else {
+                            // Expense mode content (original)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    text = "No expenses yet",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.onBackground
-                                )
-                                Text(
-                                    text = "Add your first expense to get started",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = TextSecondary,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.padding(top = 8.dp)
-                                )
+                                // Left side: Donut chart
+                                if (uiState.tagExpenseData.isNotEmpty() && uiState.totalExpenses > 0) {
+                                    val coloredTagData =
+                                        assignColorsToTagData(uiState.tagExpenseData)
+
+                                    // Donut chart
+                                    Box(
+                                        modifier = Modifier
+                                            .size(120.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        DonutChart(
+                                            data = coloredTagData,
+                                            modifier = Modifier.fillMaxSize()
+                                        )
+
+                                        // Center content
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            Text(
+                                                text = "${uiState.expenses.size}",
+                                                style = MaterialTheme.typography.headlineMedium,
+                                                fontWeight = FontWeight.ExtraBold,
+                                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                                            )
+                                            Text(
+                                                text = "expenses",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = TextSecondary
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    // When no chart data, show empty space on left
+                                    Spacer(modifier = Modifier.size(120.dp))
+                                }
+
+                                // Right side: Total expenses (centered vertically)
+                                Column(
+                                    horizontalAlignment = Alignment.End
+                                ) {
+                                    Text(
+                                        text = "Total Expenses",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = TextSecondary,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    Text(
+                                        text = CurrencyFormatter.formatCurrency(
+                                            uiState.totalExpenses,
+                                            currencySettings
+                                        ),
+                                        style = MaterialTheme.typography.displaySmall,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                }
                             }
                         }
                     }
-                    else -> {
-                        // Recent Expenses section
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surface
-                            ),
-                            shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp)
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(15.dp)
+
+                    // Legend section (only show if chart exists AND not in budget mode)
+                    if (!uiState.isBudgetMode && uiState.tagExpenseData.isNotEmpty() && uiState.totalExpenses > 0) {
+                        val coloredTagData = assignColorsToTagData(uiState.tagExpenseData)
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Legend
+                        DonutChartLegend(
+                            data = coloredTagData,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp),
+                            currencySettings = currencySettings,
+                            onTagClick = { tag ->
+                                onNavigateToViewAllExpenses(tag)
+                            }
+                        )
+                    }
+                }
+
+                // Dark bottom section with expense list
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.background)
+                        .padding(horizontal = 20.dp, vertical = 20.dp)
+                ) {
+                    when {
+                        uiState.isLoading -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 5.dp, vertical = 5.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
+                                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                            }
+                        }
+
+                        uiState.expenses.isEmpty() -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     Text(
-                                        text = "Recent Expenses",
+                                        text = "No expenses yet",
                                         style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = MaterialTheme.colorScheme.onSurface
+                                        color = MaterialTheme.colorScheme.onBackground
                                     )
                                     Text(
-                                        text = "View all →",
+                                        text = "Add your first expense to get started",
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                                        modifier = Modifier.clickable {
-                                            onNavigateToViewAllExpenses(null)
-                                        }
+                                        color = TextSecondary,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.padding(top = 8.dp)
                                     )
                                 }
-                                
-                                LazyColumn(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalArrangement = Arrangement.spacedBy(0.dp)
+                            }
+                        }
+
+                        else -> {
+                            // Recent Expenses section
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surface
+                                ),
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(15.dp)
                                 ) {
-                                    items(
-                                        items = uiState.expenses.take(10), // Show max 10 recent items
-                                        key = { it.id }
-                                    ) { expense ->
-                                        SwipeToDeleteExpenseItem(
-                                            expense = expense,
-                                            isNewlyAdded = expense.timestamp > screenOpenTime,
-                                            currencySettings = currencySettings,
-                                            onEditClick = { viewModel.onEvent(ExpenseListEvent.EditClicked(expense)) },
-                                            onDeleteClick = { viewModel.onEvent(ExpenseListEvent.DeleteClicked(expense)) }
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 5.dp, vertical = 5.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "Recent Expenses",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = MaterialTheme.colorScheme.onSurface
                                         )
+                                        Text(
+                                            text = "View all →",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                            modifier = Modifier.clickable {
+                                                onNavigateToViewAllExpenses(null)
+                                            }
+                                        )
+                                    }
+
+                                    LazyColumn(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalArrangement = Arrangement.spacedBy(0.dp)
+                                    ) {
+                                        items(
+                                            items = uiState.expenses.take(10), // Show max 10 recent items
+                                            key = { it.id }
+                                        ) { expense ->
+                                            SwipeToDeleteExpenseItem(
+                                                expense = expense,
+                                                isNewlyAdded = expense.timestamp > screenOpenTime,
+                                                currencySettings = currencySettings,
+                                                onEditClick = {
+                                                    viewModel.onEvent(
+                                                        ExpenseListEvent.EditClicked(
+                                                            expense
+                                                        )
+                                                    )
+                                                },
+                                                onDeleteClick = {
+                                                    viewModel.onEvent(
+                                                        ExpenseListEvent.DeleteClicked(
+                                                            expense
+                                                        )
+                                                    )
+                                                }
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -488,17 +445,18 @@ fun ExpenseListScreen(
                     }
                 }
             }
-        }
 
             // FAB Buttons
             Column(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(30.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(30.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalAlignment = Alignment.Start
             ) {
                 // Camera FAB (smaller, on top)
                 SmallFloatingActionButton(
+                    shape = CircleShape,
                     onClick = {
                         if (!uiState.isAnalyzingReceipt) {
                             val imageFileManager = ImageFileManager()
@@ -534,7 +492,7 @@ fun ExpenseListScreen(
                     modifier = Modifier.size(56.dp),
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
-                    shape = androidx.compose.foundation.shape.CircleShape
+                    shape = CircleShape
                 ) {
                     Text(
                         text = "+",
@@ -542,18 +500,18 @@ fun ExpenseListScreen(
                         fontWeight = FontWeight.Normal
                     )
                 }
-        }
-
-        // Show error snackbar
-        uiState.error?.let { error ->
-            LaunchedEffect(error) {
-                snackbarHostState.showSnackbar(
-                    message = error,
-                    withDismissAction = true
-                )
-                viewModel.onEvent(ExpenseListEvent.ClearError)
             }
-        }
+
+            // Show error snackbar
+            uiState.error?.let { error ->
+                LaunchedEffect(error) {
+                    snackbarHostState.showSnackbar(
+                        message = error,
+                        withDismissAction = true
+                    )
+                    viewModel.onEvent(ExpenseListEvent.ClearError)
+                }
+            }
 
             // Show AI analysis error snackbar
             uiState.aiAnalysisError?.let { error ->
@@ -565,35 +523,130 @@ fun ExpenseListScreen(
                     viewModel.onEvent(ExpenseListEvent.ClearAIAnalysisError)
                 }
             }
-        
-        // Delete confirmation dialog
-        if (uiState.showDeleteConfirmation) {
-            AlertDialog(
-                onDismissRequest = { viewModel.onEvent(ExpenseListEvent.CancelDelete) },
-                title = { Text("Delete Expense") },
-                text = { 
-                    uiState.expenseToDelete?.let { expense ->
-                        Text("Are you sure you want to delete this ${CurrencyFormatter.formatCurrency(expense.amount, currencySettings)} expense?")
+
+            // Delete confirmation dialog
+            if (uiState.showDeleteConfirmation) {
+                AlertDialog(
+                    onDismissRequest = { viewModel.onEvent(ExpenseListEvent.CancelDelete) },
+                    title = { Text("Delete Expense") },
+                    text = {
+                        uiState.expenseToDelete?.let { expense ->
+                            Text(
+                                "Are you sure you want to delete this ${
+                                    CurrencyFormatter.formatCurrency(
+                                        expense.amount,
+                                        currencySettings
+                                    )
+                                } expense?"
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = { viewModel.onEvent(ExpenseListEvent.ConfirmDelete) },
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = MaterialTheme.colorScheme.error
+                            )
+                        ) {
+                            Text("Delete")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { viewModel.onEvent(ExpenseListEvent.CancelDelete) }) {
+                            Text("Cancel")
+                        }
                     }
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = { viewModel.onEvent(ExpenseListEvent.ConfirmDelete) },
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.error
-                        )
-                    ) {
-                        Text("Delete")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { viewModel.onEvent(ExpenseListEvent.CancelDelete) }) {
-                        Text("Cancel")
-                    }
-                }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TopBar(
+    viewModel: ExpenseListViewModel,
+    uiState: ExpenseListUiState,
+    onNavigateToFinancialAdvisor: () -> Unit,
+    onNavigateToGoogleSheets: () -> Unit,
+    onNavigateToSettings: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 5.dp),
+        horizontalArrangement = Arrangement.End,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        BudgetModeSwitchButton(viewModel, uiState)
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        // Financial Advisor AI icon
+        IconButton(
+            onClick = { onNavigateToFinancialAdvisor() },
+            modifier = Modifier.size(40.dp)
+        ) {
+            Text(
+                text = "🤖",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
             )
         }
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        // Sync icon
+        IconButton(
+            onClick = { onNavigateToGoogleSheets() },
+            modifier = Modifier.size(40.dp)
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.outline_sync_24),
+                contentDescription = "Sync with Google Sheets",
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.size(24.dp)
+            )
         }
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        // Settings icon
+        IconButton(
+            onClick = { onNavigateToSettings() },
+            modifier = Modifier.size(40.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Settings,
+                contentDescription = "Settings",
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun BudgetModeSwitchButton(
+    viewModel: ExpenseListViewModel,
+    uiState: ExpenseListUiState
+) {
+    TextButton(
+        onClick = { viewModel.onEvent(ExpenseListEvent.BudgetModeToggled) },
+        colors = ButtonDefaults.textButtonColors(
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            containerColor = Color.White.copy(alpha = 0.2f)
+        ),
+        modifier = Modifier
+            .background(
+                Color.White.copy(alpha = 0.2f),
+                shape = RoundedCornerShape(16.dp)
+            )
+    ) {
+        Text(
+            text = if (uiState.isBudgetMode) "Expense" else "Budget",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
     }
 }
 
@@ -628,9 +681,9 @@ private fun ExpenseItem(expense: Expense, currencySettings: CurrencySettings) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             AssistChip(
                 onClick = { },
                 label = {
@@ -653,7 +706,7 @@ private fun ExpenseItem(expense: Expense, currencySettings: CurrencySettings) {
 private fun formatDate(timestamp: Long): String {
     val now = System.currentTimeMillis()
     val calendar = Calendar.getInstance()
-    
+
     // Today
     calendar.timeInMillis = now
     val todayStart = calendar.apply {
@@ -662,14 +715,14 @@ private fun formatDate(timestamp: Long): String {
         set(Calendar.SECOND, 0)
         set(Calendar.MILLISECOND, 0)
     }.timeInMillis
-    
+
     // Yesterday
     calendar.add(Calendar.DAY_OF_YEAR, -1)
     val yesterdayStart = calendar.timeInMillis
-    
+
     val timeFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
     val dateFormat = SimpleDateFormat("MMM d, h:mm a", Locale.getDefault())
-    
+
     return when {
         timestamp >= todayStart -> "Today ${timeFormat.format(Date(timestamp))}"
         timestamp >= yesterdayStart -> "Yesterday ${timeFormat.format(Date(timestamp))}"
@@ -687,9 +740,11 @@ private fun SwipeToDeleteExpenseItem(
     onDeleteClick: () -> Unit
 ) {
     // Animation for newly added items
-    val highlightAlpha = remember { androidx.compose.animation.core.Animatable(if (isNewlyAdded) 0.3f else 0f) }
-    val scale = remember { androidx.compose.animation.core.Animatable(if (isNewlyAdded) 0.95f else 1f) }
-    
+    val highlightAlpha =
+        remember { androidx.compose.animation.core.Animatable(if (isNewlyAdded) 0.3f else 0f) }
+    val scale =
+        remember { androidx.compose.animation.core.Animatable(if (isNewlyAdded) 0.95f else 1f) }
+
     LaunchedEffect(isNewlyAdded) {
         if (isNewlyAdded) {
             // Animate scale
@@ -700,7 +755,7 @@ private fun SwipeToDeleteExpenseItem(
                     stiffness = 300f
                 )
             )
-            
+
             // Animate highlight
             highlightAlpha.animateTo(
                 targetValue = 0f,
@@ -718,6 +773,7 @@ private fun SwipeToDeleteExpenseItem(
                     onDeleteClick()
                     false // Don't dismiss immediately, wait for confirmation
                 }
+
                 else -> false
             }
         }
@@ -735,7 +791,7 @@ private fun SwipeToDeleteExpenseItem(
                     },
                     label = "swipe background color"
                 )
-                
+
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -770,7 +826,7 @@ private fun SwipeToDeleteExpenseItem(
                             )
                     )
                 }
-                
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -807,7 +863,7 @@ private fun SwipeToDeleteExpenseItem(
                                 style = MaterialTheme.typography.titleMedium
                             )
                         }
-                        
+
                         Column(
                             verticalArrangement = Arrangement.spacedBy(3.dp)
                         ) {
@@ -838,7 +894,7 @@ private fun SwipeToDeleteExpenseItem(
                             )
                         }
                     }
-                    
+
                     Text(
                         text = CurrencyFormatter.formatCurrency(expense.amount, currencySettings),
                         style = MaterialTheme.typography.titleMedium,
@@ -885,8 +941,9 @@ private fun BudgetModeContent(
     ) {
         // Date progress with month name
         val calendar = Calendar.getInstance()
-        val monthName = calendar.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.getDefault()) ?: ""
-        
+        val monthName =
+            calendar.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.getDefault()) ?: ""
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -918,13 +975,14 @@ private fun BudgetModeContent(
         )
 
         // Budget summary with remaining budget in center
-        val remainingBudget = budgetData.totalIncomeToDate - budgetData.totalExpensesToDate - budgetData.totalRentToDate
+        val remainingBudget =
+            budgetData.totalIncomeToDate - budgetData.totalExpensesToDate - budgetData.totalRentToDate
         val remainingBudgetColor = when (budgetData.budgetStatus) {
             ir.act.personalAccountant.domain.model.BudgetStatus.GOOD -> Color.Green
             ir.act.personalAccountant.domain.model.BudgetStatus.MIDDLE -> Color(0xFFFF9800)
             ir.act.personalAccountant.domain.model.BudgetStatus.RED -> Color.Red
         }
-        
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -939,7 +997,10 @@ private fun BudgetModeContent(
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                 )
                 Text(
-                    text = CurrencyFormatter.formatCurrency(budgetData.totalIncomeToDate, currencySettings),
+                    text = CurrencyFormatter.formatCurrency(
+                        budgetData.totalIncomeToDate,
+                        currencySettings
+                    ),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     color = Color.Green
@@ -969,14 +1030,17 @@ private fun BudgetModeContent(
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                 )
                 Text(
-                    text = CurrencyFormatter.formatCurrency(budgetData.totalExpensesToDate + budgetData.totalRentToDate, currencySettings),
+                    text = CurrencyFormatter.formatCurrency(
+                        budgetData.totalExpensesToDate + budgetData.totalRentToDate,
+                        currencySettings
+                    ),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     color = Color.Red
                 )
             }
         }
-        
+
         // Additional detailed breakdown
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -991,7 +1055,10 @@ private fun BudgetModeContent(
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                 )
                 Text(
-                    text = CurrencyFormatter.formatCurrency(budgetData.dailyIncome, currencySettings),
+                    text = CurrencyFormatter.formatCurrency(
+                        budgetData.dailyIncome,
+                        currencySettings
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                 )
@@ -1019,13 +1086,16 @@ private fun BudgetModeContent(
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                 )
                 Text(
-                    text = CurrencyFormatter.formatCurrency(budgetData.totalExpensesToDate, currencySettings),
+                    text = CurrencyFormatter.formatCurrency(
+                        budgetData.totalExpensesToDate,
+                        currencySettings
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Red.copy(alpha = 0.8f)
                 )
             }
         }
-        
+
         // Additional metrics row: Estimated balance and average daily expenses
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -1040,12 +1110,18 @@ private fun BudgetModeContent(
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                 )
                 Text(
-                    text = CurrencyFormatter.formatCurrency(budgetData.estimatedEndOfMonthBalance, currencySettings),
+                    text = CurrencyFormatter.formatCurrency(
+                        budgetData.estimatedEndOfMonthBalance,
+                        currencySettings
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.Medium,
                     color = when (budgetData.budgetStatus) {
                         ir.act.personalAccountant.domain.model.BudgetStatus.GOOD -> Color.Green
-                        ir.act.personalAccountant.domain.model.BudgetStatus.MIDDLE -> Color(0xFFFF9800)
+                        ir.act.personalAccountant.domain.model.BudgetStatus.MIDDLE -> Color(
+                            0xFFFF9800
+                        )
+
                         ir.act.personalAccountant.domain.model.BudgetStatus.RED -> Color.Red
                     }
                 )
@@ -1059,7 +1135,10 @@ private fun BudgetModeContent(
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                 )
                 Text(
-                    text = CurrencyFormatter.formatCurrency(budgetData.averageDailyExpenses, currencySettings),
+                    text = CurrencyFormatter.formatCurrency(
+                        budgetData.averageDailyExpenses,
+                        currencySettings
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                 )
@@ -1074,13 +1153,14 @@ private fun BudgetProgressBar(
     modifier: Modifier = Modifier
 ) {
     val totalSalary = budgetData.dailyIncome * budgetData.totalDaysInMonth
-    
+
     // Calculate percentages (0-100)
-    val incomePercentage = if (totalSalary > 0) 
+    val incomePercentage = if (totalSalary > 0)
         ((budgetData.totalIncomeToDate / totalSalary) * 100.0).toFloat().coerceIn(0f, 100f) else 0f
-    val totalExpensePercentage = if (totalSalary > 0) 
-        (((budgetData.totalExpensesToDate + budgetData.totalRentToDate) / totalSalary) * 100.0).toFloat().coerceIn(0f, 100f) else 0f
-    val rentPercentage = if (totalSalary > 0) 
+    val totalExpensePercentage = if (totalSalary > 0)
+        (((budgetData.totalExpensesToDate + budgetData.totalRentToDate) / totalSalary) * 100.0).toFloat()
+            .coerceIn(0f, 100f) else 0f
+    val rentPercentage = if (totalSalary > 0)
         ((budgetData.totalRentToDate / totalSalary) * 100.0).toFloat().coerceIn(0f, 100f) else 0f
 
     // Create layers - drawn from largest to smallest (back to front)
@@ -1127,7 +1207,10 @@ private fun BudgetStatusGauge(
         colors = CardDefaults.cardColors(
             containerColor = when (budgetStatus) {
                 ir.act.personalAccountant.domain.model.BudgetStatus.GOOD -> Color.Green.copy(alpha = 0.1f)
-                ir.act.personalAccountant.domain.model.BudgetStatus.MIDDLE -> Color(0xFFFF9800).copy(alpha = 0.1f)
+                ir.act.personalAccountant.domain.model.BudgetStatus.MIDDLE -> Color(0xFFFF9800).copy(
+                    alpha = 0.1f
+                )
+
                 ir.act.personalAccountant.domain.model.BudgetStatus.RED -> Color.Red.copy(alpha = 0.1f)
             }
         )
