@@ -15,6 +15,7 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 @Module
@@ -38,6 +39,10 @@ object AIModule {
 
         return OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor)
+            .connectTimeout(90, TimeUnit.SECONDS)      // Time to establish connection
+            .readTimeout(300, TimeUnit.SECONDS)        // Time to read response (5 minutes)
+            .writeTimeout(90, TimeUnit.SECONDS)        // Time to write request
+            .callTimeout(360, TimeUnit.SECONDS)        // Total call timeout (6 minutes)
             .build()
     }
 

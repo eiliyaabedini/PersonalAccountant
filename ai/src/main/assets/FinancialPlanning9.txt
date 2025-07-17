@@ -1,0 +1,181 @@
+Financial Planning
+Lesson 9
+13 min
+
+What is interest?
+Interest rates are a fundamental concept in economics and finance. They represent the price of money: the cost for borrowers and the return for lenders. Understanding how they work is essential to navigating the financial world, whether you're managing savings, financing a project, or investing in markets. Behind this seemingly simple concept lies a complex reality. Interest rates take multiple forms (nominal, real, fixed, variable, etc.) and are influenced by numerous actors, from central banks to individual savers and financial institutions.
+
+Contents
+Types of Interest Rates
+Interest Rates and Their Influence on Traditional Finance
+Interest Rates in the Cryptocurrency Universe and DeFi
+How Interest Rates Affect Individual and Corporate Finances
+Conclusion
+Types of Interest Rates
+Nominal Interest Rates and Real Interest Rates
+The nominal interest rate is the stated rate on a loan or investment, before accounting for inflation. For example, if a savings account offers a nominal rate of 2%, an investor who deposits €1,000 will receive €20 in interest after one year.
+
+However, to measure the true purchasing power gain, we must consider the real interest rate, which factors in the effect of inflation. The real rate is calculated by subtracting the inflation rate from the nominal rate. Thus, if inflation is 3%, the real rate on our savings account will be -1% (2% - 3%). Despite earning interest, the saver's purchasing power will have decreased.
+
+Without this distinction, one might have the illusion of a good return when in reality, only a positive real rate allows preservation and growth of capital. In a high-inflation environment, it becomes difficult to find investments with positive real rates, which penalizes savers. Conversely, for borrowers, inflation higher than the nominal rate reduces the real burden of debt.
+
+
+
+
+
+
+
+Fixed Rates vs. Variable Rates
+A fixed-rate remains constant throughout the term of the loan or investment, providing visibility and security. For example, with a 2% fixed-rate mortgage over 20 years, monthly payments will remain the same throughout the period. However, fixed rates lack flexibility: if rates fall, the borrower cannot benefit without refinancing the loan.
+
+Conversely, a variable rate evolves based on a reference index (such as Euribor), plus a fixed margin. It allows borrowers to benefit from rate decreases but exposes them to the risk of increases. If Euribor rises from 0% to 3%, a variable-rate loan of Euribor + 1% will see its rate increase from 1% to 4%, resulting in a significant increase in monthly payments
+
+Central Bank Rates
+Central banks, such as the Federal Reserve (the "Fed") in the United States and the ECB in Europe, play a key role in determining interest rates. They set key rates, which represent the cost of very short-term money for commercial banks. These rates then influence all borrowing and lending rates throughout the economy.
+
+Let's examine what happens in the United States and Europe:
+
+In the United States, the Federal Reserve (Fed) uses two main rates. The first, the Fed Funds Rate, allows banks to lend their excess reserves to each other overnight. The second, called the Discount Rate, is used when a bank needs to borrow directly from the Fed. The latter is typically higher to encourage banks to lend to each other rather than resort to the Fed.
+
+In Europe, the European Central Bank (ECB) has three different rates. The refinancing rate is the most important, as it defines the cost of one-week loans that the ECB provides to banks. When a bank has an urgent need for liquidity, it can use the marginal lending facility, which allows borrowing for 24 hours but at a higher rate. Finally, the deposit facility rate remunerates banks that deposit their excess money with the ECB overnight.
+
+When a central bank raises its rates, as the Fed did by moving from 0% to 5.25% between March 2022 and May 2023, it increases the cost of credit. The goal is to cool down the economy and fight inflation. Conversely, when a central bank lowers its rates, as after the 2008 crisis, it aims to stimulate economic activity by facilitating access to credit.
+
+Simple Interest vs. Compound Interest
+The method of calculating interest also has a very tangible impact on the real return of an investment or the cost of a loan.
+
+With simple interest, interest is calculated only on the initial principal. If you invest €10,000 at 5% for 20 years, you'll receive €1,000 in interest each year (5% x €10,000), totaling €20,000.
+
+With compound interest, interest is calculated on both the initial principal and previously earned interest. Each year, interest is added to the principal and generates new interest the following year. This is the snowball effect of compound interest. In our example, with compound interest, the final capital would be €26,533, or 32.5% more than with simple interest.
+
+While compound interest is very favorable for long-term savings, it conversely makes credit costs explode. A borrower should therefore favor a simple interest loan, or repay as quickly as possible to limit the effect of compound interest.
+
+Interest Rates and Their Influence on Traditional Finance
+How Do Interest Rates Impact Stock Markets?
+Interest rates are one of the main drivers of stock markets, as they directly influence the value of stocks and bonds. How does this work?
+
+When rates rise:
+
+Bonds decrease in value, as their price moves inversely to rates.
+
+Stocks tend to fall, as credit costs weigh on companies, valuations become less attractive, and bonds become more competitive.
+
+The dollar appreciates, as dollar-denominated investments become more attractive.
+
+Gold declines, because it pays no yield or dividends and becomes less attractive.
+
+Real estate slows down, as mortgage rates increase, reducing households' borrowing capacity.
+
+When rates fall:
+
+Bonds increase in value, mechanically.
+
+Stocks tend to rise, as financing conditions improve for companies and valuations are supported.
+
+The dollar weakens, as dollar investments become less attractive (unless rates fall more slowly in the US than elsewhere).
+
+Gold appreciates, as bond yields become less competitive and accommodative monetary policies raise inflation concerns.
+
+Real estate is stimulated, as lower mortgage rates increase households' borrowing capacity.
+
+Of course, these mechanisms are general trends and don't always hold true in the short term, as other factors come into play (economic conditions, investor psychology). But over time, remember that the level of interest rates is a key determinant of the relative performance of stocks and bonds.
+
+Historical Interest Rate Trends
+The evolution of interest rates over the past four decades tells a fascinating story of the global economy. We'll break it down into four periods, each with its unique challenges and central bank responses.
+
+The War Against Inflation (1980-1985). In the early 1980s, the American economy experienced runaway inflation following the oil shocks. To extinguish this fire, the Federal Reserve (Fed) took a radical decision: raising interest rates to 20%, an unprecedented level. This move pushed U.S. Treasury bond rates up to 15%. While this monetary purge triggered a painful recession, it succeeded in its primary objective of controlling inflation.
+
+The Great Monetary Easing (1985-2007). The following period marked a complete change in direction. Growing globalization began exerting downward pressure on prices. In this context, interest rates began a long descent that would last over twenty years. This gradual decline strongly stimulated economic growth and notably fueled the famous Internet bubble of the 90s, driven by easy access to credit.
+
+The Zero Rate Era (2008-2021). The 2008 financial crisis pushed the Fed to adopt a radical policy. It lowered its rates to zero. It also launched an unprecedented strategy called "Quantitative Easing". The idea was to massively purchase bonds to keep rates low. This extraordinary policy had spectacular effects: stock and real estate prices soared, debt levels exploded, and investors rushed toward the riskiest investments in search of yield.
+
+The Sharp Return of Inflation (since 2022). 2022 marked the sudden return of inflation, directly linked to soaring gas and fuel prices. Central banks responded aggressively: the Fed, ECB, and Bank of England (BoE) raised their rates from 0% to 5% in just one year, unprecedented since the 1980s. This abrupt change triggered a genuine earthquake in financial markets. Technology companies, whose valuations were based on low rates, were particularly affected.
+
+The Key Lesson from this turbulent history is this: interest rates function as the global economy's thermostat. They are raised to cool an overheating economy (inflation) and lowered to stimulate it during slowdowns.
+
+Interest Rates in the Cryptocurrency Universe and DeFi
+In traditional finance, lending/borrowing is intermediated by banks. With cryptocurrencies, it occurs peer-to-peer via decentralized protocols (DeFi) operating through smart contracts. This philosophical difference creates practical differences. Let's discover which ones.
+
+How Do Crypto Products Generate Interest Rates?
+In practice, crypto holders can lend their assets via decentralized finance (DeFi) platforms like Aave and Compound. By depositing their assets in liquidity pools, they receive representative tokens (aTokens, cTokens) in return that generate interest. The interest rate offered depends on supply and demand for each crypto. The higher the demand for a crypto from borrowers, the higher its lending rate.
+
+Practical example:
+
+I deposit the equivalent of $1,000 in USDC (stablecoin) on Compound.
+
+I receive cUSDC in return.
+
+Compound's USDC pool shows a 3.5% yield because USDC is in high demand.
+
+After one year, my 1,000 cUSDC will be worth 1,035 USDC (excluding fees).
+
+I can withdraw my USDC at any time by burning my cUSDC.
+
+Similarly, staking also allows earning yield by locking up cryptos to secure a proof-of-stake (PoS) network and validate transactions.
+
+Practical example:
+
+I own 10 ETH that I lock by staking them on the Ethereum 2.0 network.
+
+The network rewards me for my contribution to its security and operation.
+
+ETH staking yield fluctuates between 4% and 10% annually depending on the total amount of ETH staked.
+
+My staked ETH is returned to me when I decide to exit the pool + accumulated interest.
+
+Finally, some centralized platforms (CeFi) also offer crypto savings accounts with yield, but with counterparty risk (platform bankruptcy), as demonstrated by the Celsius episode, the largest centralized crypto lender before its spectacular bankruptcy in summer 2022...
+
+Can We Compare Crypto Interest Rates with Traditional Products?
+At first glance, yields offered in the crypto universe are significantly higher than those in traditional finance. Getting a 5% to 10% rate on a stablecoin seems very attractive compared to near-zero rates on classical savings accounts. However, these high yields come with specific risks:
+
+Volatility: crypto assets, even stablecoins, can experience significant value fluctuations.
+
+Smart contract risk: DeFi protocols may contain bugs or security vulnerabilities.
+
+Liquidity risk: ability to withdraw funds may be limited, especially during market stress.
+
+Regulatory risk: the legal framework for crypto lending/borrowing services remains unclear and could evolve unfavorably.
+
+Another critical aspect is rate volatility in crypto. Imagine you decide to lend USDC on Compound. On a given day, the annual interest rate for USDC lenders is 5%. You deposit 1000 USDC, hoping to generate stable yield. However, the next day, a large amount of USDC is suddenly withdrawn from the platform by other users. This creates an imbalance, and the algorithm responds by sharply increasing interest rates to encourage users to deposit more USDC. As an incentive, the interest rate for USDC lenders could jump from 5% to 15% in just one day!
+
+What's the Connection Between Market Sentiment and Crypto Interest Rates?
+Market sentiment, or the general perception and risk appetite of investors, has a significant impact on interest rates in the crypto asset universe. During bullish periods (bull market), optimistic investors are more likely to take risks. Demand for crypto asset loans then increases for two reasons:
+
+Investors borrow to invest more, hoping to amplify their gains through leverage.
+
+Traders borrow to engage in margin trading (leveraged trading) to multiply their potential profits. This surge in demand mechanically drives up interest rates, with protocols adjusting their rates upward to balance the market.
+
+Conversely, during bearish periods (bear market), pessimistic investors are more risk-averse. Loan demand decreases:
+
+Investors fear borrowing in a falling market.
+
+Traders reduce their activity, as leverage becomes too risky. Interest rates then fall, as protocols seek to stimulate demand.
+
+Beyond general sentiment, sentiment toward a specific protocol can also affect rates. Very high yields (>20%) may indicate a significant default risk, with the protocol promising unsustainable returns. In some cases, this might even hide a potential Ponzi scheme, with new investors paying for the old ones! This was the case with Celsius or Anchor Protocol, offering high yields... before collapsing. Thus, overly positive sentiment toward a protocol, driven by promises of exceptional returns, is paradoxically a red flag for the informed investor.
+
+How Interest Rates Affect Individual and Corporate Finances
+Impact of Interest Rates on Your Personal Finances
+For individuals, interest rates have a direct impact on borrowing costs and savings returns. A rate increase raises the cost of mortgages, consumer loans, and credit cards. Example: on a €200,000 20-year mortgage, an increase in rate from 1% to 3% pushes monthly payments from €920 to €1,109, representing a total additional cost of €45,360. This can make home ownership more difficult and strain household budgets.
+
+Conversely, higher rates benefit savers by increasing returns on deposits, savings accounts, and euro-denominated life insurance funds. A rate increase from 0.5% to 3% on a €10,000 balance raises annual interest from €50 to €300.
+
+Impact of Interest Rates on Businesses
+For businesses, interest rates influence financing costs. Variable rates are more common in business loans. Logically, a rate increase mechanically increases interest charges on existing loans and raises the cost of new borrowing.
+
+For an SME borrowing €500,000 over 7 years, a rate increase from 3% to 6% pushes monthly payments from €6,364 to €7,161, representing a total additional cost of €66,850. This prompts a review of credit-financed investment project profitability.
+
+Similarly, for large companies financing through bond markets, higher rates increase the cost of new issues and decrease the value of existing bonds. This weighs on the company's financial structure and overall valuation.
+
+Impact of Interest Rates on Investment and Trading Strategies
+Interest rate variations offer different opportunities to investors and traders. For traders, a common strategy is "carry trade". It involves borrowing in a low-interest-rate currency and investing in another currency offering a higher rate. Profit is generated by the rate differential, minus the cost of hedging currency risk between the two currencies. This strategy reached massive proportions with the Japanese yen in 2022-2023, before being challenged in August 2024: a trader could borrow Japanese yen at near-zero rates to buy US dollars offering rates above 5%.
+
+For investors, rate levels influence asset allocation decisions. When rates are high, bonds become more attractive. Indeed, they offer significant yield for relatively low risk. Conversely, when rates are low, investors tend to shift toward stocks, particularly growth stocks. The valuation of the latter is boosted because with low rates, these companies' future profits, discounted at a lower rate, are mechanically worth more today.
+
+Conclusion
+When reading the yield offered by an investment or crypto project, it's essential to avoid a common trap: focusing solely on the nominal rate, without considering inflation. Indeed, what really matters is the real interest rate, which is the nominal rate minus inflation. A 3% savings rate might seem attractive, but if inflation is 4%, your purchasing power is actually decreasing...
+
+The reasoning is reversed for loans. A 2% fixed rate on a mortgage might seem appealing, but if inflation drops to 0%, the real cost of your loan increases. This is one of the reasons why many borrowers choose variable rate loans, allowing them to benefit from rate decreases. However, this also exposes them to higher monthly payments when rates rise.
+
+In recent years, traditional investment and loan interest rates have been overshadowed by crypto interest rates. While a savings account shows 2%, money placed on Compound yielded up to 20%. However, crypto interest rates prove to be highly volatile. Why? The answer is simple: the absence of a central bank. In the traditional financial system, interest rates are largely influenced by central bank decisions. Their intervention has a stabilizing effect on rates, with months, or even years, between rate revisions.
+
+In the decentralized universe of crypto assets, there is no central authority to regulate rates. These are therefore entirely determined by market forces, that is, by supply and demand at any given moment. This makes them much more reactive to changes in investor sentiment and behavior.

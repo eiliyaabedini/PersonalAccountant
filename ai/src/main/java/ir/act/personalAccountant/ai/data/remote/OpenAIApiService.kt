@@ -11,13 +11,23 @@ interface OpenAIApiService {
         @Header("Authorization") authorization: String,
         @Body request: OpenAIRequest
     ): Response<OpenAIResponse>
+
+    @POST("v1/responses")
+    suspend fun createResponse(
+        @Header("Authorization") authorization: String,
+        @Body request: OpenAIRequest
+    ): Response<OpenAIResponsesResponse>
 }
 
 data class OpenAIRequest(
     val model: String,
-    val messages: List<OpenAIMessage>,
-    val max_tokens: Int = 300,
-    val temperature: Double = 0.2
+    val messages: List<OpenAIMessage>? = null,
+    val input: Any? = null, // Can be string or list of messages for o3-mini
+    val max_tokens: Int? = null, // For traditional models
+    val max_completion_tokens: Int? = null, // For o3-mini reasoning models (Chat Completions API)
+    val max_output_tokens: Int? = null, // For o3-mini reasoning models (Responses API)
+    val temperature: Double? = null, // Optional - not supported by o3-mini models
+    val reasoning: OpenAIReasoning? = null // For o3-mini reasoning
 )
 
 data class OpenAIMessage(
@@ -67,4 +77,28 @@ data class OpenAIError(
     val type: String,
     val param: String?,
     val code: String?
+)
+
+// For o3-mini reasoning models
+data class OpenAIReasoning(
+    val effort: String = "medium", // "low", "medium", or "high"
+    val summary: String = "auto"   // "auto", "detailed", or "none"
+)
+
+// Response structure for Responses API (o3-mini)
+data class OpenAIResponsesResponse(
+    val id: String,
+    val `object`: String,
+    val created: Long,
+    val model: String,
+    val output: List<OpenAIOutputItem>,
+    val output_text: String?,
+    val usage: OpenAIUsage?,
+    val error: OpenAIError?
+)
+
+data class OpenAIOutputItem(
+    val type: String, // "message", "reasoning", etc.
+    val role: String?,
+    val content: String?
 )

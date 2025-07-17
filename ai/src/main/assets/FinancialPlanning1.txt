@@ -1,0 +1,74 @@
+Financial Planning
+Lesson 1
+10 min
+
+The beginnings of money and the importance of trust
+Before we dive into the world of cryptocurrencies, let us take a step back and learn some basics about the concept of money
+
+Money is everything that can be used as a medium of exchange
+
+Money had many different forms throughout human history
+
+Before the invention of money, people used barter systems (though more recent research suggests that money developed after the invention of debt)
+
+Bitcoin is the biggest financial innovation since the introduction of credit cards in the 1950s and the dawn of online banking in the late 1990s
+
+Contents
+What is money?
+Why do we need money?
+Some characteristics of money
+Why is something considered valuable?
+
+The Beginnings of Money
+What is money?
+People have been exchanging things with each other since the dawn of humankind. First there were barter systems. People exchanged items that they attributed equal intrinsic value to, as in “I give you this animal hide and you give me that sharp stone you found.” This system works quite well for exchanges between two people, but is usually too complex as soon as more people, more goods and longer distances are involved.
+
+Also, a barter system may also reach its limits when only two people are involved in the exchange. Let’s say you have a large amount of berries and want to exchange them for an animal hide. If both parties want and need the item offered by the other, there is a deal. But if there is no coincidence of wants, you have a problem.
+
+Why do we need money?
+Furthermore, the problem with an exchange system like barter is that it’s not very efficient. To fix this predicament, human history has seen lots of manifestations of the idea of exchanging one commodity for another: animal hides, salt, sea shells, gemstones, grain and precious metals, among other different commodities, have all been used to exchange one valuable item for another.
+
+On the other hand, what happens if the other party already has enough berries or doesn’t need an animal hide? To tackle this problem, people invented money.
+
+At this point, we are not talking about coins or paper money as we know it, but anything that is considered a store of value which all parties involved in the exchange agree on can be exchanged for another item thought to be valuable.
+
+Money is a useful tool that can be used to exchange value between people. Broken down to its core, it’s best described as a “medium of exchange.”
+Money is an item or entity that can be verified and is widely accepted as payment.
+
+Some characteristics of money
+Medium of Exchange
+Money is a medium of exchange for commercial transactions involving goods, services and labor. It is very useful to have a designated medium of exchange for transactions that is commonly accepted.
+
+Store of Value
+For later use, money can be used as a store of value for use in transactions until it is needed. A prerequisite for this is trust that money retains its value.
+
+Portability
+Money can be easily moved around and exchanged with other currencies. For instance, the people on the island of Yap in Micronesia used limestones as official currency before they started using US Dollars. One of these stones would often weigh more than a car, making moving them very challenging. For this reason, they were usually stored in one place even if they changed ownership and people had to remember who was the actual present owner.
+
+Durability
+Money is immutable and durable. Thanks to its sturdiness, it can be used until new supply is printed to replace the old supply.
+
+Divisibility
+Money is divisible - it is available in smaller increments for the exchange of things of varying values. Imagine if you wanted to buy a pack of gum but you could only use a 50 note - it would definitely complicate the transaction.
+
+Verifiability
+Counterfeit money is probably as old as money. In order to accept and trust money, it has to be impossible to forge and easily identified as being legitimate. Counterfeit money leads to the reduction of buying power of real money.
+
+Fungibility
+Individual units of money have to be essentially interchangeable, meaning that that two equal units have to be equivalent and indistinguishable. This also relates to divisibility. Stores of value that don’t meet these criteria are termed “non-fungible.” The most popular example of something that can be traded like money that’s non-fungible is a collectible, like a piece of art.
+
+Why is something considered valuable?
+Sea shells, gemstones or even gold, basically have no intrinsic value apart from being pretty and shiny, or in the case of gold, being able to conduct electricity well. Yet over the course of thousands of years, people used such items as a means of exchange. They were valuable because people put trust into them.
+
+Intrinsic value in this context is the perceived value that is attributed to something. This value is perceived from its intrinsic, attributed value.
+
+Even today, this holds true for our most popular and most widely used currencies, such as the Euro and the US Dollar. They are both printed by central banks and get their value from being backed by governments that people trust.
+
+All in all, most currencies and money derive their value from the fact that people think they are valuable. People who use them trust in their value.
+Trust in money and other types of assets is established in various ways.
+
+Gold and silver are trusted because throughout history, they have been perceived as valuable and been used to produce items of value thanks to their decorative properties.
+
+Fiat currencies - issued by government decree - are trusted thanks to their history of being perceived as valuable, because they are backed by governments and issued by central banks.
+
+If people were to lose their trust in even one of the factors that establish this trust, value is bound to decrease. For instance, hyperinflation (massive inflation) among a few other things, is usually triggered by citizens of a nation losing their confidence in a currency.

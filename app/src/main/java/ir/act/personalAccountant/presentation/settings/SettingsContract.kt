@@ -29,5 +29,6 @@ object SettingsContract {
         fun navigateToCategorySettings()
         fun navigateToGoogleSheets()
         fun navigateToAISettings()
+        fun navigateToFinancialAdvisor()
     }
 }

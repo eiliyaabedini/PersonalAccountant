@@ -85,6 +85,7 @@ fun ExpenseListScreen(
     onNavigateToViewAllExpenses: (String?) -> Unit,
     onNavigateToBudgetConfig: () -> Unit,
     onNavigateToGoogleSheets: () -> Unit,
+    onNavigateToFinancialAdvisor: () -> Unit,
     viewModel: ExpenseListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -159,7 +160,7 @@ fun ExpenseListScreen(
                 // Status bar space
                 Spacer(modifier = Modifier.height(40.dp))
 
-                // Top row with sync and settings icons
+                // Top row with AI advisor, sync and settings icons
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -167,6 +168,20 @@ fun ExpenseListScreen(
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // Financial Advisor AI icon
+                    IconButton(
+                        onClick = { onNavigateToFinancialAdvisor() },
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Text(
+                            text = "🤖",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+                    
                     // Sync icon
                     IconButton(
                         onClick = { onNavigateToGoogleSheets() },

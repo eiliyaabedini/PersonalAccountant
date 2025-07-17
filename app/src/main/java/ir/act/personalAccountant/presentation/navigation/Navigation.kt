@@ -13,6 +13,7 @@ import ir.act.personalAccountant.presentation.expense_edit.ExpenseEditContract
 import ir.act.personalAccountant.presentation.expense_edit.ExpenseEditScreen
 import ir.act.personalAccountant.presentation.expense_entry.ExpenseEntryScreen
 import ir.act.personalAccountant.presentation.expense_list.ExpenseListScreen
+import ir.act.personalAccountant.presentation.financial_advisor.FinancialAdvisorScreen
 import ir.act.personalAccountant.presentation.googlesheets.GoogleSheetsScreen
 import ir.act.personalAccountant.presentation.googlesheets.GoogleSheetsViewModel
 import ir.act.personalAccountant.presentation.settings.SettingsContract
@@ -31,6 +32,7 @@ object Routes {
     const val GOOGLE_SHEETS = "google_sheets"
     const val SYNC_PROGRESS = "sync_progress"
     const val AI_SETTINGS = "ai_settings"
+    const val FINANCIAL_ADVISOR = "financial_advisor"
 
     fun expenseEdit(expenseId: Long) = "expense_edit/$expenseId"
     fun viewAllExpenses(filterTag: String? = null) = if (filterTag != null) {
@@ -77,6 +79,9 @@ fun PersonalAccountantNavigation(
                 },
                 onNavigateToGoogleSheets = {
                     navController.navigate(Routes.GOOGLE_SHEETS)
+                },
+                onNavigateToFinancialAdvisor = {
+                    navController.navigate(Routes.FINANCIAL_ADVISOR)
                 }
             )
         }
@@ -119,6 +124,10 @@ fun PersonalAccountantNavigation(
 
                     override fun navigateToAISettings() {
                         navController.navigate(Routes.AI_SETTINGS)
+                    }
+
+                    override fun navigateToFinancialAdvisor() {
+                        navController.navigate(Routes.FINANCIAL_ADVISOR)
                     }
                 }
             )
@@ -185,6 +194,17 @@ fun PersonalAccountantNavigation(
             AISettingsScreen(
                 onNavigateBack = {
                     navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Routes.FINANCIAL_ADVISOR) {
+            FinancialAdvisorScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToAISettings = {
+                    navController.navigate(Routes.AI_SETTINGS)
                 }
             )
         }

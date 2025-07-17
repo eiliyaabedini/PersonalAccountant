@@ -1,9 +1,9 @@
 package ir.act.personalAccountant.ai.data.remote
 
 import com.google.gson.Gson
+import ir.act.personalAccountant.ai.domain.model.AIAnalysisResult
 import ir.act.personalAccountant.ai.domain.model.ReceiptAnalysisRequest
 import ir.act.personalAccountant.ai.domain.model.ReceiptAnalysisResponse
-import ir.act.personalAccountant.ai.domain.model.AIAnalysisResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -67,6 +67,93 @@ class OpenAIClient @Inject constructor(
                 success = false,
                 errorMessage = "Network error: ${e.message}"
             )
+        }
+    }
+
+    suspend fun sendRequest(
+        request: OpenAIRequest,
+        apiKey: String
+    ): OpenAIResponse = withContext(Dispatchers.IO) {
+        // Check if this is an o3-mini model that needs the Responses API
+        if (request.model.startsWith("o3-")) {
+            return@withContext handleO3MiniRequest(request, apiKey)
+        }
+
+        // For traditional models, ensure temperature is set if not provided
+        val requestWithTemp = if (request.temperature == null) {
+            request.copy(temperature = 0.2)
+        } else {
+            request
+        }
+
+        val response = apiService.createChatCompletion(
+            authorization = "Bearer $apiKey",
+            request = requestWithTemp
+        )
+
+        if (response.isSuccessful) {
+            response.body() ?: throw Exception("Empty response from API")
+        } else {
+            val errorBody = response.errorBody()?.string()
+            val errorMessage = try {
+                val errorResponse = gson.fromJson(errorBody, OpenAIResponse::class.java)
+                errorResponse.error?.message ?: "HTTP ${response.code()}: ${response.message()}"
+            } catch (e: Exception) {
+                "HTTP ${response.code()}: ${response.message()}"
+            }
+            throw Exception("API Error: $errorMessage")
+        }
+    }
+
+    private suspend fun handleO3MiniRequest(
+        request: OpenAIRequest,
+        apiKey: String
+    ): OpenAIResponse = withContext(Dispatchers.IO) {
+        // Convert to Responses API format
+        val responsesRequest = OpenAIRequest(
+            model = request.model,
+            input = request.messages, // Use messages as input for Responses API
+            max_output_tokens = request.max_tokens
+                ?: 4000, // Use max_output_tokens for Responses API
+            reasoning = OpenAIReasoning(effort = "medium", summary = "auto")
+        )
+
+        val response = apiService.createResponse(
+            authorization = "Bearer $apiKey",
+            request = responsesRequest
+        )
+
+        if (response.isSuccessful) {
+            val responsesBody = response.body() ?: throw Exception("Empty response from API")
+
+            // Convert OpenAIResponsesResponse to OpenAIResponse format
+            OpenAIResponse(
+                id = responsesBody.id,
+                `object` = responsesBody.`object`,
+                created = responsesBody.created,
+                model = responsesBody.model,
+                choices = listOf(
+                    OpenAIChoice(
+                        index = 0,
+                        message = OpenAIResponseMessage(
+                            role = "assistant",
+                            content = responsesBody.output_text ?: ""
+                        ),
+                        finish_reason = "stop"
+                    )
+                ),
+                usage = responsesBody.usage,
+                error = responsesBody.error
+            )
+        } else {
+            val errorBody = response.errorBody()?.string()
+            val errorMessage = try {
+                val errorResponse = gson.fromJson(errorBody, OpenAIResponsesResponse::class.java)
+                errorResponse.error?.message ?: "HTTP ${response.code()}: ${response.message()}"
+            } catch (e: Exception) {
+                "HTTP ${response.code()}: ${response.message()}"
+            }
+            throw Exception("API Error: $errorMessage")
         }
     }
 
