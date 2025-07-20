@@ -260,7 +260,7 @@ class OpenAIClient @Inject constructor(
             request.currencySymbol.let { symbol ->
                 when (symbol) {
                     "$" -> "USD"
-                    "€" -> "EUR" 
+                    "€" -> "EUR"
                     "£" -> "GBP"
                     "¥" -> "JPY"
                     else -> "USD"
