@@ -315,6 +315,7 @@ class ExpenseListViewModel @Inject constructor(
                                     tag = category,
                                     timestamp = System.currentTimeMillis(),
                                     imagePath = imagePath
+                                    // Note: Receipt analysis provides amounts in home currency, no dual currency conversion needed
                                 )
 
                                 // Refresh the expense list

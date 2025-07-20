@@ -945,6 +945,14 @@ private fun SwipeToDeleteExpenseItem(
                                         modifier = Modifier.size(16.dp)
                                     )
                                 }
+                                // Show travel indicator if expense is a travel expense
+                                if (expense.isTravelExpense) {
+                                    Text(
+                                        text = "✈️",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
                             }
                             Text(
                                 text = formatDate(expense.timestamp),
@@ -954,12 +962,32 @@ private fun SwipeToDeleteExpenseItem(
                         }
                     }
 
-                    Text(
-                        text = CurrencyFormatter.formatCurrency(expense.amount, currencySettings),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Column(
+                        horizontalAlignment = Alignment.End
+                    ) {
+                        Text(
+                            text = CurrencyFormatter.formatCurrency(
+                                expense.amount,
+                                currencySettings
+                            ),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        // Show destination currency amount if it's a travel expense
+                        if (expense.isTravelExpense && expense.destinationAmount != null && expense.destinationCurrency != null) {
+                            Text(
+                                text = "${CurrencySettings.getCurrencySymbol(expense.destinationCurrency!!)}${
+                                    String.format(
+                                        "%.2f",
+                                        expense.destinationAmount!!
+                                    )
+                                }",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                        }
+                    }
                 }
             }
         },

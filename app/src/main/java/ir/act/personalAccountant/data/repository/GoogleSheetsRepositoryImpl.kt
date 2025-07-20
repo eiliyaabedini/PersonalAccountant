@@ -168,11 +168,19 @@ class GoogleSheetsRepositoryImpl @Inject constructor(
             val sheetsService = googleAuthRepository.createSheetsService(account)
 
             // Set header values
-            val range = "$sheetTitle!A1:E1"
+            val range = "$sheetTitle!A1:G1"
             val headers = ValueRange().apply {
                 setValues(
                     listOf(
-                        listOf("ID", "Date", "Amount", "Tag", "Image")
+                        listOf(
+                            "ID",
+                            "Date",
+                            "Amount",
+                            "Tag",
+                            "Image",
+                            "Destination Amount",
+                            "Destination Currency"
+                        )
                     )
                 )
             }
@@ -218,7 +226,7 @@ class GoogleSheetsRepositoryImpl @Inject constructor(
                         startRowIndex = 0
                         endRowIndex = 1
                         startColumnIndex = 0
-                        endColumnIndex = 5
+                        endColumnIndex = 7
                     }
                     cell = CellData().apply {
                         userEnteredFormat = CellFormat().apply {
@@ -251,7 +259,7 @@ class GoogleSheetsRepositoryImpl @Inject constructor(
                         this.sheetId = sheetId
                         dimension = "COLUMNS"
                         startIndex = 0
-                        endIndex = 5
+                        endIndex = 7
                     }
                 }
             })
@@ -356,7 +364,9 @@ class GoogleSheetsRepositoryImpl @Inject constructor(
                         formatDate(expense.timestamp),
                         expense.amount.toString(),
                         expense.tag,
-                        expense.imagePath ?: ""
+                        expense.imagePath ?: "",
+                        expense.destinationAmount?.toString() ?: "",
+                        expense.destinationCurrency ?: ""
                     )
                 }
 
@@ -364,7 +374,7 @@ class GoogleSheetsRepositoryImpl @Inject constructor(
                 clearSheetData(spreadsheetId, monthYear)
 
                 // Append to sheet
-                val range = "$monthYear!A2:E"
+                val range = "$monthYear!A2:G"
                 val valueRange = ValueRange().apply {
                     setValues(rows)
                 }
@@ -501,7 +511,11 @@ class GoogleSheetsRepositoryImpl @Inject constructor(
                     val needsSync = existingRecord == null ||
                             existingRecord["Date"] != formatDate(expense.timestamp) ||
                             existingRecord["Amount"] != expense.amount.toString() ||
-                            existingRecord["Tag"] != expense.tag
+                            existingRecord["Tag"] != expense.tag ||
+                            existingRecord["Destination Amount"] != (expense.destinationAmount?.toString()
+                        ?: "") ||
+                            existingRecord["Destination Currency"] != (expense.destinationCurrency
+                        ?: "")
 
                     if (needsSync) {
                         emit(
@@ -592,7 +606,9 @@ class GoogleSheetsRepositoryImpl @Inject constructor(
                         formatDate(expense.timestamp),
                         expense.amount.toString(),
                         expense.tag,
-                        expense.imagePath ?: ""
+                        expense.imagePath ?: "",
+                        expense.destinationAmount?.toString() ?: "",
+                        expense.destinationCurrency ?: ""
                     )
                 }
 
@@ -606,7 +622,11 @@ class GoogleSheetsRepositoryImpl @Inject constructor(
                             existingRecord["Date"] != formatDate(expense.timestamp) ||
                             existingRecord["Amount"] != expense.amount.toString() ||
                             existingRecord["Tag"] != expense.tag ||
-                            existingRecord["Image"] != (expense.imagePath ?: "")
+                            existingRecord["Image"] != (expense.imagePath ?: "") ||
+                            existingRecord["Destination Amount"] != (expense.destinationAmount?.toString()
+                        ?: "") ||
+                            existingRecord["Destination Currency"] != (expense.destinationCurrency
+                        ?: "")
                 }
 
                 if (hasChanges) {
@@ -623,7 +643,7 @@ class GoogleSheetsRepositoryImpl @Inject constructor(
                     clearSheetData(spreadsheetId, monthYear)
 
                     // Append to sheet
-                    val range = "$monthYear!A2:E"
+                    val range = "$monthYear!A2:G"
                     val valueRange = ValueRange().apply {
                         setValues(rows)
                     }
@@ -698,9 +718,9 @@ class GoogleSheetsRepositoryImpl @Inject constructor(
             val sheetsService = googleAuthRepository.createSheetsService(account)
 
             // Clear data starting from row 2 (keep headers)
-            val range = "$sheetTitle!A2:E1000"
+            val range = "$sheetTitle!A2:G1000"
             val valueRange = ValueRange().apply {
-                setValues(listOf(listOf("", "", "", "", "")))
+                setValues(listOf(listOf("", "", "", "", "", "", "")))
             }
 
             sheetsService.spreadsheets().values()
@@ -902,7 +922,7 @@ class GoogleSheetsRepositoryImpl @Inject constructor(
             }
 
             // Get the data from the sheet
-            val range = "$sheetTitle!A1:E1000" // Get up to 1000 rows
+            val range = "$sheetTitle!A1:G1000" // Get up to 1000 rows
             val response = try {
                 sheetsService.spreadsheets().values()
                     .get(spreadsheetId, range)
@@ -918,7 +938,7 @@ class GoogleSheetsRepositoryImpl @Inject constructor(
                 return@withContext emptyList()
             }
 
-            // First row should be headers: ID, Date, Amount, Tag, Image
+            // First row should be headers: ID, Date, Amount, Tag, Image, Destination Amount, Destination Currency
             val headers = values[0]?.map { it.toString() } ?: return@withContext emptyList()
 
             // Convert remaining rows to maps

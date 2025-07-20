@@ -10,5 +10,7 @@ data class ExpenseEntity(
     val amount: Double,
     val timestamp: Long,
     val tag: String,
-    val imagePath: String? = null
+    val imagePath: String? = null,
+    val destinationAmount: Double? = null, // Amount in destination currency
+    val destinationCurrency: String? = null // Destination currency code
 )

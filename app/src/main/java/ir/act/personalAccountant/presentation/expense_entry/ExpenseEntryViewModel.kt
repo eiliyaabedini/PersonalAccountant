@@ -259,8 +259,13 @@ class ExpenseEntryViewModel @Inject constructor(
                     amount
                 }
 
-                val newExpenseId =
-                    addExpenseUseCase(amountToSave, tag, currentState.selectedDate, imagePath)
+                val newExpenseId = addExpenseUseCase(
+                    amount = amountToSave,
+                    tag = tag,
+                    timestamp = currentState.selectedDate,
+                    imagePath = imagePath,
+                    originalDestinationAmount = if (currentState.tripModeSettings.isEnabled) amount else null
+                )
                 
                 if (currentState.addMultipleExpenses) {
                     // Stay on the page, just clear the form
@@ -530,7 +535,8 @@ class ExpenseEntryViewModel @Inject constructor(
                 timestamp = currentState.selectedDate,
                 imagePath = currentState.selectedImageUri?.let { uri ->
                     saveSelectedImage(uri)
-                }
+                },
+                originalDestinationAmount = if (currentState.tripModeSettings.isEnabled) amount else null
             )
 
             // Navigate back to expense list
