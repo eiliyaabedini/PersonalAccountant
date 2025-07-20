@@ -17,8 +17,8 @@ android {
         applicationId = "ir.act.personalAccountant"
         minSdk = 24
         targetSdk = 35
-        versionCode = 100
-        versionName = "1.00"
+        versionCode = 200
+        versionName = "0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
