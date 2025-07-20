@@ -3,47 +3,116 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    
-    <!-- Main circular background with yellow accent -->
-    <path
-        android:fillColor="#FFE14C"
-        android:pathData="M54,20A34,34 0 1,1 54,88A34,34 0 1,1 54,20Z" />
-    
-    <!-- Inner circle with black background -->
-    <path
-        android:fillColor="#000000"
-        android:pathData="M54,26A28,28 0 1,1 54,82A28,28 0 1,1 54,26Z" />
-    
-    <!-- Donut chart representation -->
-    <path
-        android:fillColor="#FFE14C"
-        android:pathData="M54,32A22,22 0 0,1 74,48A10,10 0 0,1 64,48A12,12 0 0,0 54,42Z" />
-    
-    <path
-        android:fillColor="#B8E986"
-        android:pathData="M74,48A22,22 0 0,1 64,74A10,10 0 0,1 64,64A12,12 0 0,0 64,48Z" />
-    
-    <!-- Dollar sign in center -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:strokeWidth="2"
-        android:strokeColor="#FFFFFF"
-        android:pathData="M54,44L54,40M54,68L54,64M50,48C50,46 52,44 54,44C56,44 58,46 58,48C58,50 56,50 54,50L54,52C56,52 58,52 58,54C58,56 56,58 54,58C52,58 50,56 50,54"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round" />
-    
-    <!-- Receipt/document lines -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M42,34L45,34M42,38L48,38M42,42L46,42"
-        android:strokeWidth="1.5"
-        android:strokeColor="#FFFFFF"
-        android:strokeLineCap="round" />
-    
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M63,60L66,60M63,64L69,64M63,68L67,68"
-        android:strokeWidth="1.5"
-        android:strokeColor="#FFFFFF"
-        android:strokeLineCap="round" />
+
+  <!-- Owl body base -->
+  <path
+      android:fillColor="#4A6FA5"
+      android:pathData="M54,25 C40,25 30,40 30,58 C30,75 38,85 54,85 C70,85 78,75 78,58 C78,40 68,25 54,25 Z" />
+
+  <!-- Owl belly -->
+  <path
+      android:fillColor="#F5F5DC"
+      android:pathData="M54,45 C45,45 38,52 38,62 C38,72 45,78 54,78 C63,78 70,72 70,62 C70,52 63,45 54,45 Z" />
+
+  <!-- Left wing -->
+  <path
+      android:fillColor="#364B7A"
+      android:pathData="M35,50 C32,48 28,52 30,58 C32,65 36,70 42,72 C45,68 44,60 40,55 C38,53 36,51 35,50 Z" />
+
+  <!-- Right wing -->
+  <path
+      android:fillColor="#364B7A"
+      android:pathData="M73,50 C76,48 80,52 78,58 C76,65 72,70 66,72 C63,68 64,60 68,55 C70,53 72,51 73,50 Z" />
+
+  <!-- Left ear tuft -->
+  <path
+      android:fillColor="#FFB74D"
+      android:pathData="M42,22 C40,18 35,20 38,25 C40,28 44,30 46,28 C47,25 44,23 42,22 Z" />
+
+  <!-- Right ear tuft -->
+  <path
+      android:fillColor="#FFB74D"
+      android:pathData="M66,22 C68,18 73,20 70,25 C68,28 64,30 62,28 C61,25 64,23 66,22 Z" />
+
+  <!-- Left eye outer -->
+  <path
+      android:fillColor="#FFFFFF"
+      android:pathData="M45,42 C40,42 36,46 36,51 C36,56 40,60 45,60 C50,60 54,56 54,51 C54,46 50,42 45,42 Z" />
+
+  <!-- Right eye outer -->
+  <path
+      android:fillColor="#FFFFFF"
+      android:pathData="M63,42 C58,42 54,46 54,51 C54,56 58,60 63,60 C68,60 72,56 72,51 C72,46 68,42 63,42 Z" />
+
+  <!-- Left eye iris -->
+  <path
+      android:fillColor="#D4AF37"
+      android:pathData="M45,45 C42,45 39,47 39,51 C39,54 42,57 45,57 C48,57 51,54 51,51 C51,47 48,45 45,45 Z" />
+
+  <!-- Right eye iris -->
+  <path
+      android:fillColor="#D4AF37"
+      android:pathData="M63,45 C60,45 57,47 57,51 C57,54 60,57 63,57 C66,57 69,54 69,51 C69,47 66,45 63,45 Z" />
+
+  <!-- Left pupil -->
+  <path
+      android:fillColor="#2C1810"
+      android:pathData="M45,47 C43,47 41,49 41,51 C41,53 43,55 45,55 C47,55 49,53 49,51 C49,49 47,47 45,47 Z" />
+
+  <!-- Right pupil -->
+  <path
+      android:fillColor="#2C1810"
+      android:pathData="M63,47 C61,47 59,49 59,51 C59,53 61,55 63,55 C65,55 67,53 67,51 C67,49 65,47 63,47 Z" />
+
+  <!-- Left eye shine -->
+  <path
+      android:fillColor="#FFFFFF"
+      android:pathData="M46,47 A2,2 0,1,1 46,51 A2,2 0,1,1 46,47 Z" />
+
+  <!-- Right eye shine -->
+  <path
+      android:fillColor="#FFFFFF"
+      android:pathData="M64,47 A2,2 0,1,1 64,51 A2,2 0,1,1 64,47 Z" />
+
+  <!-- Beak -->
+  <path
+      android:fillColor="#FF8F00"
+      android:pathData="M54,58 L50,62 L54,65 L58,62 Z" />
+
+  <!-- Money/bill in wing -->
+  <path
+      android:fillColor="#4CAF50"
+      android:pathData="M50,65 L58,65 L58,75 L50,75 Z" />
+
+  <!-- Dollar sign on bill -->
+  <path
+      android:fillColor="#FFFFFF"
+      android:strokeWidth="1"
+      android:strokeColor="#FFFFFF"
+      android:pathData="M54,67 L54,73 M52,69 C52,68 53,67 54,67 C55,67 56,68 56,69 C56,70 55,70 54,70 L54,71 C55,71 56,71 56,72 C56,73 55,74 54,74 C53,74 52,73 52,72"
+      android:strokeLineCap="round" />
+
+  <!-- Feet -->
+  <path
+      android:fillColor="#FF8F00"
+      android:pathData="M45,80 L42,85 M45,80 L48,85 M47,80 L50,85" />
+
+  <path
+      android:fillColor="#FF8F00"
+      android:pathData="M63,80 L60,85 M63,80 L66,85 M65,80 L68,85" />
+
+  <!-- Chest feather details -->
+  <path
+      android:fillColor="#E8E8E8"
+      android:pathData="M48,58 C48,60 49,62 50,62 C49,62 48,60 48,58 Z" />
+  <path
+      android:fillColor="#E8E8E8"
+      android:pathData="M52,62 C52,64 53,66 54,66 C53,66 52,64 52,62 Z" />
+  <path
+      android:fillColor="#E8E8E8"
+      android:pathData="M56,62 C56,64 57,66 58,66 C57,66 56,64 56,62 Z" />
+  <path
+      android:fillColor="#E8E8E8"
+      android:pathData="M60,58 C60,60 59,62 58,62 C59,62 60,60 60,58 Z" />
+
 </vector>
