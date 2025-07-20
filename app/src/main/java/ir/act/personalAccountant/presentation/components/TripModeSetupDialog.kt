@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -27,6 +28,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,12 +51,23 @@ fun TripModeSetupDialog(
     currentTripMode: TripModeSettings,
     availableCurrencies: List<CurrencySettings>,
     onTripModeUpdate: (TripModeSettings) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onAIExchangeRateRequested: ((String, String) -> Unit)? = null,
+    isLoadingAIRate: Boolean = false,
+    aiRateError: String? = null,
+    aiExchangeRate: Double? = null
 ) {
     var selectedCurrency by remember { mutableStateOf(currentTripMode.destinationCurrency) }
     var exchangeRate by remember { mutableStateOf(currentTripMode.exchangeRate.toString()) }
     var showCurrencyPicker by remember { mutableStateOf(false) }
     val context = LocalContext.current
+
+    // Update exchange rate when AI fetches new rate
+    LaunchedEffect(aiExchangeRate) {
+        aiExchangeRate?.let { rate ->
+            exchangeRate = rate.toString()
+        }
+    }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -139,6 +152,32 @@ fun TripModeSetupDialog(
                         shape = RoundedCornerShape(12.dp)
                     )
 
+                    // AI Exchange Rate Button
+                    IconButton(
+                        onClick = {
+                            onAIExchangeRateRequested?.invoke(
+                                homeCurrency.currencyCode,
+                                selectedCurrency.currencyCode
+                            )
+                        },
+                        enabled = !isLoadingAIRate && onAIExchangeRateRequested != null,
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        if (isLoadingAIRate) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        } else {
+                            Text(
+                                text = "🤖",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+
                     // Google Search Button
                     IconButton(
                         onClick = {
@@ -159,6 +198,17 @@ fun TripModeSetupDialog(
                     }
                 }
 
+                // AI Error Display
+                aiRateError?.let { error ->
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = error,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // Action Buttons
@@ -175,11 +225,17 @@ fun TripModeSetupDialog(
                             val rate = exchangeRate.toDoubleOrNull()
                             if (rate != null && rate > 0) {
                                 onTripModeUpdate(
-                                    TripModeSettings(
+                                    currentTripMode.copy(
                                         isEnabled = true,
                                         destinationCurrency = selectedCurrency,
                                         exchangeRate = rate,
-                                        lastUpdated = System.currentTimeMillis()
+                                        lastUpdated = if (kotlin.math.abs(currentTripMode.exchangeRate - rate) < 0.0001) {
+                                            // If rate hasn't changed significantly, preserve existing timestamp
+                                            currentTripMode.lastUpdated
+                                        } else {
+                                            // Only update timestamp if user manually changed the rate
+                                            System.currentTimeMillis()
+                                        }
                                     )
                                 )
                                 onDismiss()

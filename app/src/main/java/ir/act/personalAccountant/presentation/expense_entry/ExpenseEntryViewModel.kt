@@ -10,7 +10,9 @@ import ir.act.personalAccountant.ai.AIEngine
 import ir.act.personalAccountant.ai.data.repository.AIRepository
 import ir.act.personalAccountant.core.util.ImageFileManager
 import ir.act.personalAccountant.domain.model.CurrencySettings
+import ir.act.personalAccountant.domain.usecase.AIExchangeRateResult
 import ir.act.personalAccountant.domain.usecase.AddExpenseUseCase
+import ir.act.personalAccountant.domain.usecase.GetAIExchangeRateUseCase
 import ir.act.personalAccountant.domain.usecase.GetAllTagsUseCase
 import ir.act.personalAccountant.domain.usecase.GetCurrencySettingsUseCase
 import ir.act.personalAccountant.domain.usecase.GetExpensesByTagUseCase
@@ -41,7 +43,8 @@ class ExpenseEntryViewModel @Inject constructor(
     private val aiRepository: AIRepository,
     private val getTripModeSettingsUseCase: GetTripModeSettingsUseCase,
     private val toggleTripModeUseCase: ToggleTripModeUseCase,
-    private val updateTripModeSettingsUseCase: UpdateTripModeSettingsUseCase
+    private val updateTripModeSettingsUseCase: UpdateTripModeSettingsUseCase,
+    private val getAIExchangeRateUseCase: GetAIExchangeRateUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ExpenseEntryUiState())
@@ -158,13 +161,34 @@ class ExpenseEntryViewModel @Inject constructor(
             }
 
             ExpenseEntryEvent.DismissTripModeSetup -> {
-                _uiState.update { it.copy(showTripModeSetup = false) }
+                _uiState.update {
+                    it.copy(
+                        showTripModeSetup = false,
+                        aiExchangeRateError = null,
+                        aiExchangeRate = null,
+                        isLoadingAIExchangeRate = false
+                    )
+                }
             }
 
             is ExpenseEntryEvent.TripModeSettingsUpdated -> {
                 viewModelScope.launch {
                     updateTripModeSettingsUseCase(event.settings)
                     _uiState.update { it.copy(showTripModeSetup = false) }
+                }
+            }
+
+            is ExpenseEntryEvent.AIExchangeRateRequested -> {
+                println("DEBUG: AIExchangeRateRequested event received: ${event.fromCurrency} -> ${event.toCurrency}")
+                handleAIExchangeRateRequest(event.fromCurrency, event.toCurrency)
+            }
+
+            ExpenseEntryEvent.ClearAIExchangeRateError -> {
+                _uiState.update {
+                    it.copy(
+                        aiExchangeRateError = null,
+                        aiExchangeRate = null
+                    )
                 }
             }
         }
@@ -530,6 +554,48 @@ class ExpenseEntryViewModel @Inject constructor(
     private fun loadAvailableCurrencies() {
         _uiState.update {
             it.copy(availableCurrencies = CurrencySettings.SUPPORTED_CURRENCIES)
+        }
+    }
+
+    private fun handleAIExchangeRateRequest(fromCurrency: String, toCurrency: String) {
+        viewModelScope.launch {
+            getAIExchangeRateUseCase(
+                fromCurrency = fromCurrency,
+                toCurrency = toCurrency,
+                currentTripModeSettings = _uiState.value.tripModeSettings
+            ).collect { result ->
+                when (result) {
+                    is AIExchangeRateResult.Loading -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoadingAIExchangeRate = true,
+                                aiExchangeRateError = null,
+                                aiExchangeRate = null
+                            )
+                        }
+                    }
+
+                    is AIExchangeRateResult.Success -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoadingAIExchangeRate = false,
+                                aiExchangeRate = result.exchangeRate,
+                                aiExchangeRateError = null,
+                                tripModeSettings = result.updatedTripModeSettings
+                            )
+                        }
+                    }
+
+                    is AIExchangeRateResult.Error -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoadingAIExchangeRate = false,
+                                aiExchangeRateError = result.message
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }

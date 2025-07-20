@@ -27,7 +27,8 @@ data class OpenAIRequest(
     val max_completion_tokens: Int? = null, // For o3-mini reasoning models (Chat Completions API)
     val max_output_tokens: Int? = null, // For o3-mini reasoning models (Responses API)
     val temperature: Double? = null, // Optional - not supported by o3-mini models
-    val reasoning: OpenAIReasoning? = null // For o3-mini reasoning
+    val reasoning: OpenAIReasoning? = null, // For o3-mini reasoning
+    val web_search_options: OpenAIWebSearchOptions? = null // For web search functionality
 )
 
 data class OpenAIMessage(
@@ -101,4 +102,9 @@ data class OpenAIOutputItem(
     val type: String, // "message", "reasoning", etc.
     val role: String?,
     val content: String?
+)
+
+// For web search options
+data class OpenAIWebSearchOptions(
+    val search_context_size: String = "medium" // "low", "medium", "high"
 )

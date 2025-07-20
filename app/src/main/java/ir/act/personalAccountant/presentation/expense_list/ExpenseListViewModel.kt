@@ -11,9 +11,11 @@ import ir.act.personalAccountant.ai.data.repository.AIRepository
 import ir.act.personalAccountant.core.util.DateUtils
 import ir.act.personalAccountant.core.util.ImageFileManager
 import ir.act.personalAccountant.domain.model.CurrencySettings
+import ir.act.personalAccountant.domain.usecase.AIExchangeRateResult
 import ir.act.personalAccountant.domain.usecase.AddExpenseUseCase
 import ir.act.personalAccountant.domain.usecase.BudgetUseCase
 import ir.act.personalAccountant.domain.usecase.DeleteExpenseUseCase
+import ir.act.personalAccountant.domain.usecase.GetAIExchangeRateUseCase
 import ir.act.personalAccountant.domain.usecase.GetAllExpensesUseCase
 import ir.act.personalAccountant.domain.usecase.GetAllTagsUseCase
 import ir.act.personalAccountant.domain.usecase.GetCurrencySettingsUseCase
@@ -54,7 +56,8 @@ class ExpenseListViewModel @Inject constructor(
     private val imageFileManager: ImageFileManager,
     private val getTripModeSettingsUseCase: GetTripModeSettingsUseCase,
     private val toggleTripModeUseCase: ToggleTripModeUseCase,
-    private val updateTripModeSettingsUseCase: UpdateTripModeSettingsUseCase
+    private val updateTripModeSettingsUseCase: UpdateTripModeSettingsUseCase,
+    private val getAIExchangeRateUseCase: GetAIExchangeRateUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ExpenseListUiState())
@@ -176,7 +179,12 @@ class ExpenseListViewModel @Inject constructor(
             }
 
             ExpenseListEvent.DismissTripModeSetup -> {
-                _uiState.value = _uiState.value.copy(showTripModeSetup = false)
+                _uiState.value = _uiState.value.copy(
+                    showTripModeSetup = false,
+                    aiExchangeRateError = null,
+                    aiExchangeRate = null,
+                    isLoadingAIExchangeRate = false
+                )
             }
 
             is ExpenseListEvent.TripModeSettingsUpdated -> {
@@ -184,6 +192,17 @@ class ExpenseListViewModel @Inject constructor(
                     updateTripModeSettingsUseCase(event.settings)
                     _uiState.value = _uiState.value.copy(showTripModeSetup = false)
                 }
+            }
+
+            is ExpenseListEvent.AIExchangeRateRequested -> {
+                handleAIExchangeRateRequest(event.fromCurrency, event.toCurrency)
+            }
+
+            ExpenseListEvent.ClearAIExchangeRateError -> {
+                _uiState.value = _uiState.value.copy(
+                    aiExchangeRateError = null,
+                    aiExchangeRate = null
+                )
             }
         }
     }
@@ -370,5 +389,41 @@ class ExpenseListViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(
             availableCurrencies = CurrencySettings.SUPPORTED_CURRENCIES
         )
+    }
+
+    private fun handleAIExchangeRateRequest(fromCurrency: String, toCurrency: String) {
+        viewModelScope.launch {
+            getAIExchangeRateUseCase(
+                fromCurrency = fromCurrency,
+                toCurrency = toCurrency,
+                currentTripModeSettings = _uiState.value.tripModeSettings
+            ).collect { result ->
+                when (result) {
+                    is AIExchangeRateResult.Loading -> {
+                        _uiState.value = _uiState.value.copy(
+                            isLoadingAIExchangeRate = true,
+                            aiExchangeRateError = null,
+                            aiExchangeRate = null
+                        )
+                    }
+
+                    is AIExchangeRateResult.Success -> {
+                        _uiState.value = _uiState.value.copy(
+                            isLoadingAIExchangeRate = false,
+                            aiExchangeRate = result.exchangeRate,
+                            aiExchangeRateError = null,
+                            tripModeSettings = result.updatedTripModeSettings
+                        )
+                    }
+
+                    is AIExchangeRateResult.Error -> {
+                        _uiState.value = _uiState.value.copy(
+                            isLoadingAIExchangeRate = false,
+                            aiExchangeRateError = result.message
+                        )
+                    }
+                }
+            }
+        }
     }
 }

@@ -569,7 +569,18 @@ fun ExpenseListScreen(
                     onTripModeUpdate = { settings ->
                         viewModel.onEvent(ExpenseListEvent.TripModeSettingsUpdated(settings))
                     },
-                    onDismiss = { viewModel.onEvent(ExpenseListEvent.DismissTripModeSetup) }
+                    onDismiss = { viewModel.onEvent(ExpenseListEvent.DismissTripModeSetup) },
+                    onAIExchangeRateRequested = { fromCurrency, toCurrency ->
+                        viewModel.onEvent(
+                            ExpenseListEvent.AIExchangeRateRequested(
+                                fromCurrency,
+                                toCurrency
+                            )
+                        )
+                    },
+                    isLoadingAIRate = uiState.isLoadingAIExchangeRate,
+                    aiRateError = uiState.aiExchangeRateError,
+                    aiExchangeRate = uiState.aiExchangeRate
                 )
             }
         }

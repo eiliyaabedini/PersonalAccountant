@@ -2,6 +2,8 @@ package ir.act.personalAccountant.ai.data.remote
 
 import com.google.gson.Gson
 import ir.act.personalAccountant.ai.domain.model.AIAnalysisResult
+import ir.act.personalAccountant.ai.domain.model.CurrencyExchangeResponse
+import ir.act.personalAccountant.ai.domain.model.ExchangeRateResult
 import ir.act.personalAccountant.ai.domain.model.ReceiptAnalysisRequest
 import ir.act.personalAccountant.ai.domain.model.ReceiptAnalysisResponse
 import kotlinx.coroutines.Dispatchers
@@ -285,6 +287,156 @@ class OpenAIClient @Inject constructor(
             max_tokens = 300,
             temperature = 0.2
         )
+    }
+
+    suspend fun getCurrencyExchangeRate(
+        fromCurrency: String,
+        toCurrency: String,
+        apiKey: String
+    ): CurrencyExchangeResponse = withContext(Dispatchers.IO) {
+        try {
+            val request = createExchangeRateRequest(fromCurrency, toCurrency)
+            val response = apiService.createChatCompletion(
+                authorization = "Bearer $apiKey",
+                request = request
+            )
+
+            if (response.isSuccessful) {
+                val responseBody = response.body()
+                responseBody?.let { body ->
+                    if (body.error != null) {
+                        return@withContext CurrencyExchangeResponse(
+                            success = false,
+                            errorMessage = body.error.message
+                        )
+                    }
+
+                    val content = body.choices.firstOrNull()?.message?.content
+                    if (content != null) {
+                        parseExchangeRateResponse(content, fromCurrency, toCurrency)
+                    } else {
+                        CurrencyExchangeResponse(
+                            success = false,
+                            errorMessage = "No response content received"
+                        )
+                    }
+                } ?: CurrencyExchangeResponse(
+                    success = false,
+                    errorMessage = "Empty response from API"
+                )
+            } else {
+                val errorBody = response.errorBody()?.string()
+                val errorMessage = try {
+                    val errorResponse = gson.fromJson(errorBody, OpenAIResponse::class.java)
+                    errorResponse.error?.message ?: "HTTP ${response.code()}: ${response.message()}"
+                } catch (e: Exception) {
+                    "HTTP ${response.code()}: ${response.message()}"
+                }
+
+                CurrencyExchangeResponse(
+                    success = false,
+                    errorMessage = errorMessage
+                )
+            }
+        } catch (e: Exception) {
+            CurrencyExchangeResponse(
+                success = false,
+                errorMessage = "Network error: ${e.message}"
+            )
+        }
+    }
+
+    private fun createExchangeRateRequest(fromCurrency: String, toCurrency: String): OpenAIRequest {
+        val systemPrompt = """
+            You are a currency exchange rate assistant. Search for the current live exchange rate from $fromCurrency to $toCurrency. 
+            IMPORTANT: Find the exact timestamp when this exchange rate was published/updated by the source.
+            
+            Respond ONLY with valid JSON in this exact format:
+            {
+                "rate": 0.0000,
+                "from_currency": "$fromCurrency",
+                "to_currency": "$toCurrency",
+                "timestamp_utc": "YYYY-MM-DD HH:MM:SS UTC",
+                "source": "source_name",
+                "confidence": 0.95
+            }
+            
+            Rules:
+            - rate must be a number representing how much 1 unit of $fromCurrency equals in $toCurrency
+            - timestamp_utc should be the actual time when the exchange rate was last updated according to the source, not the current time
+            - source should be the website/service where you found the rate
+            - confidence should be between 0.0 and 1.0 based on source reliability
+            - respond in only 4 precision like 4.2436 not more than that and round it up
+        """.trimIndent()
+
+        return OpenAIRequest(
+            model = "gpt-4o-search-preview",
+            messages = listOf(
+                OpenAIMessage(
+                    role = "system",
+                    content = listOf(
+                        OpenAIContent(
+                            type = "text",
+                            text = systemPrompt
+                        )
+                    )
+                ),
+                OpenAIMessage(
+                    role = "user",
+                    content = listOf(
+                        OpenAIContent(
+                            type = "text",
+                            text = "Please search for and provide the current live exchange rate from $fromCurrency to $toCurrency, including the exact timestamp when this rate was last updated by the source."
+                        )
+                    )
+                )
+            ),
+            max_tokens = 300,
+            web_search_options = OpenAIWebSearchOptions(search_context_size = "medium")
+        )
+    }
+
+    private fun parseExchangeRateResponse(
+        content: String,
+        fromCurrency: String,
+        toCurrency: String
+    ): CurrencyExchangeResponse {
+        return try {
+            val cleanContent = content.trim()
+                .removePrefix("```json")
+                .removeSuffix("```")
+                .trim()
+
+            val result = gson.fromJson(cleanContent, ExchangeRateResult::class.java)
+
+            // Parse timestamp from UTC string format to milliseconds
+            val timestamp = try {
+                result.timestamp_utc?.let { timestampStr ->
+                    // Try to parse the "YYYY-MM-DD HH:MM:SS UTC" format
+                    val format =
+                        java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss 'UTC'", java.util.Locale.US)
+                    format.timeZone = java.util.TimeZone.getTimeZone("UTC")
+                    format.parse(timestampStr)?.time ?: System.currentTimeMillis()
+                } ?: System.currentTimeMillis()
+            } catch (e: Exception) {
+                // If parsing fails, use current time
+                System.currentTimeMillis()
+            }
+
+            CurrencyExchangeResponse(
+                success = true,
+                exchangeRate = result.rate,
+                fromCurrency = result.from_currency,
+                toCurrency = result.to_currency,
+                timestamp = timestamp,
+                source = result.source
+            )
+        } catch (e: Exception) {
+            CurrencyExchangeResponse(
+                success = false,
+                errorMessage = "Failed to parse exchange rate response: ${e.message}"
+            )
+        }
     }
 
     private fun parseAIResponse(content: String): ReceiptAnalysisResponse {

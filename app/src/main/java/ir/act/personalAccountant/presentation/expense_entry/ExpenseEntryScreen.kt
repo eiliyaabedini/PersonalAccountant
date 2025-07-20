@@ -141,6 +141,14 @@ fun ExpenseEntryScreen(
         }
     }
 
+    // Show AI exchange rate error snackbar
+    uiState.aiExchangeRateError?.let { error ->
+        LaunchedEffect(error) {
+            snackbarHostState.showSnackbar(error)
+            viewModel.onEvent(ExpenseEntryEvent.ClearAIExchangeRateError)
+        }
+    }
+
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -210,6 +218,15 @@ fun ExpenseEntryScreen(
                     currencySettings = currencySettings,
                     tripModeSettings = uiState.tripModeSettings,
                     onExchangeRateClick = { viewModel.onEvent(ExpenseEntryEvent.ShowTripModeSetup) },
+                    onAIExchangeRateClick = {
+                        viewModel.onEvent(
+                            ExpenseEntryEvent.AIExchangeRateRequested(
+                                fromCurrency = currencySettings.currencyCode,
+                                toCurrency = uiState.tripModeSettings.destinationCurrency.currencyCode
+                            )
+                        )
+                    },
+                    isLoadingAIRate = uiState.isLoadingAIExchangeRate,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 20.dp, vertical = 8.dp)
@@ -631,7 +648,18 @@ fun ExpenseEntryScreen(
                 onTripModeUpdate = { settings ->
                     viewModel.onEvent(ExpenseEntryEvent.TripModeSettingsUpdated(settings))
                 },
-                onDismiss = { viewModel.onEvent(ExpenseEntryEvent.DismissTripModeSetup) }
+                onDismiss = { viewModel.onEvent(ExpenseEntryEvent.DismissTripModeSetup) },
+                onAIExchangeRateRequested = { fromCurrency, toCurrency ->
+                    viewModel.onEvent(
+                        ExpenseEntryEvent.AIExchangeRateRequested(
+                            fromCurrency,
+                            toCurrency
+                        )
+                    )
+                },
+                isLoadingAIRate = uiState.isLoadingAIExchangeRate,
+                aiRateError = uiState.aiExchangeRateError,
+                aiExchangeRate = uiState.aiExchangeRate
             )
         }
     }
@@ -663,7 +691,7 @@ private fun EnhancedTagDialog(
                     .padding(24.dp)
             ) {
                 Text(
-                    text = "Select or Add Tag",
+                    text = "Select or Add Category",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 16.dp)
@@ -672,7 +700,7 @@ private fun EnhancedTagDialog(
                 // Existing tags section
                 if (availableTags.isNotEmpty()) {
                     Text(
-                        text = "Existing Tags",
+                        text = "Existing Categories",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier.padding(bottom = 12.dp)
@@ -720,7 +748,7 @@ private fun EnhancedTagDialog(
 
                 // Add new tag section
                 Text(
-                    text = "Add New Tag",
+                    text = "Add New Category",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.padding(bottom = 12.dp)
@@ -729,7 +757,7 @@ private fun EnhancedTagDialog(
                 OutlinedTextField(
                     value = newTagName,
                     onValueChange = onTagNameChange,
-                    label = { Text("New tag name") },
+                    label = { Text("New category name") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
@@ -1089,6 +1117,8 @@ private fun AmountDisplaySection(
     currencySettings: ir.act.personalAccountant.domain.model.CurrencySettings,
     tripModeSettings: ir.act.personalAccountant.domain.model.TripModeSettings,
     onExchangeRateClick: () -> Unit = {},
+    onAIExchangeRateClick: () -> Unit = {},
+    isLoadingAIRate: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     if (tripModeSettings.isEnabled) {
@@ -1139,21 +1169,75 @@ private fun AmountDisplaySection(
                 }
             }
 
-            // Exchange rate display (small, below) - clickable
+            // Exchange rate display with AI button
             Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = ir.act.personalAccountant.domain.model.TripModeSettings.formatExchangeRateWithTimestamp(
-                    homeCurrency = currencySettings,
-                    destinationCurrency = tripModeSettings.destinationCurrency,
-                    exchangeRate = tripModeSettings.exchangeRate,
-                    lastUpdated = tripModeSettings.lastUpdated
-                ),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
-                modifier = Modifier
-                    .clickable { onExchangeRateClick() }
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
-            )
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (isLoadingAIRate) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(14.dp),
+                            color = MaterialTheme.colorScheme.primary,
+                            strokeWidth = 1.5.dp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Fetching live rate...",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                        )
+                    }
+                } else {
+                    Text(
+                        text = ir.act.personalAccountant.domain.model.TripModeSettings.formatExchangeRateWithTimestamp(
+                            homeCurrency = currencySettings,
+                            destinationCurrency = tripModeSettings.destinationCurrency,
+                            exchangeRate = tripModeSettings.exchangeRate,
+                            lastUpdated = tripModeSettings.lastUpdated
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                        modifier = Modifier
+                            .clickable { onExchangeRateClick() }
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // AI exchange rate button
+                IconButton(
+                    onClick = {
+                        onAIExchangeRateClick()
+                    },
+                    enabled = !isLoadingAIRate,
+                    modifier = Modifier
+                        .size(32.dp) // Made larger for easier clicking
+                        .background(
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), // More visible
+                            CircleShape
+                        )
+                ) {
+                    if (isLoadingAIRate) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(12.dp),
+                            color = MaterialTheme.colorScheme.primary,
+                            strokeWidth = 1.5.dp
+                        )
+                    } else {
+                        Text(
+                            text = "🤖",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
         }
     } else {
         // Normal Mode: Show single currency

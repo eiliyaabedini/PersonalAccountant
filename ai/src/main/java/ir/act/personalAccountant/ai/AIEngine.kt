@@ -1,10 +1,11 @@
 package ir.act.personalAccountant.ai
 
 import android.net.Uri
+import ir.act.personalAccountant.ai.data.remote.OpenAIClient
+import ir.act.personalAccountant.ai.domain.model.CurrencyExchangeResponse
 import ir.act.personalAccountant.ai.domain.model.ReceiptAnalysisRequest
 import ir.act.personalAccountant.ai.domain.model.ReceiptAnalysisResponse
 import ir.act.personalAccountant.ai.domain.usecase.ImageAnalyzer
-import ir.act.personalAccountant.ai.data.remote.OpenAIClient
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import java.io.InputStream
@@ -72,6 +73,24 @@ class AIEngine @Inject constructor(
             ReceiptAnalysisResponse(
                 success = false,
                 errorMessage = "Connection test failed: ${e.message}"
+            )
+        }
+    }
+
+    suspend fun fetchCurrencyExchangeRate(
+        fromCurrency: String,
+        toCurrency: String,
+        apiKey: String
+    ): Flow<CurrencyExchangeResponse> = flow {
+        try {
+            val response = openAIClient.getCurrencyExchangeRate(fromCurrency, toCurrency, apiKey)
+            emit(response)
+        } catch (e: Exception) {
+            emit(
+                CurrencyExchangeResponse(
+                    success = false,
+                    errorMessage = "Failed to fetch exchange rate: ${e.message}"
+                )
             )
         }
     }

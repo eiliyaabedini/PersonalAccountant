@@ -27,7 +27,10 @@ data class ExpenseListUiState(
     val aiAnalysisError: String? = null,
     val tripModeSettings: TripModeSettings = TripModeSettings.DEFAULT,
     val showTripModeSetup: Boolean = false,
-    val availableCurrencies: List<CurrencySettings> = emptyList()
+    val availableCurrencies: List<CurrencySettings> = emptyList(),
+    val isLoadingAIExchangeRate: Boolean = false,
+    val aiExchangeRateError: String? = null,
+    val aiExchangeRate: Double? = null
 )
 
 sealed class ExpenseListEvent {
@@ -47,6 +50,10 @@ sealed class ExpenseListEvent {
     object ShowTripModeSetup : ExpenseListEvent()
     object DismissTripModeSetup : ExpenseListEvent()
     data class TripModeSettingsUpdated(val settings: TripModeSettings) : ExpenseListEvent()
+    data class AIExchangeRateRequested(val fromCurrency: String, val toCurrency: String) :
+        ExpenseListEvent()
+
+    object ClearAIExchangeRateError : ExpenseListEvent()
 }
 
 sealed class ExpenseListUiInteraction {
