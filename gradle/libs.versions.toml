@@ -1,6 +1,8 @@
 [versions]
 agp = "8.9.1"
 kotlin = "2.0.21"
+googleServices = "4.4.3"
+crashlytics = "3.0.4"
 coreKtx = "1.15.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
@@ -8,6 +10,7 @@ espressoCore = "3.6.1"
 lifecycleRuntimeKtx = "2.8.7"
 activityCompose = "1.10.1"
 composeBom = "2024.09.00"
+firebaseBom = "33.16.0"
 room = "2.6.1"
 hilt = "2.51.1"
 hiltNavigationCompose = "1.2.0"
@@ -79,6 +82,11 @@ google-api-services-drive = { group = "com.google.apis", name = "google-api-serv
 google-http-client-android = { group = "com.google.http-client", name = "google-http-client-android", version.ref = "googleHttpClient" }
 google-http-client-jackson2 = { group = "com.google.http-client", name = "google-http-client-jackson2", version.ref = "googleHttpClient" }
 
+# Firebase
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
+firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
+firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics-ndk" }
+
 # Retrofit and HTTP Client
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 retrofit-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
@@ -93,4 +101,6 @@ kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
+crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "crashlytics" }
 
