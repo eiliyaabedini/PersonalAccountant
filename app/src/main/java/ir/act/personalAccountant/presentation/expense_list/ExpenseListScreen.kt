@@ -3,6 +3,7 @@ package ir.act.personalAccountant.presentation.expense_list
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -79,12 +80,13 @@ import ir.act.personalAccountant.ui.theme.BudgetOrangeLight
 import ir.act.personalAccountant.ui.theme.BudgetPurpleLight
 import ir.act.personalAccountant.ui.theme.BudgetRedLight
 import ir.act.personalAccountant.ui.theme.TextSecondary
+import ir.act.personalAccountant.ui.theme.YellowPrimary
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ExpenseListScreen(
     onNavigateToExpenseEntry: () -> Unit,
@@ -420,29 +422,52 @@ fun ExpenseListScreen(
                                         modifier = Modifier.fillMaxWidth(),
                                         verticalArrangement = Arrangement.spacedBy(0.dp)
                                     ) {
-                                        items(
-                                            items = uiState.expenses.take(10), // Show max 10 recent items
-                                            key = { it.id }
-                                        ) { expense ->
-                                            SwipeToDeleteExpenseItem(
-                                                expense = expense,
-                                                isNewlyAdded = expense.timestamp > screenOpenTime,
-                                                currencySettings = currencySettings,
-                                                onEditClick = {
-                                                    viewModel.onEvent(
-                                                        ExpenseListEvent.EditClicked(
-                                                            expense
-                                                        )
-                                                    )
-                                                },
-                                                onDeleteClick = {
-                                                    viewModel.onEvent(
-                                                        ExpenseListEvent.DeleteClicked(
-                                                            expense
-                                                        )
+                                        // Show expenses grouped by day with sticky headers
+                                        uiState.groupedExpensesByDay.forEach { (dayOfMonth, expensesForDay) ->
+                                            stickyHeader(key = "day_header_$dayOfMonth") {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .background(MaterialTheme.colorScheme.surface)
+                                                        .padding(vertical = 4.dp)
+                                                ) {
+                                                    DayGroupHeader(
+                                                        dayOfMonth = dayOfMonth,
+                                                        totalAmount = expensesForDay.sumOf { it.amount },
+                                                        currencySettings = currencySettings,
+                                                        expenseCount = expensesForDay.size
                                                     )
                                                 }
-                                            )
+                                            }
+
+                                            items(
+                                                items = expensesForDay.take(5), // Limit to 5 per day for recent expenses
+                                                key = { it.id }
+                                            ) { expense ->
+                                                SwipeToDeleteExpenseItem(
+                                                    expense = expense,
+                                                    isNewlyAdded = expense.timestamp > screenOpenTime,
+                                                    currencySettings = currencySettings,
+                                                    onEditClick = {
+                                                        viewModel.onEvent(
+                                                            ExpenseListEvent.EditClicked(
+                                                                expense
+                                                            )
+                                                        )
+                                                    },
+                                                    onDeleteClick = {
+                                                        viewModel.onEvent(
+                                                            ExpenseListEvent.DeleteClicked(
+                                                                expense
+                                                            )
+                                                        )
+                                                    }
+                                                )
+                                            }
+
+                                            item {
+                                                Spacer(modifier = Modifier.height(8.dp))
+                                            }
                                         }
                                     }
                                 }
@@ -1313,5 +1338,50 @@ private fun BudgetStatusGauge(
             color = color,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
         )
+    }
+}
+
+@Composable
+private fun DayGroupHeader(
+    dayOfMonth: Int,
+    totalAmount: Double,
+    currencySettings: CurrencySettings,
+    expenseCount: Int
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = YellowPrimary // Use theme yellow from FAB
+        ),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text = "Day $dayOfMonth",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF5D4037) // Dark brown for good contrast with yellow
+                )
+                Text(
+                    text = "$expenseCount ${if (expenseCount == 1) "expense" else "expenses"}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF5D4037).copy(alpha = 0.7f) // Dark brown with transparency
+                )
+            }
+
+            Text(
+                text = CurrencyFormatter.formatCurrency(totalAmount, currencySettings),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF5D4037) // Dark brown for good contrast with yellow
+            )
+        }
     }
 }

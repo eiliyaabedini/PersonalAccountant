@@ -10,6 +10,7 @@ import ir.act.personalAccountant.domain.model.TripModeSettings
 
 data class ExpenseListUiState(
     val expenses: List<Expense> = emptyList(),
+    val groupedExpensesByDay: Map<Int, List<Expense>> = emptyMap(),
     val totalExpenses: Double = 0.0,
     val tagExpenseData: List<TagExpenseData> = emptyList(),
     val isLoading: Boolean = false,

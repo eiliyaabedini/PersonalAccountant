@@ -11,6 +11,7 @@ import ir.act.personalAccountant.ai.data.repository.AIRepository
 import ir.act.personalAccountant.core.util.DateUtils
 import ir.act.personalAccountant.core.util.ImageFileManager
 import ir.act.personalAccountant.domain.model.CurrencySettings
+import ir.act.personalAccountant.domain.model.Expense
 import ir.act.personalAccountant.domain.usecase.AIExchangeRateResult
 import ir.act.personalAccountant.domain.usecase.AddExpenseUseCase
 import ir.act.personalAccountant.domain.usecase.BudgetUseCase
@@ -35,6 +36,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import java.util.Calendar
 import javax.inject.Inject
 
 @HiltViewModel
@@ -218,8 +220,10 @@ class ExpenseListViewModel @Inject constructor(
                     getTotalExpensesByMonthUseCase(currentState.currentYear, currentState.currentMonth),
                     getExpensesByTagForMonthUseCase(currentState.currentYear, currentState.currentMonth)
                 ) { expenses, total, tagData ->
+                    val groupedByDay = groupExpensesByDayOfMonth(expenses)
                     _uiState.value = _uiState.value.copy(
                         expenses = expenses,
+                        groupedExpensesByDay = groupedByDay,
                         totalExpenses = total,
                         tagExpenseData = tagData,
                         isLoading = false,
@@ -535,5 +539,13 @@ class ExpenseListViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun groupExpensesByDayOfMonth(expenses: List<Expense>): Map<Int, List<Expense>> {
+        return expenses.groupBy { expense ->
+            val calendar = Calendar.getInstance()
+            calendar.timeInMillis = expense.timestamp
+            calendar.get(Calendar.DAY_OF_MONTH)
+        }.toSortedMap(compareByDescending { it })
     }
 }
