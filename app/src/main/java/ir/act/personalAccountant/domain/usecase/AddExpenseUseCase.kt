@@ -15,7 +15,8 @@ class AddExpenseUseCase @Inject constructor(
         tag: String,
         timestamp: Long = System.currentTimeMillis(),
         imagePath: String? = null,
-        originalDestinationAmount: Double? = null // Original amount in destination currency before conversion
+        originalDestinationAmount: Double? = null, // Original amount in destination currency before conversion
+        destinationCurrency: String? = null // Explicit destination currency (overrides trip mode settings)
     ): Long {
         if (amount <= 0) {
             throw IllegalArgumentException("Amount must be greater than 0")
@@ -24,7 +25,17 @@ class AddExpenseUseCase @Inject constructor(
         // Get current trip mode settings
         val tripModeSettings = tripModeRepository.getTripModeSettings().first()
 
-        val expense = if (tripModeSettings.isEnabled && originalDestinationAmount != null) {
+        val expense = if (originalDestinationAmount != null && destinationCurrency != null) {
+            // Explicit dual currency (from AI analysis or manual entry)
+            Expense(
+                amount = amount, // Home currency amount (already converted)
+                timestamp = timestamp,
+                tag = tag,
+                imagePath = imagePath,
+                destinationAmount = originalDestinationAmount, // Original destination currency amount
+                destinationCurrency = destinationCurrency // Explicit destination currency
+            )
+        } else if (tripModeSettings.isEnabled && originalDestinationAmount != null) {
             // Travel mode: amount is already converted to home currency
             Expense(
                 amount = amount, // Home currency amount (already converted)

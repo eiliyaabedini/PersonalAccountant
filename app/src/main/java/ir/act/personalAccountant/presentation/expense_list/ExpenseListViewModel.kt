@@ -304,42 +304,54 @@ class ExpenseListViewModel @Inject constructor(
                     if (result.success) {
                         val totalAmount = result.totalAmount
                         val category = result.category
+                        val detectedCurrency = result.detectedCurrency
+                        val homeCurrency = _uiState.value.currencySettings.currencyCode
 
                         // If we have both amount and category with good confidence, auto-save
                         if (totalAmount != null && category != null && result.confidence > 0.7f) {
-                            // Auto-save the expense
-                            try {
-                                val imagePath = saveImageToStorage(tempCameraUri)
-                                val newExpenseId = addExpenseUseCase(
-                                    amount = totalAmount,
-                                    tag = category,
-                                    timestamp = System.currentTimeMillis(),
-                                    imagePath = imagePath
-                                    // Note: Receipt analysis provides amounts in home currency, no dual currency conversion needed
+                            if (detectedCurrency != null && detectedCurrency != homeCurrency) {
+                                // Currency is different - handle as travel expense
+                                handleTravelExpenseFromCamera(
+                                    totalAmount,
+                                    detectedCurrency,
+                                    homeCurrency,
+                                    category,
+                                    tempCameraUri
                                 )
-
-                                // Refresh the expense list
-                                loadExpenses()
-
-                                // Clear the temp URI
-                                _uiState.value = _uiState.value.copy(tempCameraUri = null)
-
-                                // Show success message
-                                _uiInteraction.send(
-                                    ExpenseListUiInteraction.ShowSuccessMessage(
-                                        "Expense added successfully! Amount: ${
-                                            CurrencySettings.getCurrencySymbol(
-                                                _uiState.value.currencySettings.currencyCode
-                                            )
-                                        }$totalAmount, Category: $category"
+                            } else {
+                                // Same currency or no currency detected - save normally
+                                try {
+                                    val imagePath = saveImageToStorage(tempCameraUri)
+                                    val newExpenseId = addExpenseUseCase(
+                                        amount = totalAmount,
+                                        tag = category,
+                                        timestamp = System.currentTimeMillis(),
+                                        imagePath = imagePath
                                     )
-                                )
 
-                            } catch (e: Exception) {
-                                _uiState.value = _uiState.value.copy(
-                                    isAnalyzingReceipt = false,
-                                    aiAnalysisError = "Failed to save expense: ${e.message}"
-                                )
+                                    // Refresh the expense list
+                                    loadExpenses()
+
+                                    // Clear the temp URI
+                                    _uiState.value = _uiState.value.copy(tempCameraUri = null)
+
+                                    // Show success message
+                                    _uiInteraction.send(
+                                        ExpenseListUiInteraction.ShowSuccessMessage(
+                                            "Expense added successfully! Amount: ${
+                                                CurrencySettings.getCurrencySymbol(
+                                                    _uiState.value.currencySettings.currencyCode
+                                                )
+                                            }$totalAmount, Category: $category"
+                                        )
+                                    )
+
+                                } catch (e: Exception) {
+                                    _uiState.value = _uiState.value.copy(
+                                        isAnalyzingReceipt = false,
+                                        aiAnalysisError = "Failed to save expense: ${e.message}"
+                                    )
+                                }
                             }
                         } else {
                             _uiState.value = _uiState.value.copy(
@@ -375,6 +387,103 @@ class ExpenseListViewModel @Inject constructor(
             }
         } catch (e: Exception) {
             null
+        }
+    }
+
+    private fun handleTravelExpenseFromCamera(
+        amountInDestinationCurrency: Double,
+        destinationCurrency: String,
+        homeCurrency: String,
+        category: String,
+        tempCameraUri: Uri
+    ) {
+        viewModelScope.launch {
+            try {
+                _uiState.value = _uiState.value.copy(
+                    isAnalyzingReceipt = true,
+                    aiAnalysisError = null
+                )
+
+                // Get API key for exchange rate lookup
+                val apiKey = aiRepository.apiKey.first()
+                if (apiKey.isBlank()) {
+                    _uiState.value = _uiState.value.copy(
+                        isAnalyzingReceipt = false,
+                        aiAnalysisError = "OpenAI API key not configured for exchange rate lookup."
+                    )
+                    return@launch
+                }
+
+                // Fetch exchange rate from destination currency to home currency
+                aiEngine.fetchCurrencyExchangeRate(
+                    fromCurrency = destinationCurrency,
+                    toCurrency = homeCurrency,
+                    apiKey = apiKey
+                ).collect { exchangeResult ->
+                    _uiState.value = _uiState.value.copy(isAnalyzingReceipt = false)
+
+                    if (exchangeResult.success && exchangeResult.exchangeRate != null) {
+                        // Convert amount to home currency
+                        val amountInHomeCurrency =
+                            amountInDestinationCurrency * exchangeResult.exchangeRate!!
+
+                        // Save as travel expense with dual currency
+                        try {
+                            val imagePath = saveImageToStorage(tempCameraUri)
+                            val newExpenseId = addExpenseUseCase(
+                                amount = amountInHomeCurrency, // Save converted amount in home currency
+                                tag = category,
+                                timestamp = System.currentTimeMillis(),
+                                imagePath = imagePath,
+                                originalDestinationAmount = amountInDestinationCurrency, // Original amount in destination currency
+                                destinationCurrency = destinationCurrency // Detected currency from receipt
+                            )
+
+                            // Refresh the expense list
+                            loadExpenses()
+
+                            // Clear the temp URI
+                            _uiState.value = _uiState.value.copy(tempCameraUri = null)
+
+                            // Show success message with dual currency info
+                            _uiInteraction.send(
+                                ExpenseListUiInteraction.ShowSuccessMessage(
+                                    "Travel expense added! ${
+                                        CurrencySettings.getCurrencySymbol(
+                                            destinationCurrency
+                                        )
+                                    }$amountInDestinationCurrency → ${
+                                        CurrencySettings.getCurrencySymbol(
+                                            homeCurrency
+                                        )
+                                    }${
+                                        String.format(
+                                            "%.2f",
+                                            amountInHomeCurrency
+                                        )
+                                    }, Category: $category"
+                                )
+                            )
+
+                        } catch (e: Exception) {
+                            _uiState.value = _uiState.value.copy(
+                                isAnalyzingReceipt = false,
+                                aiAnalysisError = "Failed to save travel expense: ${e.message}"
+                            )
+                        }
+                    } else {
+                        _uiState.value = _uiState.value.copy(
+                            aiAnalysisError = "Failed to get exchange rate: ${exchangeResult.errorMessage ?: "Unknown error"}"
+                        )
+                    }
+                }
+
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isAnalyzingReceipt = false,
+                    aiAnalysisError = "Failed to process travel expense: ${e.message}"
+                )
+            }
         }
     }
 

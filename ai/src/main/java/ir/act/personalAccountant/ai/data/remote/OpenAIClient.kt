@@ -238,6 +238,7 @@ class OpenAIClient @Inject constructor(
             You are a receipt analysis assistant. Analyze the provided receipt image and extract:
             1. Total amount (as a decimal number)
             2. Most appropriate category from the available options
+            3. Currency detected from the receipt (look for currency symbols, currency codes, or country context)
             
             Available categories: ${request.availableCategories.joinToString(", ")}
             
@@ -246,13 +247,26 @@ class OpenAIClient @Inject constructor(
                 "total_amount": 0.00,
                 "category": "category_name",
                 "confidence": 0.95,
-                "currency_detected": "${request.currencySymbol}"
+                "currency_detected": "USD"
             }
             
             Rules:
             - total_amount must be a number (decimal)
             - category must be one of the available categories
-            - confidence should be between 0.0 and 1.0
+            - confidence should be between 0.0 and 1.0 based on how certain you are about the amount and category
+            - currency_detected should be the 3-letter ISO currency code (e.g., USD, EUR, GBP, JPY) detected from the receipt
+            - Look for currency symbols ($, €, £, ¥), currency codes (USD, EUR), or country/language context to determine currency
+            - If you can't determine the currency from the receipt, use "${
+            request.currencySymbol.let { symbol ->
+                when (symbol) {
+                    "$" -> "USD"
+                    "€" -> "EUR"
+                    "£" -> "GBP"
+                    "¥" -> "JPY"
+                    else -> "USD"
+                }
+            }
+        }" as default
             - If you can't determine the amount or category, use confidence < 0.5
         """.trimIndent()
 
@@ -452,7 +466,8 @@ class OpenAIClient @Inject constructor(
                 success = true,
                 totalAmount = result.total_amount,
                 category = result.category,
-                confidence = result.confidence
+                confidence = result.confidence,
+                detectedCurrency = result.currency_detected
             )
         } catch (e: Exception) {
             ReceiptAnalysisResponse(

@@ -5,6 +5,7 @@ data class ReceiptAnalysisResponse(
     val totalAmount: Double? = null,
     val category: String? = null,
     val confidence: Float = 0f,
+    val detectedCurrency: String? = null,
     val errorMessage: String? = null
 )
 
