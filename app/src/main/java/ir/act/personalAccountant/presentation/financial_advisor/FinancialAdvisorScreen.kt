@@ -54,7 +54,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import ir.act.personalAccountant.R
 import ir.act.personalAccountant.core.util.DateUtils
-import ir.act.personalAccountant.presentation.components.MarkdownText
+import ir.act.personalAccountant.presentation.components.MarkdownRenderer
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -284,7 +284,7 @@ private fun ChatMessageItem(message: ChatMessage) {
             Column(
                 modifier = Modifier.padding(12.dp)
             ) {
-                MarkdownText(
+                MarkdownRenderer(
                     text = message.content,
                     style = MaterialTheme.typography.bodyMedium,
                     color = if (message.isUser)

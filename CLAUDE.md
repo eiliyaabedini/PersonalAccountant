@@ -174,3 +174,7 @@ This app follows **MVVM + UseCase architecture** with **Jetpack Compose** and **
 
 - When you finished implementation, build debug version and use adb to run the app on my device
 - After building and installing, launch the app with: `adb shell am start -n ir.act.personalAccountant/.MainActivity`
+
+## Library Management Notes
+
+- When you add new library consider keeping same style and adding them to libs.versions.toml
