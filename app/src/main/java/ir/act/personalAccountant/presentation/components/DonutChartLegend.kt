@@ -161,7 +161,7 @@ private fun LegendItem(
             Text(
                 text = "(${CurrencyFormatter.formatCurrency(averageDailyAmount, currencySettings)}/day)",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = androidx.compose.ui.graphics.Color.Gray,
                 textAlign = TextAlign.Center
             )
         }
