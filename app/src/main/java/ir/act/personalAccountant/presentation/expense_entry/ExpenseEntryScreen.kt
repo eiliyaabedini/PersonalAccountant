@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -205,12 +206,11 @@ fun ExpenseEntryScreen(
                 }
             }
 
-            // Dark content section  
+            // Dark content section
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.background)
-                    .padding(top = 20.dp)
                     .verticalScroll(rememberScrollState())
             ) {
                 // Amount section - with dual currency support for trip mode
@@ -489,72 +489,13 @@ fun ExpenseEntryScreen(
                     }
 
                     // Add button with toggle button
-                    Column(
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Card(
-                            onClick = { viewModel.onEvent(ExpenseEntryEvent.AddTagClicked) },
-                            modifier = Modifier
-                                .size(50.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.primary
-                            ),
-                            shape = RoundedCornerShape(25.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Add,
-                                    contentDescription = "Add or select tag",
-                                    tint = MaterialTheme.colorScheme.onPrimary,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        Card(
-                            onClick = { viewModel.onEvent(ExpenseEntryEvent.AddMultipleExpensesToggled) },
-                            modifier = Modifier
-                                .height(30.dp)
-                                .width(100.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = if (uiState.addMultipleExpenses)
-                                    MaterialTheme.colorScheme.primary
-                                else
-                                    MaterialTheme.colorScheme.surface
-                            ),
-                            border = if (!uiState.addMultipleExpenses)
-                                BorderStroke(
-                                    1.dp,
-                                    MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                                )
-                            else null,
-                            shape = RoundedCornerShape(25.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(horizontal = 16.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "Multiple",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Medium,
-                                    color = if (uiState.addMultipleExpenses)
-                                        MaterialTheme.colorScheme.onPrimary
-                                    else
-                                        MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-                        }
-
+                        MultipleExpenseButton(viewModel, uiState)
+                        AddExpenseButton(viewModel)
                     }
                 }
 
@@ -661,6 +602,75 @@ fun ExpenseEntryScreen(
                 isLoadingAIRate = uiState.isLoadingAIExchangeRate,
                 aiRateError = uiState.aiExchangeRateError,
                 aiExchangeRate = uiState.aiExchangeRate
+            )
+        }
+    }
+}
+
+@Composable
+private fun MultipleExpenseButton(
+    viewModel: ExpenseEntryViewModel,
+    uiState: ExpenseEntryUiState
+) {
+    Card(
+        onClick = { viewModel.onEvent(ExpenseEntryEvent.AddMultipleExpensesToggled) },
+        modifier = Modifier
+            .height(30.dp)
+            .width(100.dp)
+            .offset(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (uiState.addMultipleExpenses)
+                MaterialTheme.colorScheme.primary
+            else
+                MaterialTheme.colorScheme.surface
+        ),
+        border = if (!uiState.addMultipleExpenses)
+            BorderStroke(
+                1.dp,
+                MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+            )
+        else null,
+        shape = RoundedCornerShape(25.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Multiple",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                color = if (uiState.addMultipleExpenses)
+                    MaterialTheme.colorScheme.onPrimary
+                else
+                    MaterialTheme.colorScheme.onSurface
+            )
+        }
+    }
+}
+
+@Composable
+private fun AddExpenseButton(viewModel: ExpenseEntryViewModel) {
+    Card(
+        onClick = { viewModel.onEvent(ExpenseEntryEvent.AddTagClicked) },
+        modifier = Modifier
+            .size(50.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primary
+        ),
+        shape = RoundedCornerShape(25.dp)
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Add or select tag",
+                tint = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.size(24.dp)
             )
         }
     }
