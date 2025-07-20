@@ -619,7 +619,7 @@ private fun TopBar(
             modifier = Modifier.size(40.dp)
         ) {
             Image(
-                painter = painterResource(R.mipmap.owl_ai),
+                painter = painterResource(R.mipmap.owl),
                 contentDescription = null,
                 Modifier.size(32.dp)
             )

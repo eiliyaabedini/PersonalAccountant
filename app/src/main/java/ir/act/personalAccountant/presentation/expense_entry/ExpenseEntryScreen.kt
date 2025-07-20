@@ -1242,7 +1242,7 @@ private fun AmountDisplaySection(
                         )
                     } else {
                         Image(
-                            painter = painterResource(R.mipmap.owl_ai),
+                            painter = painterResource(R.mipmap.owl),
                             contentDescription = null,
                             Modifier.size(32.dp)
                         )

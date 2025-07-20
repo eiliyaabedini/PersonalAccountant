@@ -220,7 +220,7 @@ private fun WelcomeMessage(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Image(
-                painter = painterResource(R.mipmap.owl_ai),
+                painter = painterResource(R.mipmap.owl),
                 contentDescription = null,
                 Modifier.size(48.dp)
             )
