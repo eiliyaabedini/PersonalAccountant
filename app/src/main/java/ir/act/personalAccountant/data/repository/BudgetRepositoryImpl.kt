@@ -34,4 +34,9 @@ class BudgetRepositoryImpl @Inject constructor(
         val currentSettings = cache.getBudgetSettingsSync()
         cache.updateBudgetSettings(currentSettings.copy(isConfigured = isConfigured))
     }
+
+    override suspend fun updateSavingGoal(savingGoal: Double) {
+        val currentSettings = cache.getBudgetSettingsSync()
+        cache.updateBudgetSettings(currentSettings.copy(monthlySavingGoal = savingGoal))
+    }
 }

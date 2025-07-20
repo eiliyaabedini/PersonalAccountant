@@ -8,6 +8,8 @@ object BudgetConfigContract {
         val budgetSettings: BudgetSettings = BudgetSettings(),
         val netSalaryInput: String = "",
         val rentInput: String = "",
+        val savingGoalInput: String = "",
+        val recommendedSavingGoal: Double = 0.0,
         val isInputValid: Boolean = false,
         val errorMessage: String? = null,
         val isSuccess: Boolean = false
@@ -16,6 +18,8 @@ object BudgetConfigContract {
     sealed class Event {
         data class OnNetSalaryChanged(val netSalary: String) : Event()
         data class OnRentChanged(val rent: String) : Event()
+        data class OnSavingGoalChanged(val savingGoal: String) : Event()
+        data object OnUseRecommendedSavingGoal : Event()
         data object OnSaveClicked : Event()
         data object OnDismissError : Event()
         data object OnNavigateBack : Event()

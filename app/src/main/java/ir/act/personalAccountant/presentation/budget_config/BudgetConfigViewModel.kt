@@ -30,10 +30,14 @@ class BudgetConfigViewModel @Inject constructor(
     private fun observeBudgetSettings() {
         viewModelScope.launch {
             budgetUseCase.getBudgetSettings().collect { budgetSettings ->
+                val recommended =
+                    calculateRecommendedSavingGoal(if (budgetSettings.netSalary > 0) budgetSettings.netSalary.toString() else "")
                 _uiState.value = _uiState.value.copy(
                     budgetSettings = budgetSettings,
                     netSalaryInput = if (budgetSettings.netSalary > 0) budgetSettings.netSalary.toString() else "",
-                    rentInput = if (budgetSettings.totalRent > 0) budgetSettings.totalRent.toString() else ""
+                    rentInput = if (budgetSettings.totalRent > 0) budgetSettings.totalRent.toString() else "",
+                    savingGoalInput = if (budgetSettings.monthlySavingGoal > 0) budgetSettings.monthlySavingGoal.toString() else "",
+                    recommendedSavingGoal = recommended
                 )
             }
         }
@@ -46,6 +50,13 @@ class BudgetConfigViewModel @Inject constructor(
             }
             is BudgetConfigContract.Event.OnRentChanged -> {
                 handleRentChanged(event.rent)
+            }
+            is BudgetConfigContract.Event.OnSavingGoalChanged -> {
+                handleSavingGoalChanged(event.savingGoal)
+            }
+
+            is BudgetConfigContract.Event.OnUseRecommendedSavingGoal -> {
+                handleUseRecommendedSavingGoal()
             }
             is BudgetConfigContract.Event.OnSaveClicked -> {
                 handleSaveClicked()
@@ -60,27 +71,58 @@ class BudgetConfigViewModel @Inject constructor(
     }
 
     private fun handleNetSalaryChanged(netSalary: String) {
-        updateInputValidation(netSalary, _uiState.value.rentInput)
+        val recommended = calculateRecommendedSavingGoal(netSalary)
+        updateInputValidation(netSalary, _uiState.value.rentInput, _uiState.value.savingGoalInput)
         _uiState.value = _uiState.value.copy(
             netSalaryInput = netSalary,
+            recommendedSavingGoal = recommended,
             errorMessage = null
         )
     }
 
     private fun handleRentChanged(rent: String) {
-        updateInputValidation(_uiState.value.netSalaryInput, rent)
+        updateInputValidation(_uiState.value.netSalaryInput, rent, _uiState.value.savingGoalInput)
         _uiState.value = _uiState.value.copy(
             rentInput = rent,
             errorMessage = null
         )
     }
 
-    private fun updateInputValidation(netSalary: String, rent: String) {
+    private fun handleSavingGoalChanged(savingGoal: String) {
+        updateInputValidation(_uiState.value.netSalaryInput, _uiState.value.rentInput, savingGoal)
+        _uiState.value = _uiState.value.copy(
+            savingGoalInput = savingGoal,
+            errorMessage = null
+        )
+    }
+
+    private fun handleUseRecommendedSavingGoal() {
+        val recommended = _uiState.value.recommendedSavingGoal
+        if (recommended > 0) {
+            _uiState.value = _uiState.value.copy(
+                savingGoalInput = recommended.toString()
+            )
+            updateInputValidation(
+                _uiState.value.netSalaryInput,
+                _uiState.value.rentInput,
+                recommended.toString()
+            )
+        }
+    }
+
+    private fun calculateRecommendedSavingGoal(netSalary: String): Double {
+        val salary = netSalary.toDoubleOrNull() ?: 0.0
+        return salary * 0.20 // 20% based on 50/30/20 rule
+    }
+
+    private fun updateInputValidation(netSalary: String, rent: String, savingGoal: String) {
         val isNetSalaryValid = netSalary.toDoubleOrNull()?.let { it > 0 } == true
         val isRentValid = rent.isEmpty() || rent.toDoubleOrNull()?.let { it >= 0 } == true
+        val isSavingGoalValid =
+            savingGoal.isEmpty() || savingGoal.toDoubleOrNull()?.let { it >= 0 } == true
         
         _uiState.value = _uiState.value.copy(
-            isInputValid = isNetSalaryValid && isRentValid
+            isInputValid = isNetSalaryValid && isRentValid && isSavingGoalValid
         )
     }
 
@@ -101,11 +143,20 @@ class BudgetConfigViewModel @Inject constructor(
             return
         }
 
+        val savingGoal = _uiState.value.savingGoalInput.toDoubleOrNull() ?: 0.0
+        if (savingGoal < 0) {
+            _uiState.value = _uiState.value.copy(
+                errorMessage = "Saving goal amount cannot be negative"
+            )
+            return
+        }
+
         _uiState.value = _uiState.value.copy(isLoading = true)
         viewModelScope.launch {
             try {
                 budgetUseCase.updateNetSalary(netSalary)
                 budgetUseCase.updateTotalRent(rent)
+                budgetUseCase.updateSavingGoal(savingGoal)
                 budgetUseCase.setBudgetConfigured(true)
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,

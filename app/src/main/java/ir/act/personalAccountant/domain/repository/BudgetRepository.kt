@@ -9,4 +9,5 @@ interface BudgetRepository {
     suspend fun updateNetSalary(netSalary: Double)
     suspend fun updateTotalRent(totalRent: Double)
     suspend fun setBudgetConfigured(isConfigured: Boolean)
+    suspend fun updateSavingGoal(savingGoal: Double)
 }

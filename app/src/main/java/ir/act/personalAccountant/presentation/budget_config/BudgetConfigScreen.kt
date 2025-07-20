@@ -15,6 +15,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -148,6 +150,91 @@ fun BudgetConfigScreen(
                     )
                 }
             )
+
+            // Saving Goal Section
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Saving Goal Header
+                    Text(
+                        text = "Monthly Saving Goal",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Medium
+                    )
+
+                    // 50/30/20 Rule Explanation
+                    val explanationText = if (uiState.recommendedSavingGoal > 0) {
+                        "Based on the 50/30/20 rule, we recommend saving 20% of your income (${
+                            String.format(
+                                "%.2f",
+                                uiState.recommendedSavingGoal
+                            )
+                        }). You can adjust this amount below:"
+                    } else {
+                        "Based on the 50/30/20 rule, we recommend saving 20% of your income. Enter your salary above to see the suggested amount."
+                    }
+                    Text(
+                        text = explanationText,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    // Recommended Amount with Button
+                    if (uiState.recommendedSavingGoal > 0) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Suggested (20%): ${
+                                    String.format(
+                                        "%.2f",
+                                        uiState.recommendedSavingGoal
+                                    )
+                                }",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            TextButton(
+                                onClick = {
+                                    viewModel.handleEvent(BudgetConfigContract.Event.OnUseRecommendedSavingGoal)
+                                }
+                            ) {
+                                Text("Use This")
+                            }
+                        }
+                    }
+
+                    // Saving Goal Input
+                    OutlinedTextField(
+                        value = uiState.savingGoalInput,
+                        onValueChange = {
+                            viewModel.handleEvent(BudgetConfigContract.Event.OnSavingGoalChanged(it))
+                        },
+                        label = { Text("Monthly Saving Goal (Optional)") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.fillMaxWidth(),
+                        supportingText = {
+                            Text(
+                                text = "Leave empty to use automatic 20% calculation",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    )
+                }
+            }
 
             // Error message
             if (uiState.errorMessage != null) {

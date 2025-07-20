@@ -3,6 +3,7 @@ package ir.act.personalAccountant.domain.usecase
 import ir.act.personalAccountant.domain.model.BudgetData
 import ir.act.personalAccountant.domain.model.BudgetSettings
 import ir.act.personalAccountant.domain.model.BudgetStatus
+import ir.act.personalAccountant.domain.model.SavingGoalStatus
 import ir.act.personalAccountant.domain.repository.BudgetRepository
 import ir.act.personalAccountant.domain.repository.ExpenseRepository
 import kotlinx.coroutines.flow.Flow
@@ -16,6 +17,7 @@ interface BudgetUseCase {
     suspend fun updateNetSalary(netSalary: Double)
     suspend fun updateTotalRent(totalRent: Double)
     suspend fun setBudgetConfigured(isConfigured: Boolean)
+    suspend fun updateSavingGoal(savingGoal: Double)
     fun getBudgetData(): Flow<BudgetData>
 }
 
@@ -42,6 +44,10 @@ class BudgetUseCaseImpl @Inject constructor(
 
     override suspend fun setBudgetConfigured(isConfigured: Boolean) {
         budgetRepository.setBudgetConfigured(isConfigured)
+    }
+
+    override suspend fun updateSavingGoal(savingGoal: Double) {
+        budgetRepository.updateSavingGoal(savingGoal)
     }
 
     override fun getBudgetData(): Flow<BudgetData> {
@@ -87,6 +93,48 @@ class BudgetUseCaseImpl @Inject constructor(
                 totalExpensesWithRent > totalIncomeToDate * 0.8 -> BudgetStatus.MIDDLE
                 else -> BudgetStatus.GOOD
             }
+
+            // Saving goal calculations - automatically use 20% of salary or user-defined amount
+            val autoSavingGoal = budgetSettings.netSalary * 0.20 // 20% based on 50/30/20 rule
+            val savingGoal = if (budgetSettings.monthlySavingGoal > 0) {
+                budgetSettings.monthlySavingGoal
+            } else {
+                autoSavingGoal
+            }
+
+            val currentBalance = totalIncomeToDate - totalExpensesToDate - totalRentToDate
+            val daysRemaining = totalDaysInMonth - currentDay
+            val dailyNetIncomeAfterRent = dailyIncome - dailyRent
+
+            // Calculate today's expenses for color logic
+            val todayExpenses = currentMonthExpenses.filter { expense ->
+                val expenseCalendar = Calendar.getInstance()
+                expenseCalendar.timeInMillis = expense.timestamp
+                expenseCalendar.get(Calendar.DAY_OF_MONTH) == currentDay
+            }.sumOf { it.amount }
+
+            val (dailySavingsNeeded, recommendedDailyExpenseBudget, savingGoalStatus) = if (budgetSettings.netSalary > 0) {
+                val amountNeededForGoal = savingGoal - currentBalance
+
+                val dailySavingsNeeded = if (daysRemaining > 0) {
+                    amountNeededForGoal / daysRemaining
+                } else 0.0
+
+                val recommendedDailyExpenseBudget = if (daysRemaining > 0) {
+                    (dailyNetIncomeAfterRent - dailySavingsNeeded).coerceAtLeast(0.0)
+                } else 0.0
+
+                val status = when {
+                    currentBalance >= savingGoal -> SavingGoalStatus.GOAL_EXCEEDED
+                    amountNeededForGoal <= 0 -> SavingGoalStatus.GOAL_EXCEEDED
+                    dailySavingsNeeded > dailyNetIncomeAfterRent -> SavingGoalStatus.NEED_ADJUSTMENT
+                    else -> SavingGoalStatus.ON_TRACK
+                }
+
+                Triple(dailySavingsNeeded, recommendedDailyExpenseBudget, status)
+            } else {
+                Triple(0.0, 0.0, SavingGoalStatus.NOT_SET)
+            }
             
             BudgetData(
                 currentDay = currentDay,
@@ -98,7 +146,13 @@ class BudgetUseCaseImpl @Inject constructor(
                 totalExpensesToDate = totalExpensesToDate,
                 averageDailyExpenses = averageDailyExpenses,
                 estimatedEndOfMonthBalance = estimatedEndOfMonthBalance,
-                budgetStatus = budgetStatus
+                budgetStatus = budgetStatus,
+                savingGoal = savingGoal,
+                currentBalance = currentBalance,
+                dailySavingsNeeded = dailySavingsNeeded,
+                recommendedDailyExpenseBudget = recommendedDailyExpenseBudget,
+                savingGoalStatus = savingGoalStatus,
+                todayExpenses = todayExpenses
             )
         }
     }
