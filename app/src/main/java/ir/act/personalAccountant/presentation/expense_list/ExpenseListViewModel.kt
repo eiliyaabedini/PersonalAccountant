@@ -22,6 +22,9 @@ import ir.act.personalAccountant.domain.usecase.GetExpensesByTagForMonthUseCase
 import ir.act.personalAccountant.domain.usecase.GetExpensesByTagUseCase
 import ir.act.personalAccountant.domain.usecase.GetTotalExpensesByMonthUseCase
 import ir.act.personalAccountant.domain.usecase.GetTotalExpensesUseCase
+import ir.act.personalAccountant.domain.usecase.GetTripModeSettingsUseCase
+import ir.act.personalAccountant.domain.usecase.ToggleTripModeUseCase
+import ir.act.personalAccountant.domain.usecase.UpdateTripModeSettingsUseCase
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -48,7 +51,10 @@ class ExpenseListViewModel @Inject constructor(
     private val getAllTagsUseCase: GetAllTagsUseCase,
     private val aiEngine: AIEngine,
     private val aiRepository: AIRepository,
-    private val imageFileManager: ImageFileManager
+    private val imageFileManager: ImageFileManager,
+    private val getTripModeSettingsUseCase: GetTripModeSettingsUseCase,
+    private val toggleTripModeUseCase: ToggleTripModeUseCase,
+    private val updateTripModeSettingsUseCase: UpdateTripModeSettingsUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ExpenseListUiState())
@@ -62,6 +68,8 @@ class ExpenseListViewModel @Inject constructor(
         loadExpenses()
         loadCurrencySettings()
         loadBudgetSettings()
+        loadTripModeSettings()
+        loadAvailableCurrencies()
     }
 
     private fun initializeCurrentMonth() {
@@ -150,6 +158,32 @@ class ExpenseListViewModel @Inject constructor(
 
             ExpenseListEvent.ClearAIAnalysisError -> {
                 _uiState.value = _uiState.value.copy(aiAnalysisError = null)
+            }
+
+            ExpenseListEvent.TripModeToggled -> {
+                val currentTripMode = _uiState.value.tripModeSettings
+                if (!currentTripMode.isEnabled) {
+                    _uiState.value = _uiState.value.copy(showTripModeSetup = true)
+                } else {
+                    viewModelScope.launch {
+                        toggleTripModeUseCase(false)
+                    }
+                }
+            }
+
+            ExpenseListEvent.ShowTripModeSetup -> {
+                _uiState.value = _uiState.value.copy(showTripModeSetup = true)
+            }
+
+            ExpenseListEvent.DismissTripModeSetup -> {
+                _uiState.value = _uiState.value.copy(showTripModeSetup = false)
+            }
+
+            is ExpenseListEvent.TripModeSettingsUpdated -> {
+                viewModelScope.launch {
+                    updateTripModeSettingsUseCase(event.settings)
+                    _uiState.value = _uiState.value.copy(showTripModeSetup = false)
+                }
             }
         }
     }
@@ -322,5 +356,19 @@ class ExpenseListViewModel @Inject constructor(
         } catch (e: Exception) {
             null
         }
+    }
+
+    private fun loadTripModeSettings() {
+        viewModelScope.launch {
+            getTripModeSettingsUseCase().collect { tripModeSettings ->
+                _uiState.value = _uiState.value.copy(tripModeSettings = tripModeSettings)
+            }
+        }
+    }
+
+    private fun loadAvailableCurrencies() {
+        _uiState.value = _uiState.value.copy(
+            availableCurrencies = CurrencySettings.SUPPORTED_CURRENCIES
+        )
     }
 }

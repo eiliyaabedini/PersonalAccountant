@@ -15,6 +15,9 @@ import ir.act.personalAccountant.domain.usecase.GetAllTagsUseCase
 import ir.act.personalAccountant.domain.usecase.GetCurrencySettingsUseCase
 import ir.act.personalAccountant.domain.usecase.GetExpensesByTagUseCase
 import ir.act.personalAccountant.domain.usecase.GetTotalExpensesUseCase
+import ir.act.personalAccountant.domain.usecase.GetTripModeSettingsUseCase
+import ir.act.personalAccountant.domain.usecase.ToggleTripModeUseCase
+import ir.act.personalAccountant.domain.usecase.UpdateTripModeSettingsUseCase
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -35,7 +38,10 @@ class ExpenseEntryViewModel @Inject constructor(
     private val getCurrencySettingsUseCase: GetCurrencySettingsUseCase,
     private val imageFileManager: ImageFileManager,
     private val aiEngine: AIEngine,
-    private val aiRepository: AIRepository
+    private val aiRepository: AIRepository,
+    private val getTripModeSettingsUseCase: GetTripModeSettingsUseCase,
+    private val toggleTripModeUseCase: ToggleTripModeUseCase,
+    private val updateTripModeSettingsUseCase: UpdateTripModeSettingsUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ExpenseEntryUiState())
@@ -49,6 +55,8 @@ class ExpenseEntryViewModel @Inject constructor(
         loadAvailableTags()
         loadTagExpenseData()
         loadCurrencySettings()
+        loadTripModeSettings()
+        loadAvailableCurrencies()
     }
 
     fun onEvent(event: ExpenseEntryEvent) {
@@ -133,6 +141,32 @@ class ExpenseEntryViewModel @Inject constructor(
             ExpenseEntryEvent.ClearAIAnalysisError -> {
                 _uiState.update { it.copy(aiAnalysisError = null) }
             }
+
+            ExpenseEntryEvent.TripModeToggled -> {
+                val currentTripMode = _uiState.value.tripModeSettings
+                if (!currentTripMode.isEnabled) {
+                    _uiState.update { it.copy(showTripModeSetup = true) }
+                } else {
+                    viewModelScope.launch {
+                        toggleTripModeUseCase(false)
+                    }
+                }
+            }
+
+            ExpenseEntryEvent.ShowTripModeSetup -> {
+                _uiState.update { it.copy(showTripModeSetup = true) }
+            }
+
+            ExpenseEntryEvent.DismissTripModeSetup -> {
+                _uiState.update { it.copy(showTripModeSetup = false) }
+            }
+
+            is ExpenseEntryEvent.TripModeSettingsUpdated -> {
+                viewModelScope.launch {
+                    updateTripModeSettingsUseCase(event.settings)
+                    _uiState.update { it.copy(showTripModeSetup = false) }
+                }
+            }
         }
     }
 
@@ -192,8 +226,17 @@ class ExpenseEntryViewModel @Inject constructor(
                 val imagePath = currentState.selectedImageUri?.let { uri ->
                     saveSelectedImage(uri)
                 }
-                
-                val newExpenseId = addExpenseUseCase(amount, tag, currentState.selectedDate, imagePath)
+
+                // Convert to home currency if trip mode is active
+                val amountToSave = if (currentState.tripModeSettings.isEnabled) {
+                    // Convert from destination currency to home currency
+                    amount / currentState.tripModeSettings.exchangeRate
+                } else {
+                    amount
+                }
+
+                val newExpenseId =
+                    addExpenseUseCase(amountToSave, tag, currentState.selectedDate, imagePath)
                 
                 if (currentState.addMultipleExpenses) {
                     // Stay on the page, just clear the form
@@ -449,8 +492,16 @@ class ExpenseEntryViewModel @Inject constructor(
         }
 
         try {
+            // Convert to home currency if trip mode is active
+            val amountToSave = if (currentState.tripModeSettings.isEnabled) {
+                // Convert from destination currency to home currency
+                amount / currentState.tripModeSettings.exchangeRate
+            } else {
+                amount
+            }
+            
             val newExpenseId = addExpenseUseCase(
-                amount = amount,
+                amount = amountToSave,
                 tag = selectedTag,
                 timestamp = currentState.selectedDate,
                 imagePath = currentState.selectedImageUri?.let { uri ->
@@ -465,6 +516,20 @@ class ExpenseEntryViewModel @Inject constructor(
             _uiState.update {
                 it.copy(aiAnalysisError = "Failed to save expense: ${e.message}")
             }
+        }
+    }
+
+    private fun loadTripModeSettings() {
+        viewModelScope.launch {
+            getTripModeSettingsUseCase().collect { tripModeSettings ->
+                _uiState.update { it.copy(tripModeSettings = tripModeSettings) }
+            }
+        }
+    }
+
+    private fun loadAvailableCurrencies() {
+        _uiState.update {
+            it.copy(availableCurrencies = CurrencySettings.SUPPORTED_CURRENCIES)
         }
     }
 }

@@ -6,6 +6,7 @@ import ir.act.personalAccountant.domain.model.BudgetSettings
 import ir.act.personalAccountant.domain.model.CurrencySettings
 import ir.act.personalAccountant.domain.model.Expense
 import ir.act.personalAccountant.domain.model.TagExpenseData
+import ir.act.personalAccountant.domain.model.TripModeSettings
 
 data class ExpenseListUiState(
     val expenses: List<Expense> = emptyList(),
@@ -23,7 +24,10 @@ data class ExpenseListUiState(
     val budgetData: BudgetData? = null,
     val tempCameraUri: Uri? = null,
     val isAnalyzingReceipt: Boolean = false,
-    val aiAnalysisError: String? = null
+    val aiAnalysisError: String? = null,
+    val tripModeSettings: TripModeSettings = TripModeSettings.DEFAULT,
+    val showTripModeSetup: Boolean = false,
+    val availableCurrencies: List<CurrencySettings> = emptyList()
 )
 
 sealed class ExpenseListEvent {
@@ -39,6 +43,10 @@ sealed class ExpenseListEvent {
     data class CameraClicked(val uri: Uri) : ExpenseListEvent()
     object CameraImageCaptured : ExpenseListEvent()
     object ClearAIAnalysisError : ExpenseListEvent()
+    object TripModeToggled : ExpenseListEvent()
+    object ShowTripModeSetup : ExpenseListEvent()
+    object DismissTripModeSetup : ExpenseListEvent()
+    data class TripModeSettingsUpdated(val settings: TripModeSettings) : ExpenseListEvent()
 }
 
 sealed class ExpenseListUiInteraction {

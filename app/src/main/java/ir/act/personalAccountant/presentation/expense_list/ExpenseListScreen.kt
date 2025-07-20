@@ -71,6 +71,7 @@ import ir.act.personalAccountant.presentation.components.DonutChart
 import ir.act.personalAccountant.presentation.components.DonutChartLegend
 import ir.act.personalAccountant.presentation.components.LayeredProgressBar
 import ir.act.personalAccountant.presentation.components.ProgressLayer
+import ir.act.personalAccountant.presentation.components.TripModeSetupDialog
 import ir.act.personalAccountant.presentation.components.assignColorsToTagData
 import ir.act.personalAccountant.ui.theme.TextSecondary
 import java.text.SimpleDateFormat
@@ -452,7 +453,7 @@ fun ExpenseListScreen(
                     .align(Alignment.BottomEnd)
                     .padding(30.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
-                horizontalAlignment = Alignment.Start
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Camera FAB (smaller, on top)
                 SmallFloatingActionButton(
@@ -558,6 +559,19 @@ fun ExpenseListScreen(
                     }
                 )
             }
+
+            // Trip Mode Setup Dialog
+            if (uiState.showTripModeSetup) {
+                TripModeSetupDialog(
+                    homeCurrency = uiState.currencySettings,
+                    currentTripMode = uiState.tripModeSettings,
+                    availableCurrencies = uiState.availableCurrencies,
+                    onTripModeUpdate = { settings ->
+                        viewModel.onEvent(ExpenseListEvent.TripModeSettingsUpdated(settings))
+                    },
+                    onDismiss = { viewModel.onEvent(ExpenseListEvent.DismissTripModeSetup) }
+                )
+            }
         }
     }
 }
@@ -578,6 +592,8 @@ private fun TopBar(
         verticalAlignment = Alignment.CenterVertically
     ) {
         BudgetModeSwitchButton(viewModel, uiState)
+        Spacer(modifier = Modifier.width(8.dp))
+        TripModeToggleButton(viewModel, uiState)
 
         Spacer(modifier = Modifier.weight(1f))
 
@@ -646,6 +662,37 @@ private fun BudgetModeSwitchButton(
             text = if (uiState.isBudgetMode) "Expense" else "Budget",
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+@Composable
+private fun TripModeToggleButton(
+    viewModel: ExpenseListViewModel,
+    uiState: ExpenseListUiState
+) {
+    IconButton(
+        onClick = { viewModel.onEvent(ExpenseListEvent.TripModeToggled) },
+        modifier = Modifier
+            .size(40.dp)
+            .background(
+                if (uiState.tripModeSettings.isEnabled) {
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                } else {
+                    Color.White.copy(alpha = 0.2f)
+                },
+                shape = CircleShape
+            )
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_airplane),
+            contentDescription = if (uiState.tripModeSettings.isEnabled) "Disable Trip Mode" else "Enable Trip Mode",
+            tint = if (uiState.tripModeSettings.isEnabled) {
+                Color.White
+            } else {
+                MaterialTheme.colorScheme.onPrimaryContainer
+            },
+            modifier = Modifier.size(20.dp)
         )
     }
 }

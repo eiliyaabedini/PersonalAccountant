@@ -4,6 +4,7 @@ import android.net.Uri
 import ir.act.personalAccountant.data.local.model.TagWithCount
 import ir.act.personalAccountant.domain.model.CurrencySettings
 import ir.act.personalAccountant.domain.model.TagExpenseData
+import ir.act.personalAccountant.domain.model.TripModeSettings
 
 data class ExpenseEntryUiState(
     val currentAmount: String = "",
@@ -25,7 +26,10 @@ data class ExpenseEntryUiState(
     val isProcessingImage: Boolean = false,
     val showImageViewer: Boolean = false,
     val isAnalyzingReceipt: Boolean = false,
-    val aiAnalysisError: String? = null
+    val aiAnalysisError: String? = null,
+    val tripModeSettings: TripModeSettings = TripModeSettings.DEFAULT,
+    val showTripModeSetup: Boolean = false,
+    val availableCurrencies: List<CurrencySettings> = emptyList()
 )
 
 sealed class ExpenseEntryEvent {
@@ -52,6 +56,10 @@ sealed class ExpenseEntryEvent {
     object DismissImageViewer : ExpenseEntryEvent()
     object AnalyzeReceiptClicked : ExpenseEntryEvent()
     object ClearAIAnalysisError : ExpenseEntryEvent()
+    object TripModeToggled : ExpenseEntryEvent()
+    object ShowTripModeSetup : ExpenseEntryEvent()
+    object DismissTripModeSetup : ExpenseEntryEvent()
+    data class TripModeSettingsUpdated(val settings: TripModeSettings) : ExpenseEntryEvent()
 }
 
 sealed class ExpenseEntryUiInteraction {

@@ -75,10 +75,12 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import ir.act.personalAccountant.R
 import ir.act.personalAccountant.core.util.CurrencyFormatter
 import ir.act.personalAccountant.core.util.ImageFileManager
 import ir.act.personalAccountant.data.local.model.TagWithCount
 import ir.act.personalAccountant.presentation.components.NumberKeypad
+import ir.act.personalAccountant.presentation.components.TripModeSetupDialog
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -185,8 +187,12 @@ fun ExpenseEntryScreen(
                         text = "Add Expense",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.weight(1f)
                     )
+
+                    // Trip Mode Toggle
+                    TripModeToggleButton(viewModel, uiState)
                 }
             }
 
@@ -198,29 +204,16 @@ fun ExpenseEntryScreen(
                     .padding(top = 20.dp)
                     .verticalScroll(rememberScrollState())
             ) {
-                // Amount section
-                Row(
+                // Amount section - with dual currency support for trip mode
+                AmountDisplaySection(
+                    currentAmount = uiState.currentAmount,
+                    currencySettings = currencySettings,
+                    tripModeSettings = uiState.tripModeSettings,
+                    onExchangeRateClick = { viewModel.onEvent(ExpenseEntryEvent.ShowTripModeSetup) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = CurrencyFormatter.getCurrencySymbol(currencySettings),
-                        style = MaterialTheme.typography.displayLarge.copy(fontSize = 56.sp),
-                        fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
-                    )
-
-                    Text(
-                        text = if (uiState.currentAmount.isEmpty()) "0" else uiState.currentAmount,
-                        style = MaterialTheme.typography.displayLarge.copy(fontSize = 56.sp),
-                        fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        textAlign = TextAlign.Center
-                    )
-                }
+                        .padding(horizontal = 20.dp, vertical = 8.dp)
+                )
                 // Number keypad
                 NumberKeypad(
                     onNumberClick = { viewModel.onEvent(ExpenseEntryEvent.NumberClicked(it)) },
@@ -627,6 +620,19 @@ fun ExpenseEntryScreen(
                     onRemove = { viewModel.onEvent(ExpenseEntryEvent.RemoveImage) }
                 )
             }
+        }
+
+        // Trip Mode Setup Dialog
+        if (uiState.showTripModeSetup) {
+            TripModeSetupDialog(
+                homeCurrency = uiState.currencySettings,
+                currentTripMode = uiState.tripModeSettings,
+                availableCurrencies = uiState.availableCurrencies,
+                onTripModeUpdate = { settings ->
+                    viewModel.onEvent(ExpenseEntryEvent.TripModeSettingsUpdated(settings))
+                },
+                onDismiss = { viewModel.onEvent(ExpenseEntryEvent.DismissTripModeSetup) }
+            )
         }
     }
 }
@@ -1042,6 +1048,134 @@ private fun FullScreenImageViewer(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun TripModeToggleButton(
+    viewModel: ExpenseEntryViewModel,
+    uiState: ExpenseEntryUiState
+) {
+    IconButton(
+        onClick = { viewModel.onEvent(ExpenseEntryEvent.TripModeToggled) },
+        modifier = Modifier
+            .size(40.dp)
+            .background(
+                if (uiState.tripModeSettings.isEnabled) {
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                } else {
+                    Color.White.copy(alpha = 0.2f)
+                },
+                shape = CircleShape
+            )
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_airplane),
+            contentDescription = if (uiState.tripModeSettings.isEnabled) "Disable Trip Mode" else "Enable Trip Mode",
+            tint = if (uiState.tripModeSettings.isEnabled) {
+                Color.White
+            } else {
+                MaterialTheme.colorScheme.onPrimaryContainer
+            },
+            modifier = Modifier.size(20.dp)
+        )
+    }
+}
+
+@Composable
+private fun AmountDisplaySection(
+    currentAmount: String,
+    currencySettings: ir.act.personalAccountant.domain.model.CurrencySettings,
+    tripModeSettings: ir.act.personalAccountant.domain.model.TripModeSettings,
+    onExchangeRateClick: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    if (tripModeSettings.isEnabled) {
+        // Trip Mode: Show dual currency display
+        Column(
+            modifier = modifier,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Main destination currency (large)
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = CurrencyFormatter.getCurrencySymbol(tripModeSettings.destinationCurrency),
+                    style = MaterialTheme.typography.displayLarge.copy(fontSize = 56.sp),
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
+                )
+
+                Text(
+                    text = if (currentAmount.isEmpty()) "0" else currentAmount,
+                    style = MaterialTheme.typography.displayLarge.copy(fontSize = 56.sp),
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                // Home currency conversion (small)
+                Column(
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    val homeAmount =
+                        (currentAmount.toDoubleOrNull() ?: 0.0) / tripModeSettings.exchangeRate
+                    Text(
+                        text = "${CurrencyFormatter.getCurrencySymbol(currencySettings)}${
+                            String.format(
+                                "%.2f",
+                                homeAmount
+                            )
+                        }",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                    )
+                }
+            }
+
+            // Exchange rate display (small, below) - clickable
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = ir.act.personalAccountant.domain.model.TripModeSettings.formatExchangeRateWithTimestamp(
+                    homeCurrency = currencySettings,
+                    destinationCurrency = tripModeSettings.destinationCurrency,
+                    exchangeRate = tripModeSettings.exchangeRate,
+                    lastUpdated = tripModeSettings.lastUpdated
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                modifier = Modifier
+                    .clickable { onExchangeRateClick() }
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            )
+        }
+    } else {
+        // Normal Mode: Show single currency
+        Row(
+            modifier = modifier,
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = CurrencyFormatter.getCurrencySymbol(currencySettings),
+                style = MaterialTheme.typography.displayLarge.copy(fontSize = 56.sp),
+                fontWeight = FontWeight.ExtraBold,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
+            )
+
+            Text(
+                text = if (currentAmount.isEmpty()) "0" else currentAmount,
+                style = MaterialTheme.typography.displayLarge.copy(fontSize = 56.sp),
+                fontWeight = FontWeight.ExtraBold,
+                color = MaterialTheme.colorScheme.onBackground,
+                textAlign = TextAlign.Center
+            )
         }
     }
 }

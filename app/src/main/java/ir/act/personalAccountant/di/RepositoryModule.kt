@@ -8,10 +8,12 @@ import ir.act.personalAccountant.data.repository.BudgetRepositoryImpl
 import ir.act.personalAccountant.data.repository.ExpenseRepositoryImpl
 import ir.act.personalAccountant.data.repository.GoogleSheetsRepositoryImpl
 import ir.act.personalAccountant.data.repository.SyncStateRepositoryImpl
+import ir.act.personalAccountant.data.repository.TripModeRepositoryImpl
 import ir.act.personalAccountant.domain.repository.BudgetRepository
 import ir.act.personalAccountant.domain.repository.ExpenseRepository
 import ir.act.personalAccountant.domain.repository.GoogleSheetsRepository
 import ir.act.personalAccountant.domain.repository.SyncStateRepository
+import ir.act.personalAccountant.domain.repository.TripModeRepository
 import ir.act.personalAccountant.domain.usecase.BudgetUseCase
 import ir.act.personalAccountant.domain.usecase.BudgetUseCaseImpl
 import javax.inject.Singleton
@@ -49,4 +51,10 @@ abstract class RepositoryModule {
     abstract fun bindSyncStateRepository(
         syncStateRepositoryImpl: SyncStateRepositoryImpl
     ): SyncStateRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindTripModeRepository(
+        tripModeRepositoryImpl: TripModeRepositoryImpl
+    ): TripModeRepository
 }
