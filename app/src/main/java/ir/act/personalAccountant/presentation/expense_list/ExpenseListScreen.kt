@@ -435,7 +435,6 @@ fun ExpenseListScreen(
                                                         dayOfMonth = dayOfMonth,
                                                         totalAmount = expensesForDay.sumOf { it.amount },
                                                         currencySettings = currencySettings,
-                                                        expenseCount = expensesForDay.size
                                                     )
                                                 }
                                             }
@@ -1212,7 +1211,7 @@ private fun BudgetModeContent(
             }
         }
 
-        // Additional metrics row: Estimated balance and average daily expenses
+        // Additional metrics row: Estimated balance, daily budget, and average daily expenses
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
@@ -1239,6 +1238,38 @@ private fun BudgetModeContent(
                     }
                 )
             }
+
+            // Daily Budget (Saving Goal) - always show when salary is configured
+            if (budgetData.savingGoalStatus != ir.act.personalAccountant.domain.model.SavingGoalStatus.NOT_SET) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Daily Budget",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                    )
+                    Text(
+                        text = CurrencyFormatter.formatCurrency(
+                            budgetData.recommendedDailyExpenseBudget,
+                            currencySettings
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold,
+                        color = if (budgetData.recommendedDailyExpenseBudget > 0) {
+                            // New color logic: green if today's spending < daily budget, red if over
+                            if (budgetData.todayExpenses <= budgetData.recommendedDailyExpenseBudget) {
+                                BudgetGreenLight
+                            } else {
+                                BudgetRedLight
+                            }
+                        } else {
+                            MaterialTheme.colorScheme.onPrimaryContainer
+                        }
+                    )
+                }
+            }
+            
             Column(
                 horizontalAlignment = Alignment.End
             ) {
@@ -1257,6 +1288,7 @@ private fun BudgetModeContent(
                 )
             }
         }
+
     }
 }
 
@@ -1346,7 +1378,6 @@ private fun DayGroupHeader(
     dayOfMonth: Int,
     totalAmount: Double,
     currencySettings: CurrencySettings,
-    expenseCount: Int
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -1364,15 +1395,10 @@ private fun DayGroupHeader(
         ) {
             Column {
                 Text(
-                    text = "Day $dayOfMonth",
+                    text = formatDayHeaderText(dayOfMonth),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF5D4037) // Dark brown for good contrast with yellow
-                )
-                Text(
-                    text = "$expenseCount ${if (expenseCount == 1) "expense" else "expenses"}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF5D4037).copy(alpha = 0.7f) // Dark brown with transparency
                 )
             }
 
@@ -1383,5 +1409,25 @@ private fun DayGroupHeader(
                 color = Color(0xFF5D4037) // Dark brown for good contrast with yellow
             )
         }
+    }
+}
+
+private fun formatDayHeaderText(dayOfMonth: Int): String {
+    val now = Calendar.getInstance()
+    val today = now.get(Calendar.DAY_OF_MONTH)
+
+    // Create a calendar for the specific day in current month/year
+    val targetCalendar = Calendar.getInstance().apply {
+        set(Calendar.DAY_OF_MONTH, dayOfMonth)
+    }
+
+    // Format day name and month
+    val dayName = SimpleDateFormat("EEEE", Locale.getDefault()).format(targetCalendar.time)
+    val monthName = SimpleDateFormat("MMMM", Locale.getDefault()).format(targetCalendar.time)
+
+    return when {
+        dayOfMonth == today -> "Today $dayName $monthName $dayOfMonth"
+        dayOfMonth == today - 1 -> "Yesterday $dayName $monthName $dayOfMonth"
+        else -> "$dayName $monthName $dayOfMonth"
     }
 }
