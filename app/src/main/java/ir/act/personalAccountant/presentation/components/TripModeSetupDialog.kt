@@ -3,6 +3,7 @@ package ir.act.personalAccountant.presentation.components
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -170,10 +171,10 @@ fun TripModeSetupDialog(
                                 color = MaterialTheme.colorScheme.primary
                             )
                         } else {
-                            Text(
-                                text = "🤖",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.primary
+                            Image(
+                                painter = painterResource(R.mipmap.owl_ai),
+                                contentDescription = null,
+                                Modifier.size(32.dp)
                             )
                         }
                     }

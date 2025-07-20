@@ -3,6 +3,7 @@ package ir.act.personalAccountant.presentation.expense_list
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -613,10 +614,10 @@ private fun TopBar(
             onClick = { onNavigateToFinancialAdvisor() },
             modifier = Modifier.size(40.dp)
         ) {
-            Text(
-                text = "🤖",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
+            Image(
+                painter = painterResource(R.mipmap.owl_ai),
+                contentDescription = null,
+                Modifier.size(32.dp)
             )
         }
 

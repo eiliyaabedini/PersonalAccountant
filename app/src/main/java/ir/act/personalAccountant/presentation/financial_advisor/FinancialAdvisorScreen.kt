@@ -1,5 +1,6 @@
 package ir.act.personalAccountant.presentation.financial_advisor
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -45,11 +46,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import ir.act.personalAccountant.R
 import ir.act.personalAccountant.core.util.DateUtils
 import ir.act.personalAccountant.presentation.components.MarkdownText
 import java.text.SimpleDateFormat
@@ -216,10 +219,10 @@ private fun WelcomeMessage(
             modifier = Modifier.padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = "🤖",
-                style = MaterialTheme.typography.displaySmall,
-                modifier = Modifier.padding(bottom = 8.dp)
+            Image(
+                painter = painterResource(R.mipmap.owl_ai),
+                contentDescription = null,
+                Modifier.size(48.dp)
             )
 
             Text(

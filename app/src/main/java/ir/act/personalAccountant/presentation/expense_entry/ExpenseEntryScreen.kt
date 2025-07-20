@@ -5,6 +5,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -1230,10 +1231,10 @@ private fun AmountDisplaySection(
                             strokeWidth = 1.5.dp
                         )
                     } else {
-                        Text(
-                            text = "🤖",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary
+                        Image(
+                            painter = painterResource(R.mipmap.owl_ai),
+                            contentDescription = null,
+                            Modifier.size(32.dp)
                         )
                     }
                 }
