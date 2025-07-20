@@ -481,9 +481,9 @@ fun ExpenseListScreen(
                             strokeWidth = 2.dp
                         )
                     } else {
-                        Text(
-                            text = "📷",
-                            style = MaterialTheme.typography.titleMedium
+                        Image(
+                            painter = painterResource(R.drawable.baseline_camera_enhance_24),
+                            contentDescription = "Take image from receipt"
                         )
                     }
                 }
