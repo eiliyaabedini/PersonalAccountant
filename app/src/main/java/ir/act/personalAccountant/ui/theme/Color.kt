@@ -13,6 +13,12 @@ val LightGray = Color(0xFFF5F5F5)          // Very light background
 val TextSecondary = Color(0xFF666666)       // Secondary text
 val TextTertiary = Color(0xFF999999)       // Tertiary text
 
+// Budget colors - lighter variants for progress bars and status
+val BudgetGreenLight = GreenSecondary    // Lighter green for income/good status
+val BudgetRedLight = Color(0xFFE57373)      // Lighter red for expenses/over budget
+val BudgetOrangeLight = YellowPrimary   // Lighter orange for moderate status
+val BudgetPurpleLight = PurpleAccent   // Lighter purple for rent/additional expenses
+
 // Legacy colors (keep for compatibility)
 val Purple80 = Color(0xFFD0BCFF)
 val PurpleGrey80 = Color(0xFFCCC2DC)

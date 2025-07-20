@@ -74,6 +74,10 @@ import ir.act.personalAccountant.presentation.components.LayeredProgressBar
 import ir.act.personalAccountant.presentation.components.ProgressLayer
 import ir.act.personalAccountant.presentation.components.TripModeSetupDialog
 import ir.act.personalAccountant.presentation.components.assignColorsToTagData
+import ir.act.personalAccountant.ui.theme.BudgetGreenLight
+import ir.act.personalAccountant.ui.theme.BudgetOrangeLight
+import ir.act.personalAccountant.ui.theme.BudgetPurpleLight
+import ir.act.personalAccountant.ui.theme.BudgetRedLight
 import ir.act.personalAccountant.ui.theme.TextSecondary
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -1065,9 +1069,9 @@ private fun BudgetModeContent(
         val remainingBudget =
             budgetData.totalIncomeToDate - budgetData.totalExpensesToDate - budgetData.totalRentToDate
         val remainingBudgetColor = when (budgetData.budgetStatus) {
-            ir.act.personalAccountant.domain.model.BudgetStatus.GOOD -> Color.Green
-            ir.act.personalAccountant.domain.model.BudgetStatus.MIDDLE -> Color(0xFFFF9800)
-            ir.act.personalAccountant.domain.model.BudgetStatus.RED -> Color.Red
+            ir.act.personalAccountant.domain.model.BudgetStatus.GOOD -> BudgetGreenLight
+            ir.act.personalAccountant.domain.model.BudgetStatus.MIDDLE -> BudgetOrangeLight
+            ir.act.personalAccountant.domain.model.BudgetStatus.RED -> BudgetRedLight
         }
 
         Row(
@@ -1090,7 +1094,7 @@ private fun BudgetModeContent(
                     ),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
-                    color = Color.Green
+                    color = BudgetGreenLight
                 )
             }
             Column(
@@ -1123,7 +1127,7 @@ private fun BudgetModeContent(
                     ),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
-                    color = Color.Red
+                    color = BudgetRedLight
                 )
             }
         }
@@ -1161,7 +1165,7 @@ private fun BudgetModeContent(
                 Text(
                     text = CurrencyFormatter.formatCurrency(budgetData.dailyRent, currencySettings),
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF9C27B0)
+                    color = BudgetPurpleLight
                 )
             }
             Column(
@@ -1178,7 +1182,7 @@ private fun BudgetModeContent(
                         currencySettings
                     ),
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.Red.copy(alpha = 0.8f)
+                    color = BudgetRedLight.copy(alpha = 0.8f)
                 )
             }
         }
@@ -1204,12 +1208,9 @@ private fun BudgetModeContent(
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.Medium,
                     color = when (budgetData.budgetStatus) {
-                        ir.act.personalAccountant.domain.model.BudgetStatus.GOOD -> Color.Green
-                        ir.act.personalAccountant.domain.model.BudgetStatus.MIDDLE -> Color(
-                            0xFFFF9800
-                        )
-
-                        ir.act.personalAccountant.domain.model.BudgetStatus.RED -> Color.Red
+                        ir.act.personalAccountant.domain.model.BudgetStatus.GOOD -> BudgetGreenLight
+                        ir.act.personalAccountant.domain.model.BudgetStatus.MIDDLE -> BudgetOrangeLight
+                        ir.act.personalAccountant.domain.model.BudgetStatus.RED -> BudgetRedLight
                     }
                 )
             }
@@ -1254,17 +1255,17 @@ private fun BudgetProgressBar(
     val layers = listOf(
         ProgressLayer(
             value = incomePercentage,
-            color = Color.Green.copy(alpha = 0.7f),
+            color = BudgetGreenLight.copy(alpha = 0.8f),
             label = "Income"
         ),
         ProgressLayer(
             value = totalExpensePercentage,
-            color = Color.Red.copy(alpha = 0.8f),
+            color = BudgetRedLight.copy(alpha = 0.8f),
             label = "Total Expenses"
         ),
         ProgressLayer(
             value = rentPercentage,
-            color = Color(0xFF9C27B0),
+            color = BudgetPurpleLight,
             label = "Rent"
         )
     )
@@ -1284,21 +1285,24 @@ private fun BudgetStatusGauge(
     modifier: Modifier = Modifier
 ) {
     val (color, text) = when (budgetStatus) {
-        ir.act.personalAccountant.domain.model.BudgetStatus.GOOD -> Color.Green to "Good"
-        ir.act.personalAccountant.domain.model.BudgetStatus.MIDDLE -> Color(0xFFFF9800) to "Moderate"
-        ir.act.personalAccountant.domain.model.BudgetStatus.RED -> Color.Red to "Over Budget"
+        ir.act.personalAccountant.domain.model.BudgetStatus.GOOD -> BudgetGreenLight to "Good"
+        ir.act.personalAccountant.domain.model.BudgetStatus.MIDDLE -> BudgetOrangeLight to "Moderate"
+        ir.act.personalAccountant.domain.model.BudgetStatus.RED -> BudgetRedLight to "Over Budget"
     }
 
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(
             containerColor = when (budgetStatus) {
-                ir.act.personalAccountant.domain.model.BudgetStatus.GOOD -> Color.Green.copy(alpha = 0.1f)
-                ir.act.personalAccountant.domain.model.BudgetStatus.MIDDLE -> Color(0xFFFF9800).copy(
+                ir.act.personalAccountant.domain.model.BudgetStatus.GOOD -> BudgetGreenLight.copy(
                     alpha = 0.1f
                 )
 
-                ir.act.personalAccountant.domain.model.BudgetStatus.RED -> Color.Red.copy(alpha = 0.1f)
+                ir.act.personalAccountant.domain.model.BudgetStatus.MIDDLE -> BudgetOrangeLight.copy(
+                    alpha = 0.1f
+                )
+
+                ir.act.personalAccountant.domain.model.BudgetStatus.RED -> BudgetRedLight.copy(alpha = 0.1f)
             }
         )
     ) {
