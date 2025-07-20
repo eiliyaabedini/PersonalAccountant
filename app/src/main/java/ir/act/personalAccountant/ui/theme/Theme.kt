@@ -1,15 +1,10 @@
 package ir.act.personalAccountant.ui.theme
 
-import android.app.Activity
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
     primary = YellowPrimary,
@@ -17,13 +12,24 @@ private val DarkColorScheme = darkColorScheme(
     tertiary = PurpleAccent,
     background = DarkBackground,
     surface = DarkCard,
+    surfaceVariant = DarkCard,
+    surfaceContainer = DarkCard,
+    surfaceContainerHigh = DarkCard,
+    surfaceContainerHighest = DarkCard,
+    surfaceContainerLow = DarkCard,
+    surfaceContainerLowest = DarkCard,
     onPrimary = DarkBackground,
     onSecondary = DarkBackground,
     onTertiary = DarkBackground,
     onBackground = WhiteSection,
     onSurface = WhiteSection,
+    onSurfaceVariant = WhiteSection,
     primaryContainer = WhiteSection,
-    onPrimaryContainer = DarkBackground
+    onPrimaryContainer = DarkBackground,
+    secondaryContainer = DarkCard,
+    onSecondaryContainer = WhiteSection,
+    tertiaryContainer = DarkCard,
+    onTertiaryContainer = WhiteSection
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -32,13 +38,24 @@ private val LightColorScheme = lightColorScheme(
     tertiary = PurpleAccent,
     background = DarkBackground,
     surface = DarkCard,
+    surfaceVariant = DarkCard,
+    surfaceContainer = DarkCard,
+    surfaceContainerHigh = DarkCard,
+    surfaceContainerHighest = DarkCard,
+    surfaceContainerLow = DarkCard,
+    surfaceContainerLowest = DarkCard,
     onPrimary = DarkBackground,
     onSecondary = DarkBackground,
     onTertiary = DarkBackground,
     onBackground = WhiteSection,
     onSurface = WhiteSection,
+    onSurfaceVariant = WhiteSection,
     primaryContainer = WhiteSection,
-    onPrimaryContainer = DarkBackground
+    onPrimaryContainer = DarkBackground,
+    secondaryContainer = DarkCard,
+    onSecondaryContainer = WhiteSection,
+    tertiaryContainer = DarkCard,
+    onTertiaryContainer = WhiteSection
 )
 
 @Composable

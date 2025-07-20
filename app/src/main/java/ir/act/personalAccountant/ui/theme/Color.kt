@@ -6,8 +6,8 @@ import androidx.compose.ui.graphics.Color
 val YellowPrimary = Color(0xFFF1C94B)      // Main accent/FAB button
 val GreenSecondary = Color(0xFFB8E986)     // Chart segments and cards
 val PurpleAccent = Color(0xFFC8B6FF)       // Additional accent color
-val DarkBackground = Color(0xFF1E1E1E)      // Main dark background
-val DarkCard = Color(0xFF2C2C2C)           // Dark card background
+val DarkBackground = Color(0xFF0C1125)      // Main dark background
+val DarkCard = Color(0xFF212241)           // Dark card background
 val WhiteSection = Color(0xFFFFFFFF)       // Top white section
 val LightGray = Color(0xFFF5F5F5)          // Very light background
 val TextSecondary = Color(0xFF666666)       // Secondary text
