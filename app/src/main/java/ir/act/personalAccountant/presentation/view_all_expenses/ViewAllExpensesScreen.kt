@@ -1,6 +1,7 @@
 package ir.act.personalAccountant.presentation.view_all_expenses
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -52,13 +54,15 @@ import ir.act.personalAccountant.core.util.CurrencyFormatter
 import ir.act.personalAccountant.core.util.DateUtils
 import ir.act.personalAccountant.domain.model.CurrencySettings
 import ir.act.personalAccountant.domain.model.Expense
+import ir.act.personalAccountant.ui.theme.DarkCard
 import ir.act.personalAccountant.ui.theme.TextSecondary
+import ir.act.personalAccountant.ui.theme.YellowPrimary
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ViewAllExpensesScreen(
     onNavigateToExpenseEdit: (Long) -> Unit,
@@ -157,6 +161,52 @@ fun ViewAllExpensesScreen(
                         )
                     }
                 }
+
+                // Grouping toggle buttons
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Group by:",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                    )
+
+                    val isDaySelected = uiState.groupingMode == GroupingMode.BY_DAY
+                    val isCategorySelected = uiState.groupingMode == GroupingMode.BY_CATEGORY
+
+                    Button(
+                        onClick = {
+                            if (!isDaySelected) {
+                                viewModel.onEvent(ViewAllExpensesEvent.ToggleGrouping)
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isDaySelected) YellowPrimary else Color.White,
+                            contentColor = DarkCard
+                        ),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
+                    ) {
+                        Text("Day")
+                    }
+
+                    Button(
+                        onClick = {
+                            if (!isCategorySelected) {
+                                viewModel.onEvent(ViewAllExpensesEvent.ToggleGrouping)
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isCategorySelected) YellowPrimary else Color.White, // Force blue color
+                            contentColor = DarkCard
+                        ),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
+                    ) {
+                        Text("Category")
+                    }
+                }
             }
         }
 
@@ -210,17 +260,104 @@ fun ViewAllExpensesScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     contentPadding = PaddingValues(vertical = 16.dp)
                 ) {
-                    items(
-                        items = uiState.expenses,
-                        key = { it.id }
-                    ) { expense ->
-                        SwipeToDeleteExpenseItem(
-                            expense = expense,
-                            isNewlyAdded = expense.timestamp > screenOpenTime,
-                            currencySettings = uiState.currencySettings,
-                            onEditClick = { viewModel.onEvent(ViewAllExpensesEvent.EditClicked(expense)) },
-                            onDeleteClick = { viewModel.onEvent(ViewAllExpensesEvent.DeleteClicked(expense)) }
-                        )
+                    when (uiState.groupingMode) {
+                        GroupingMode.BY_DAY -> {
+                            uiState.groupedExpensesByDay.forEach { (dayOfMonth, expensesForDay) ->
+                                stickyHeader(key = "day_header_$dayOfMonth") {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(MaterialTheme.colorScheme.background)
+                                            .padding(vertical = 4.dp)
+                                    ) {
+                                        DayGroupHeader(
+                                            dayOfMonth = dayOfMonth,
+                                            totalAmount = expensesForDay.sumOf { it.amount },
+                                            currencySettings = uiState.currencySettings,
+                                            expenseCount = expensesForDay.size
+                                        )
+                                    }
+                                }
+
+                                items(
+                                    items = expensesForDay,
+                                    key = { it.id }
+                                ) { expense ->
+                                    SwipeToDeleteExpenseItem(
+                                        expense = expense,
+                                        isNewlyAdded = expense.timestamp > screenOpenTime,
+                                        currencySettings = uiState.currencySettings,
+                                        onEditClick = {
+                                            viewModel.onEvent(
+                                                ViewAllExpensesEvent.EditClicked(
+                                                    expense
+                                                )
+                                            )
+                                        },
+                                        onDeleteClick = {
+                                            viewModel.onEvent(
+                                                ViewAllExpensesEvent.DeleteClicked(
+                                                    expense
+                                                )
+                                            )
+                                        }
+                                    )
+                                }
+
+                                item {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                }
+                            }
+                        }
+
+                        GroupingMode.BY_CATEGORY -> {
+                            uiState.groupedExpensesByCategory.forEach { (category, expensesForCategory) ->
+                                stickyHeader(key = "category_header_$category") {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(MaterialTheme.colorScheme.background)
+                                            .padding(vertical = 4.dp)
+                                    ) {
+                                        CategoryGroupHeader(
+                                            category = category,
+                                            totalAmount = expensesForCategory.sumOf { it.amount },
+                                            currencySettings = uiState.currencySettings,
+                                            expenseCount = expensesForCategory.size
+                                        )
+                                    }
+                                }
+
+                                items(
+                                    items = expensesForCategory,
+                                    key = { it.id }
+                                ) { expense ->
+                                    SwipeToDeleteExpenseItem(
+                                        expense = expense,
+                                        isNewlyAdded = expense.timestamp > screenOpenTime,
+                                        currencySettings = uiState.currencySettings,
+                                        onEditClick = {
+                                            viewModel.onEvent(
+                                                ViewAllExpensesEvent.EditClicked(
+                                                    expense
+                                                )
+                                            )
+                                        },
+                                        onDeleteClick = {
+                                            viewModel.onEvent(
+                                                ViewAllExpensesEvent.DeleteClicked(
+                                                    expense
+                                                )
+                                            )
+                                        }
+                                    )
+                                }
+
+                                item {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -260,6 +397,96 @@ fun ViewAllExpensesScreen(
                 }
             }
         )
+    }
+}
+
+@Composable
+private fun DayGroupHeader(
+    dayOfMonth: Int,
+    totalAmount: Double,
+    currencySettings: CurrencySettings,
+    expenseCount: Int
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = YellowPrimary // Use theme yellow from FAB
+        ),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text = "Day $dayOfMonth",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF5D4037) // Dark brown for good contrast with yellow
+                )
+                Text(
+                    text = "$expenseCount ${if (expenseCount == 1) "expense" else "expenses"}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF5D4037).copy(alpha = 0.7f) // Dark brown with transparency
+                )
+            }
+
+            Text(
+                text = CurrencyFormatter.formatCurrency(totalAmount, currencySettings),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF5D4037) // Dark brown for good contrast with yellow
+            )
+        }
+    }
+}
+
+@Composable
+private fun CategoryGroupHeader(
+    category: String,
+    totalAmount: Double,
+    currencySettings: CurrencySettings,
+    expenseCount: Int
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = YellowPrimary // Use theme yellow from FAB
+        ),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text = category,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF5D4037) // Dark brown for good contrast with yellow
+                )
+                Text(
+                    text = "$expenseCount ${if (expenseCount == 1) "expense" else "expenses"}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF5D4037).copy(alpha = 0.7f) // Dark brown with transparency
+                )
+            }
+
+            Text(
+                text = CurrencyFormatter.formatCurrency(totalAmount, currencySettings),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF5D4037) // Dark brown for good contrast with yellow
+            )
+        }
     }
 }
 

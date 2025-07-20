@@ -1,10 +1,18 @@
 package ir.act.personalAccountant.presentation.view_all_expenses
 
-import ir.act.personalAccountant.domain.model.Expense
 import ir.act.personalAccountant.domain.model.CurrencySettings
+import ir.act.personalAccountant.domain.model.Expense
+
+enum class GroupingMode {
+    BY_DAY,
+    BY_CATEGORY
+}
 
 data class ViewAllExpensesUiState(
     val expenses: List<Expense> = emptyList(),
+    val groupedExpensesByDay: Map<Int, List<Expense>> = emptyMap(),
+    val groupedExpensesByCategory: Map<String, List<Expense>> = emptyMap(),
+    val groupingMode: GroupingMode = GroupingMode.BY_DAY,
     val isLoading: Boolean = false,
     val error: String? = null,
     val showDeleteConfirmation: Boolean = false,
@@ -22,6 +30,7 @@ sealed class ViewAllExpensesEvent {
     object ConfirmDelete : ViewAllExpensesEvent()
     object CancelDelete : ViewAllExpensesEvent()
     object ClearFilter : ViewAllExpensesEvent()
+    object ToggleGrouping : ViewAllExpensesEvent()
     object BackClicked : ViewAllExpensesEvent()
 }
 

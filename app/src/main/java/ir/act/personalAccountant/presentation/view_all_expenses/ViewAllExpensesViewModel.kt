@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import ir.act.personalAccountant.core.util.DateUtils
+import ir.act.personalAccountant.domain.model.Expense
 import ir.act.personalAccountant.domain.usecase.DeleteExpenseUseCase
 import ir.act.personalAccountant.domain.usecase.GetCurrencySettingsUseCase
 import ir.act.personalAccountant.domain.usecase.GetExpensesByMonthUseCase
@@ -15,6 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import java.util.Calendar
 import javax.inject.Inject
 
 @HiltViewModel
@@ -49,8 +51,15 @@ class ViewAllExpensesViewModel @Inject constructor(
     }
 
     private fun initializeFilter() {
+        val initialGroupingMode = if (filterByTag != null) {
+            GroupingMode.BY_CATEGORY
+        } else {
+            GroupingMode.BY_DAY
+        }
+        
         _uiState.value = _uiState.value.copy(
-            filterByTag = filterByTag
+            filterByTag = filterByTag,
+            groupingMode = initialGroupingMode
         )
     }
 
@@ -93,6 +102,13 @@ class ViewAllExpensesViewModel @Inject constructor(
                 )
                 loadExpenses()
             }
+            ViewAllExpensesEvent.ToggleGrouping -> {
+                val newGroupingMode = when (_uiState.value.groupingMode) {
+                    GroupingMode.BY_DAY -> GroupingMode.BY_CATEGORY
+                    GroupingMode.BY_CATEGORY -> GroupingMode.BY_DAY
+                }
+                _uiState.value = _uiState.value.copy(groupingMode = newGroupingMode)
+            }
             ViewAllExpensesEvent.BackClicked -> {
                 viewModelScope.launch {
                     _uiInteraction.send(ViewAllExpensesUiInteraction.NavigateBack)
@@ -119,8 +135,12 @@ class ViewAllExpensesViewModel @Inject constructor(
                 }
                 
                 expensesFlow.collect { expenses ->
+                    val groupedByDay = groupExpensesByDayOfMonth(expenses)
+                    val groupedByCategory = groupExpensesByCategory(expenses)
                     _uiState.value = _uiState.value.copy(
                         expenses = expenses,
+                        groupedExpensesByDay = groupedByDay,
+                        groupedExpensesByCategory = groupedByCategory,
                         isLoading = false,
                         error = null
                     )
@@ -140,5 +160,21 @@ class ViewAllExpensesViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(currencySettings = currencySettings)
             }
         }
+    }
+
+    private fun groupExpensesByDayOfMonth(expenses: List<Expense>): Map<Int, List<Expense>> {
+        return expenses.groupBy { expense ->
+            val calendar = Calendar.getInstance()
+            calendar.timeInMillis = expense.timestamp
+            calendar.get(Calendar.DAY_OF_MONTH)
+        }.toSortedMap(compareByDescending { it })
+    }
+
+    private fun groupExpensesByCategory(expenses: List<Expense>): Map<String, List<Expense>> {
+        return expenses.groupBy { expense ->
+            expense.tag
+        }.toList().sortedByDescending { (_, expensesInCategory) ->
+            expensesInCategory.sumOf { it.amount }
+        }.toMap()
     }
 }
