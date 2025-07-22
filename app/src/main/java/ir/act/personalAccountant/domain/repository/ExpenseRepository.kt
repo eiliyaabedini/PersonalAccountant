@@ -16,4 +16,5 @@ interface ExpenseRepository {
     fun getTotalExpensesByMonth(year: Int, month: Int): Flow<Double>
     fun getExpensesByTagAndMonth(tag: String, year: Int, month: Int): Flow<List<Expense>>
     suspend fun mergeTags(oldTags: List<String>, newTag: String): Int
+    suspend fun getExpensesByDateRange(startTime: Long, endTime: Long): List<Expense>
 }

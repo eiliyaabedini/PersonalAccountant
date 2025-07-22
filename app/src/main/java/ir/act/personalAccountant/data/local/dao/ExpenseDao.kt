@@ -63,4 +63,7 @@ interface ExpenseDao {
 
     @Query("UPDATE expenses SET tag = :newTag WHERE tag IN (:oldTags)")
     suspend fun updateExpenseTagsBatch(oldTags: List<String>, newTag: String): Int
+
+    @Query("SELECT * FROM expenses WHERE timestamp >= :startTime AND timestamp < :endTime ORDER BY timestamp DESC")
+    suspend fun getExpensesByDateRange(startTime: Long, endTime: Long): List<ExpenseEntity>
 }

@@ -290,6 +290,62 @@ fun SettingsScreen(
                             }
                         }
 
+                        // Daily Reminder Settings (only show if notifications are enabled)
+                        if (uiState.isNotificationEnabled) {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surface
+                                ),
+                                shape = RoundedCornerShape(16.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Notifications,
+                                            contentDescription = "Daily Reminder",
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                        Column {
+                                            Text(
+                                                text = "Daily Reminder",
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.Medium,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                            Text(
+                                                text = "Get reminded at 8 PM to add expenses",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurface.copy(
+                                                    alpha = 0.7f
+                                                )
+                                            )
+                                        }
+                                    }
+
+                                    Switch(
+                                        checked = uiState.isDailyReminderEnabled,
+                                        onCheckedChange = { enabled ->
+                                            viewModel.onEvent(
+                                                Events.DailyReminderToggleClicked(
+                                                    enabled
+                                                )
+                                            )
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
                         // Budget Settings
                         Text(
                             text = "Budget Settings",

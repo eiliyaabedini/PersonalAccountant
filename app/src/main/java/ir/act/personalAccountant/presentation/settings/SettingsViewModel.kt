@@ -7,6 +7,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import ir.act.personalAccountant.data.local.NotificationPreferences
 import ir.act.personalAccountant.data.notification.NotificationService
+import ir.act.personalAccountant.data.worker.DailyReminderScheduler
 import ir.act.personalAccountant.domain.usecase.BudgetUseCase
 import ir.act.personalAccountant.domain.usecase.GetCurrencySettingsUseCase
 import ir.act.personalAccountant.domain.usecase.UpdateCurrencySettingsUseCase
@@ -31,6 +32,7 @@ class SettingsViewModel @Inject constructor(
     private val budgetUseCase: BudgetUseCase,
     private val notificationPreferences: NotificationPreferences,
     private val notificationService: NotificationService,
+    private val dailyReminderScheduler: DailyReminderScheduler,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -89,6 +91,10 @@ class SettingsViewModel @Inject constructor(
             is Events.NotificationToggleClicked -> {
                 handleNotificationToggle(event.enabled)
             }
+
+            is Events.DailyReminderToggleClicked -> {
+                handleDailyReminderToggle(event.enabled)
+            }
             
             is Events.ClearError -> {
                 _uiState.value = _uiState.value.copy(error = null)
@@ -115,6 +121,7 @@ class SettingsViewModel @Inject constructor(
                         currentCurrencySettings = currencySettings,
                         budgetSettings = budgetSettings,
                         isNotificationEnabled = notificationPreferences.isNotificationEnabled,
+                        isDailyReminderEnabled = notificationPreferences.isDailyReminderEnabled,
                         hasNotificationPermission = NotificationPermissionHelper.hasNotificationPermission(
                             context
                         ),
@@ -155,6 +162,7 @@ class SettingsViewModel @Inject constructor(
 
         _uiState.value = _uiState.value.copy(
             isNotificationEnabled = notificationPreferences.isNotificationEnabled,
+            isDailyReminderEnabled = notificationPreferences.isDailyReminderEnabled,
             hasNotificationPermission = hasPermission
         )
     }
@@ -186,7 +194,17 @@ class SettingsViewModel @Inject constructor(
     private fun disableNotifications() {
         notificationPreferences.isNotificationEnabled = false
         notificationService.stopNotificationUpdates()
-        _uiState.value = _uiState.value.copy(isNotificationEnabled = false)
+
+        // Also disable daily reminders if notifications are disabled
+        if (notificationPreferences.isDailyReminderEnabled) {
+            notificationPreferences.isDailyReminderEnabled = false
+            dailyReminderScheduler.cancelDailyReminder()
+        }
+
+        _uiState.value = _uiState.value.copy(
+            isNotificationEnabled = false,
+            isDailyReminderEnabled = false
+        )
     }
 
     fun onPermissionResult(isGranted: Boolean) {
@@ -213,6 +231,18 @@ class SettingsViewModel @Inject constructor(
         }
         // Refresh service status 
         notificationService.refreshNotificationStatus()
+    }
+
+    private fun handleDailyReminderToggle(enabled: Boolean) {
+        notificationPreferences.isDailyReminderEnabled = enabled
+
+        if (enabled) {
+            dailyReminderScheduler.scheduleDailyReminder()
+        } else {
+            dailyReminderScheduler.cancelDailyReminder()
+        }
+
+        _uiState.value = _uiState.value.copy(isDailyReminderEnabled = enabled)
     }
 
 }

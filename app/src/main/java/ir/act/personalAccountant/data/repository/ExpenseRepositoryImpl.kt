@@ -78,6 +78,10 @@ class ExpenseRepositoryImpl @Inject constructor(
         return expenseDao.updateExpenseTagsBatch(oldTags, newTag)
     }
 
+    override suspend fun getExpensesByDateRange(startTime: Long, endTime: Long): List<Expense> {
+        return expenseDao.getExpensesByDateRange(startTime, endTime).map { it.toDomain() }
+    }
+
     private fun Expense.toEntity(): ExpenseEntity {
         return ExpenseEntity(
             id = id,

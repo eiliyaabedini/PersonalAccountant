@@ -26,17 +26,21 @@ class BudgetNotificationManager @Inject constructor(
 
     companion object {
         const val NOTIFICATION_ID = 1001
+        const val REMINDER_NOTIFICATION_ID = 1002
         const val CHANNEL_ID = "budget_notification_channel"
+        const val REMINDER_CHANNEL_ID = "daily_reminder_channel"
         const val CHANNEL_NAME = "Budget Notifications"
+        const val REMINDER_CHANNEL_NAME = "Daily Reminders"
     }
 
     init {
-        createNotificationChannel()
+        createNotificationChannels()
     }
 
-    private fun createNotificationChannel() {
+    private fun createNotificationChannels() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
+            // Budget notification channel
+            val budgetChannel = NotificationChannel(
                 CHANNEL_ID,
                 CHANNEL_NAME,
                 NotificationManager.IMPORTANCE_LOW
@@ -45,7 +49,20 @@ class BudgetNotificationManager @Inject constructor(
                 setShowBadge(false)
                 lockscreenVisibility = Notification.VISIBILITY_PUBLIC
             }
-            notificationManager.createNotificationChannel(channel)
+
+            // Daily reminder channel
+            val reminderChannel = NotificationChannel(
+                REMINDER_CHANNEL_ID,
+                REMINDER_CHANNEL_NAME,
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                description = "Daily reminders to add expenses"
+                setShowBadge(true)
+                lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+            }
+
+            notificationManager.createNotificationChannel(budgetChannel)
+            notificationManager.createNotificationChannel(reminderChannel)
         }
     }
 
@@ -56,6 +73,42 @@ class BudgetNotificationManager @Inject constructor(
 
     fun clearNotification() {
         notificationManager.cancel(NOTIFICATION_ID)
+    }
+
+    fun showReminderNotification() {
+        val intent = Intent(context, MainActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        intent.putExtra(
+            Constants.Navigation.NAVIGATE_TO_KEY,
+            Constants.Navigation.NAVIGATE_TO_EXPENSE_ENTRY
+        )
+
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            0,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val largeIcon = BitmapFactory.decodeResource(context.resources, R.mipmap.happy_owl)
+
+        val notification = NotificationCompat.Builder(context, REMINDER_CHANNEL_ID)
+            .setContentTitle("Don't forget to track your expenses!")
+            .setContentText("Tap to add today's expenses")
+            .setSmallIcon(R.mipmap.happy_owl)
+            .setLargeIcon(largeIcon)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .build()
+
+        notificationManager.notify(REMINDER_NOTIFICATION_ID, notification)
+    }
+
+    fun clearReminderNotification() {
+        notificationManager.cancel(REMINDER_NOTIFICATION_ID)
     }
 
     private fun createNotification(data: NotificationData): Notification {

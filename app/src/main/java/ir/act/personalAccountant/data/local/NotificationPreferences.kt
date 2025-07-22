@@ -17,9 +17,14 @@ class NotificationPreferences @Inject constructor(
 
     companion object {
         private const val KEY_NOTIFICATION_ENABLED = "notification_enabled"
+        private const val KEY_DAILY_REMINDER_ENABLED = "daily_reminder_enabled"
     }
 
     var isNotificationEnabled: Boolean
         get() = prefs.getBoolean(KEY_NOTIFICATION_ENABLED, false)
         set(value) = prefs.edit().putBoolean(KEY_NOTIFICATION_ENABLED, value).apply()
+
+    var isDailyReminderEnabled: Boolean
+        get() = prefs.getBoolean(KEY_DAILY_REMINDER_ENABLED, false)
+        set(value) = prefs.edit().putBoolean(KEY_DAILY_REMINDER_ENABLED, value).apply()
 }

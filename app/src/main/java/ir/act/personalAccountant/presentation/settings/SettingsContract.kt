@@ -11,6 +11,7 @@ object SettingsContract {
         val showCurrencyPicker: Boolean = false,
         val budgetSettings: BudgetSettings = BudgetSettings(),
         val isNotificationEnabled: Boolean = false,
+        val isDailyReminderEnabled: Boolean = false,
         val hasNotificationPermission: Boolean = false,
         val isLoading: Boolean = false,
         val error: String? = null
@@ -23,6 +24,7 @@ object SettingsContract {
         object BudgetConfigClicked : Events()
         object CategorySettingsClicked : Events()
         data class NotificationToggleClicked(val enabled: Boolean) : Events()
+        data class DailyReminderToggleClicked(val enabled: Boolean) : Events()
         object ClearError : Events()
     }
     
