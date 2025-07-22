@@ -1,3 +1,181 @@
 <resources>
     <string name="app_name">Personal Accountant</string>
+
+    <!-- Common buttons -->
+    <string name="ok_button">OK</string>
+    <string name="cancel_button">Cancel</string>
+    <string name="delete_button">Delete</string>
+    <string name="add_button">Add</string>
+    <string name="merge_button">Merge</string>
+    <string name="clear_button">Clear</string>
+    <string name="use_this_button">Use This</string>
+    <string name="send_button">Send</string>
+
+    <!-- Common content descriptions -->
+    <string name="back_content_description">Back</string>
+    <string name="settings_content_description">Settings</string>
+    <string name="delete_content_description">Delete</string>
+    <string name="camera_content_description">Camera</string>
+    <string name="gallery_content_description">Gallery</string>
+    <string name="close_content_description">Close</string>
+    <string name="select_content_description">Select</string>
+    <string name="selected_content_description">Selected</string>
+
+    <!-- Navigation and date -->
+    <string name="previous_month_content_description">Previous month</string>
+    <string name="next_month_content_description">Next month</string>
+    <string name="select_date_content_description">Select Date</string>
+
+    <!-- Dialog titles -->
+    <string name="error_dialog_title">Error</string>
+    <string name="delete_expense_dialog_title">Delete Expense</string>
+    <string name="merge_categories_dialog_title">Merge Categories</string>
+    <string name="select_currency_title">Select Currency</string>
+
+    <!-- Expense List Screen -->
+    <string name="owl_waiting_content_description">Owl waiting for expenses</string>
+    <string name="no_expenses_yet">No expenses yet</string>
+    <string name="first_expense_guidance">Use the + button below to add your first expense and start tracking your finances</string>
+    <string name="recent_expenses">Recent Expenses</string>
+    <string name="view_all">View all →</string>
+    <string name="take_receipt_image_content_description">Take image from receipt</string>
+    <string name="sync_google_sheets_content_description">Sync with Google Sheets</string>
+    <string name="has_attachment_content_description">Has attachment</string>
+    <string name="delete_expense_confirmation_message">Are you sure you want to delete this expense?</string>
+    <string name="delete_expense_with_amount_confirmation_message">Are you sure you want to delete this %s expense?</string>
+
+    <!-- Budget Owl Display -->
+    <string name="owl_content_description">Owl</string>
+    <string name="budget_not_configured_title">Budget Not Configured</string>
+    <string name="budget_configuration_message">Please configure your budget settings to see daily tracking</string>
+    <string name="over_budget_today">Over Budget Today!</string>
+    <string name="on_track_today">On Track Today!</string>
+    <string name="todays_expenses">Today\'s Expenses</string>
+    <string name="daily_budget_label">Daily Budget</string>
+    <string name="remaining_budget_label">Remaining</string>
+    <string name="over_budget_label">Over</string>
+    <string name="income_label">Income</string>
+    <string name="expenses_label">Expenses</string>
+    <string name="rent_label">Rent</string>
+
+    <!-- Budget Details -->
+    <string name="no_budget_data_title">No Budget Data Available</string>
+    <string name="configure_budget_message">Configure your budget to see detailed information</string>
+    <string name="budget_details_title">Budget Details</string>
+    <string name="budget_status_good">Good</string>
+    <string name="budget_status_moderate">Moderate</string>
+    <string name="budget_status_over">Over Budget</string>
+    <string name="budget_title">Budget</string>
+    <string name="recommended_daily_budget_title">Recommended Daily Budget</string>
+    <string name="monthly_overview_title">Monthly Overview</string>
+    <string name="total_income_so_far_title">Total Income so far</string>
+    <string name="total_expenses_so_far_title">Total Expenses so far</string>
+    <string name="total_rent_expenses_title">Total Rent + Expenses</string>
+    <string name="remaining_title">Remaining</string>
+    <string name="daily_breakdown_title">Daily Breakdown</string>
+    <string name="daily_income_title">Daily Income</string>
+    <string name="daily_rent_title">Daily Rent</string>
+    <string name="average_daily_expenses_title">Average Daily Expenses</string>
+    <string name="projections_title">Projections</string>
+    <string name="estimated_end_month_balance_title">Estimated End-of-Month Balance</string>
+
+    <!-- Budget Config Screen -->
+    <string name="budget_configuration_title">Budget Configuration</string>
+    <string name="net_monthly_salary_label">Net Monthly Salary *</string>
+    <string name="monthly_rent_label">Monthly Rent (Optional)</string>
+    <string name="monthly_saving_goal_label">Monthly Saving Goal (Optional)</string>
+    <string name="currency_label">Currency</string>
+    <string name="save_budget_button">Save Budget Configuration</string>
+    <string name="enter_amount_hint">Enter amount</string>
+
+    <!-- Expense Entry/Edit -->
+    <string name="add_expense_title">Add Expense</string>
+    <string name="edit_expense_title">Edit Expense</string>
+    <string name="amount_label">Amount</string>
+    <string name="tag_label">Tag</string>
+    <string name="date_label">Date</string>
+    <string name="save_expense_button">Save Expense</string>
+    <string name="update_expense_button">Update Expense</string>
+    <string name="receipt_image_content_description">Receipt Image</string>
+    <string name="remove_image_content_description">Remove Image</string>
+    <string name="add_image_content_description">Add Image</string>
+    <string name="analyzing_text">Analyzing...</string>
+    <string name="analyze_receipt_button">🤖 Analyze Receipt</string>
+    <string name="add_select_tag_content_description">Add or select tag</string>
+    <string name="new_category_name_label">New category name</string>
+    <string name="add_tag_button">Add Tag</string>
+    <string name="full_screen_image_content_description">Full Screen Image</string>
+    <string name="tag_name_label">Tag name</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Settings</string>
+    <string name="general_settings_title">General</string>
+    <string name="currency_settings_title">Currency</string>
+    <string name="select_currency_content_description">Select Currency</string>
+    <string name="notifications_title">Notifications</string>
+    <string name="notifications_content_description">Notifications</string>
+    <string name="budget_settings_title">Budget</string>
+    <string name="configure_budget_title">Configure Budget</string>
+    <string name="configure_budget_content_description">Configure Budget</string>
+    <string name="category_settings_title">Category Settings</string>
+    <string name="category_settings_content_description">Category Settings</string>
+    <string name="ai_settings_title">AI Settings</string>
+    <string name="ai_settings_content_description">AI Settings</string>
+    <string name="integrations_title">Integrations</string>
+    <string name="financial_advisor_title">Financial Advisor</string>
+    <string name="financial_advisor_content_description">Financial Advisor</string>
+    <string name="google_sheets_title">Google Sheets</string>
+    <string name="google_sheets_content_description">Google Sheets</string>
+    <string name="configure_google_sheets_content_description">Configure Google Sheets</string>
+
+    <!-- Category Settings -->
+    <string name="clear_selection_content_description">Clear selection</string>
+    <string name="merge_tags_content_description">Merge tags</string>
+    <string name="merge_categories_button">Merge Categories</string>
+
+    <!-- Google Sheets Screen -->
+    <string name="google_sheets_sync_title">Google Sheets Sync</string>
+    <string name="syncing_text">Syncing...</string>
+    <string name="connecting_text">Connecting...</string>
+    <string name="quick_sync_button">Quick Sync</string>
+    <string name="disconnect_button">Disconnect</string>
+    <string name="connect_google_sheets_button">Connect Google Sheets</string>
+    <string name="refresh_connection_status_button">Refresh Connection Status</string>
+
+    <!-- Financial Advisor Screen -->
+    <string name="financial_advisor_screen_title">AI Financial Advisor</string>
+    <string name="clear_chat_content_description">Clear Chat</string>
+    <string name="get_financial_advice_button">Get General Financial Advice</string>
+    <string name="send_content_description">Send</string>
+
+    <!-- View All Expenses Screen -->
+    <string name="all_expenses_title">All Expenses</string>
+    <string name="day_filter_text">Day</string>
+    <string name="category_filter_text">Category</string>
+
+    <!-- Trip Mode Setup -->
+    <string name="trip_mode_setup_title">Trip Mode Setup</string>
+    <string name="destination_currency_label">Destination Currency</string>
+    <string name="exchange_rate_label">Exchange Rate</string>
+    <string name="exchange_rate_format">1 %s =</string>
+    <string name="search_on_google_content_description">Search on Google</string>
+    <string name="enable_trip_mode_button">Enable Trip Mode</string>
+    <string name="disable_trip_mode_title">Disable Trip Mode</string>
+    <string name="enable_trip_mode_title">Enable Trip Mode</string>
+
+    <!-- Chart Components -->
+    <string name="show_less_button">Show Less</string>
+    <string name="collapse_content_description">Collapse</string>
+    <string name="expand_content_description">Expand</string>
+    <string name="expenses_count_label">expenses</string>
+    <string name="total_expenses_label">Total Expenses</string>
+
+    <!-- Sync Progress -->
+    <string name="sync_progress_title">Sync Progress</string>
+    <string name="stop_sync_button">Stop Sync</string>
+
+    <!-- Status and Loading -->
+    <string name="loading">Loading...</string>
+    <string name="no_data">No data</string>
+    <string name="error_occurred">An error occurred</string>
 </resources>

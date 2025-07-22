@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -48,14 +49,14 @@ fun BudgetOwlDisplay(
         ) {
             Image(
                 painter = painterResource(R.mipmap.owl),
-                contentDescription = "Owl",
+                contentDescription = stringResource(R.string.owl_content_description),
                 modifier = Modifier.size(120.dp)
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Budget Not Configured",
+                text = stringResource(R.string.budget_not_configured_title),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -65,7 +66,7 @@ fun BudgetOwlDisplay(
             Spacer(modifier = Modifier.height(12.dp))
 
             Text(
-                text = "Please configure your budget settings to see daily tracking",
+                text = stringResource(R.string.budget_configuration_message),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
                 textAlign = TextAlign.Center
@@ -84,7 +85,8 @@ fun BudgetOwlDisplay(
 
     val owlImage = if (isOverBudget) R.mipmap.sad_owl_big else R.mipmap.happy_owl_big
     val owlColor = if (isOverBudget) BudgetRedLight else BudgetGreenLight
-    val statusText = if (isOverBudget) "Over Budget Today!" else "On Track Today!"
+    val statusText =
+        if (isOverBudget) stringResource(R.string.over_budget_today) else stringResource(R.string.on_track_today)
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -128,7 +130,7 @@ fun BudgetOwlDisplay(
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        text = "Today's Expenses",
+                        text = stringResource(R.string.todays_expenses),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                     )
@@ -150,7 +152,7 @@ fun BudgetOwlDisplay(
                         modifier = Modifier.weight(1f)
                     ) {
                         Text(
-                            text = "Daily Budget",
+                            text = stringResource(R.string.daily_budget_label),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
                             textAlign = TextAlign.Center
@@ -175,7 +177,9 @@ fun BudgetOwlDisplay(
                         val remaining =
                             budgetData.recommendedDailyExpenseBudget - budgetData.todayExpenses
                         Text(
-                            text = if (remaining >= 0) "Remaining" else "Over",
+                            text = if (remaining >= 0) stringResource(R.string.remaining_budget_label) else stringResource(
+                                R.string.over_budget_label
+                            ),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                         )
@@ -214,17 +218,17 @@ fun BudgetOwlDisplay(
             if (incomePercentage > 0f) ProgressLayer(
                 value = incomePercentage,
                 color = BudgetGreenLight.copy(alpha = 0.8f),
-                label = "Income"
+                label = stringResource(R.string.income_label)
             ) else null,
             if (totalExpensePercentage > 0f) ProgressLayer(
                 value = totalExpensePercentage,
                 color = BudgetRedLight.copy(alpha = 0.8f),
-                label = "Expenses"
+                label = stringResource(R.string.expenses_label)
             ) else null,
             if (rentPercentage > 0f) ProgressLayer(
                 value = rentPercentage,
                 color = BudgetPurpleLight,
-                label = "Rent"
+                label = stringResource(R.string.rent_label)
             ) else null
         )
 

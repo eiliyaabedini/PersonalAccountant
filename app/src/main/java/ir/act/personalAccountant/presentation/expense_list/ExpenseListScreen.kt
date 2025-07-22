@@ -63,6 +63,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -208,7 +209,7 @@ fun ExpenseListScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                                    contentDescription = "Previous month",
+                                    contentDescription = stringResource(R.string.previous_month_content_description),
                                     tint = MaterialTheme.colorScheme.onPrimaryContainer,
                                     modifier = Modifier.size(24.dp)
                                 )
@@ -237,7 +238,7 @@ fun ExpenseListScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                    contentDescription = "Next month",
+                                    contentDescription = stringResource(R.string.next_month_content_description),
                                     tint = MaterialTheme.colorScheme.onPrimaryContainer,
                                     modifier = Modifier.size(24.dp)
                                 )
@@ -293,7 +294,7 @@ fun ExpenseListScreen(
                                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                                             )
                                             Text(
-                                                text = "expenses",
+                                                text = stringResource(R.string.expenses_count_label),
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = TextSecondary
                                             )
@@ -309,7 +310,7 @@ fun ExpenseListScreen(
                                     horizontalAlignment = Alignment.End
                                 ) {
                                     Text(
-                                        text = "Total Expenses",
+                                        text = stringResource(R.string.total_expenses_label),
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = TextSecondary,
                                         fontWeight = FontWeight.Medium
@@ -385,14 +386,14 @@ fun ExpenseListScreen(
                                 ) {
                                     Image(
                                         painter = painterResource(R.mipmap.owl),
-                                        contentDescription = "Owl waiting for expenses",
+                                        contentDescription = stringResource(R.string.owl_waiting_content_description),
                                         modifier = Modifier.size(120.dp)
                                     )
 
                                     Spacer(modifier = Modifier.height(24.dp))
 
                                     Text(
-                                        text = "No expenses yet",
+                                        text = stringResource(R.string.no_expenses_yet),
                                         style = MaterialTheme.typography.titleLarge,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onBackground,
@@ -402,7 +403,7 @@ fun ExpenseListScreen(
                                     Spacer(modifier = Modifier.height(12.dp))
 
                                     Text(
-                                        text = "Use the + button below to add your first expense and start tracking your finances",
+                                        text = stringResource(R.string.first_expense_guidance),
                                         style = MaterialTheme.typography.bodyLarge,
                                         color = TextSecondary,
                                         textAlign = TextAlign.Center,
@@ -434,13 +435,13 @@ fun ExpenseListScreen(
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Text(
-                                            text = "Recent Expenses",
+                                            text = stringResource(R.string.recent_expenses),
                                             style = MaterialTheme.typography.titleMedium,
                                             fontWeight = FontWeight.SemiBold,
                                             color = MaterialTheme.colorScheme.onSurface
                                         )
                                         Text(
-                                            text = "View all →",
+                                            text = stringResource(R.string.view_all),
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                                             modifier = Modifier.clickable {
@@ -543,7 +544,7 @@ fun ExpenseListScreen(
                     } else {
                         Image(
                             painter = painterResource(R.drawable.baseline_camera_enhance_24),
-                            contentDescription = "Take image from receipt"
+                            contentDescription = stringResource(R.string.take_receipt_image_content_description)
                         )
                     }
                 }
@@ -590,7 +591,7 @@ fun ExpenseListScreen(
             if (uiState.showDeleteConfirmation) {
                 AlertDialog(
                     onDismissRequest = { viewModel.onEvent(ExpenseListEvent.CancelDelete) },
-                    title = { Text("Delete Expense") },
+                    title = { Text(stringResource(R.string.delete_expense_dialog_title)) },
                     text = {
                         uiState.expenseToDelete?.let { expense ->
                             Text(
@@ -610,12 +611,12 @@ fun ExpenseListScreen(
                                 contentColor = MaterialTheme.colorScheme.error
                             )
                         ) {
-                            Text("Delete")
+                            Text(stringResource(R.string.delete_button))
                         }
                     },
                     dismissButton = {
                         TextButton(onClick = { viewModel.onEvent(ExpenseListEvent.CancelDelete) }) {
-                            Text("Cancel")
+                            Text(stringResource(R.string.cancel_button))
                         }
                     }
                 )
@@ -697,7 +698,7 @@ private fun TopBar(
         ) {
             Icon(
                 painter = painterResource(R.drawable.outline_sync_24),
-                contentDescription = "Sync with Google Sheets",
+                contentDescription = stringResource(R.string.sync_google_sheets_content_description),
                 tint = MaterialTheme.colorScheme.onPrimaryContainer,
                 modifier = Modifier.size(24.dp)
             )
@@ -712,7 +713,7 @@ private fun TopBar(
         ) {
             Icon(
                 imageVector = Icons.Default.Settings,
-                contentDescription = "Settings",
+                contentDescription = stringResource(R.string.settings_content_description),
                 tint = MaterialTheme.colorScheme.onPrimaryContainer,
                 modifier = Modifier.size(20.dp)
             )
@@ -1015,7 +1016,7 @@ private fun SwipeToDeleteExpenseItem(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete",
+                        contentDescription = stringResource(R.string.delete_content_description),
                         tint = MaterialTheme.colorScheme.onError
                     )
                 }
@@ -1095,7 +1096,7 @@ private fun SwipeToDeleteExpenseItem(
                                 if (!expense.imagePath.isNullOrEmpty()) {
                                     Icon(
                                         painter = painterResource(id = R.drawable.ic_attachment),
-                                        contentDescription = "Has attachment",
+                                        contentDescription = stringResource(R.string.has_attachment_content_description),
                                         tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.size(16.dp)
                                     )

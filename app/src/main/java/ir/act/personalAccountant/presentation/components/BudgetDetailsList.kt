@@ -18,8 +18,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import ir.act.personalAccountant.R
 import ir.act.personalAccountant.core.util.CurrencyFormatter
 import ir.act.personalAccountant.domain.model.BudgetData
 import ir.act.personalAccountant.domain.model.BudgetStatus
@@ -50,12 +52,12 @@ fun BudgetDetailsList(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "No Budget Data Available",
+                    text = stringResource(R.string.no_budget_data_title),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "Configure your budget to see detailed information",
+                    text = stringResource(R.string.configure_budget_message),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
@@ -84,7 +86,7 @@ fun BudgetDetailsList(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Budget Details",
+                    text = stringResource(R.string.budget_details_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -92,9 +94,9 @@ fun BudgetDetailsList(
 
                 // Budget status indicator
                 val (statusColor, statusText) = when (budgetData.budgetStatus) {
-                    BudgetStatus.GOOD -> BudgetGreenLight to "Good"
-                    BudgetStatus.MIDDLE -> BudgetOrangeLight to "Moderate"
-                    BudgetStatus.RED -> BudgetRedLight to "Over Budget"
+                    BudgetStatus.GOOD -> BudgetGreenLight to stringResource(R.string.budget_status_good)
+                    BudgetStatus.MIDDLE -> BudgetOrangeLight to stringResource(R.string.budget_status_moderate)
+                    BudgetStatus.RED -> BudgetRedLight to stringResource(R.string.budget_status_over)
                 }
 
                 Text(
@@ -115,14 +117,14 @@ fun BudgetDetailsList(
                     item {
                         Spacer(modifier = Modifier.height(8.dp))
                         BudgetDetailItem(
-                            title = "Budget",
+                            title = stringResource(R.string.budget_title),
                             isHeader = true
                         )
                     }
 
                     item {
                         BudgetDetailItem(
-                            title = "Recommended Daily Budget",
+                            title = stringResource(R.string.recommended_daily_budget_title),
                             value = CurrencyFormatter.formatCurrency(
                                 budgetData.recommendedDailyExpenseBudget,
                                 currencySettings
@@ -135,14 +137,14 @@ fun BudgetDetailsList(
                 // Monthly Overview Section
                 item {
                     BudgetDetailItem(
-                        title = "Monthly Overview",
+                        title = stringResource(R.string.monthly_overview_title),
                         isHeader = true
                     )
                 }
 
                 item {
                     BudgetDetailItem(
-                        title = "Total Income so far",
+                        title = stringResource(R.string.total_income_so_far_title),
                         value = CurrencyFormatter.formatCurrency(
                             budgetData.totalIncomeToDate,
                             currencySettings
@@ -153,7 +155,7 @@ fun BudgetDetailsList(
 
                 item {
                     BudgetDetailItem(
-                        title = "Total Expenses so far",
+                        title = stringResource(R.string.total_expenses_so_far_title),
                         value = CurrencyFormatter.formatCurrency(
                             budgetData.totalExpensesToDate,
                             currencySettings
@@ -164,7 +166,7 @@ fun BudgetDetailsList(
 
                 item {
                     BudgetDetailItem(
-                        title = "Total Rent + Expenses",
+                        title = stringResource(R.string.total_rent_expenses_title),
                         value = CurrencyFormatter.formatCurrency(
                             budgetData.totalRentToDate + budgetData.totalExpensesToDate,
                             currencySettings
@@ -182,7 +184,7 @@ fun BudgetDetailsList(
                         BudgetStatus.RED -> BudgetRedLight
                     }
                     BudgetDetailItem(
-                        title = "Remaining",
+                        title = stringResource(R.string.remaining_title),
                         value = CurrencyFormatter.formatCurrency(remainingBudget, currencySettings),
                         valueColor = remainingColor,
                         isImportant = true
@@ -193,14 +195,14 @@ fun BudgetDetailsList(
                 item {
                     Spacer(modifier = Modifier.height(8.dp))
                     BudgetDetailItem(
-                        title = "Daily Breakdown",
+                        title = stringResource(R.string.daily_breakdown_title),
                         isHeader = true
                     )
                 }
 
                 item {
                     BudgetDetailItem(
-                        title = "Daily Income",
+                        title = stringResource(R.string.daily_income_title),
                         value = CurrencyFormatter.formatCurrency(
                             budgetData.dailyIncome,
                             currencySettings
@@ -211,7 +213,7 @@ fun BudgetDetailsList(
 
                 item {
                     BudgetDetailItem(
-                        title = "Daily Rent",
+                        title = stringResource(R.string.daily_rent_title),
                         value = CurrencyFormatter.formatCurrency(
                             budgetData.dailyRent,
                             currencySettings
@@ -222,7 +224,7 @@ fun BudgetDetailsList(
 
                 item {
                     BudgetDetailItem(
-                        title = "Average Daily Expenses",
+                        title = stringResource(R.string.average_daily_expenses_title),
                         value = CurrencyFormatter.formatCurrency(
                             budgetData.averageDailyExpenses,
                             currencySettings
@@ -235,7 +237,7 @@ fun BudgetDetailsList(
                 item {
                     Spacer(modifier = Modifier.height(8.dp))
                     BudgetDetailItem(
-                        title = "Projections",
+                        title = stringResource(R.string.projections_title),
                         isHeader = true
                     )
                 }
@@ -247,7 +249,7 @@ fun BudgetDetailsList(
                         BudgetStatus.RED -> BudgetRedLight
                     }
                     BudgetDetailItem(
-                        title = "Estimated End-of-Month Balance",
+                        title = stringResource(R.string.estimated_end_month_balance_title),
                         value = CurrencyFormatter.formatCurrency(
                             budgetData.estimatedEndOfMonthBalance,
                             currencySettings
