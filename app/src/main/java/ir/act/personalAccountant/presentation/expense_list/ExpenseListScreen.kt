@@ -1396,15 +1396,14 @@ private fun DayGroupHeader(
             Column {
                 Text(
                     text = formatDayHeaderText(dayOfMonth),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleSmall,
                     color = Color(0xFF5D4037) // Dark brown for good contrast with yellow
                 )
             }
 
             Text(
                 text = CurrencyFormatter.formatCurrency(totalAmount, currencySettings),
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF5D4037) // Dark brown for good contrast with yellow
             )
