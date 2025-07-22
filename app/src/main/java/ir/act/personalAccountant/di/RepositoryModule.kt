@@ -16,6 +16,8 @@ import ir.act.personalAccountant.domain.repository.SyncStateRepository
 import ir.act.personalAccountant.domain.repository.TripModeRepository
 import ir.act.personalAccountant.domain.usecase.BudgetUseCase
 import ir.act.personalAccountant.domain.usecase.BudgetUseCaseImpl
+import ir.act.personalAccountant.domain.usecase.NotificationUseCase
+import ir.act.personalAccountant.domain.usecase.NotificationUseCaseImpl
 import javax.inject.Singleton
 
 @Module
@@ -57,4 +59,10 @@ abstract class RepositoryModule {
     abstract fun bindTripModeRepository(
         tripModeRepositoryImpl: TripModeRepositoryImpl
     ): TripModeRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindNotificationUseCase(
+        notificationUseCaseImpl: NotificationUseCaseImpl
+    ): NotificationUseCase
 }

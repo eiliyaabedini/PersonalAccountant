@@ -10,6 +10,8 @@ object SettingsContract {
         val availableCurrencies: List<CurrencySettings> = CurrencySettings.SUPPORTED_CURRENCIES,
         val showCurrencyPicker: Boolean = false,
         val budgetSettings: BudgetSettings = BudgetSettings(),
+        val isNotificationEnabled: Boolean = false,
+        val hasNotificationPermission: Boolean = false,
         val isLoading: Boolean = false,
         val error: String? = null
     )
@@ -20,6 +22,7 @@ object SettingsContract {
         data class CurrencySelected(val currencySettings: CurrencySettings) : Events()
         object BudgetConfigClicked : Events()
         object CategorySettingsClicked : Events()
+        data class NotificationToggleClicked(val enabled: Boolean) : Events()
         object ClearError : Events()
     }
     

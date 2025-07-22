@@ -1,0 +1,25 @@
+package ir.act.personalAccountant.data.local
+
+import android.content.Context
+import android.content.SharedPreferences
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import javax.inject.Singleton
+
+@Singleton
+class NotificationPreferences @Inject constructor(
+    @ApplicationContext private val context: Context
+) {
+    private val prefs: SharedPreferences = context.getSharedPreferences(
+        "notification_preferences",
+        Context.MODE_PRIVATE
+    )
+
+    companion object {
+        private const val KEY_NOTIFICATION_ENABLED = "notification_enabled"
+    }
+
+    var isNotificationEnabled: Boolean
+        get() = prefs.getBoolean(KEY_NOTIFICATION_ENABLED, false)
+        set(value) = prefs.edit().putBoolean(KEY_NOTIFICATION_ENABLED, value).apply()
+}

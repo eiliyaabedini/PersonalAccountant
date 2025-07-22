@@ -1,5 +1,8 @@
 package ir.act.personalAccountant.presentation.settings
 
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -29,6 +33,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -37,6 +42,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -44,6 +50,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import ir.act.personalAccountant.domain.model.CurrencySettings
 import ir.act.personalAccountant.presentation.settings.SettingsContract.Events
 import ir.act.personalAccountant.presentation.settings.SettingsContract.UiInteractions
+import ir.act.personalAccountant.util.Constants
+import ir.act.personalAccountant.util.NotificationPermissionHelper
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,6 +60,14 @@ fun SettingsScreen(
     uiInteractions: UiInteractions
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    // Permission launcher
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        viewModel.onPermissionResult(isGranted)
+    }
 
     // Handle navigation events
     LaunchedEffect(Unit) {
@@ -63,6 +79,36 @@ fun SettingsScreen(
 
                 is SettingsViewModel.NavigationEvent.NavigateToCategorySettings -> {
                     uiInteractions.navigateToCategorySettings()
+                }
+            }
+        }
+    }
+
+    // Handle notification events
+    LaunchedEffect(Unit) {
+        viewModel.notificationEvents.collect { event ->
+            when (event) {
+                is SettingsViewModel.NotificationEvent.PermissionDenied -> {
+                    val permission = NotificationPermissionHelper.getNotificationPermission()
+                    if (permission.isNotEmpty()) {
+                        permissionLauncher.launch(permission)
+                    }
+                }
+
+                is SettingsViewModel.NotificationEvent.ShowToast -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+
+                is SettingsViewModel.NotificationEvent.PermissionGranted -> {
+                    Toast.makeText(
+                        context,
+                        Constants.Notifications.PERMISSION_GRANTED_MESSAGE,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+
+                is SettingsViewModel.NotificationEvent.PermissionPermanentlyDenied -> {
+                    // Handle in viewmodel
                 }
             }
         }
@@ -121,7 +167,7 @@ fun SettingsScreen(
                         }
 
                         Text(
-                            text = "Settings",
+                            text = Constants.Settings.SETTINGS_TITLE,
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -145,7 +191,7 @@ fun SettingsScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         Text(
-                            text = "Currency",
+                            text = Constants.Settings.CURRENCY_TITLE,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onBackground
@@ -184,6 +230,62 @@ fun SettingsScreen(
                                     imageVector = Icons.Default.KeyboardArrowRight,
                                     contentDescription = "Select Currency",
                                     tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                            }
+                        }
+
+                        // Notification Settings
+                        Text(
+                            text = Constants.Settings.NOTIFICATIONS_TITLE,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surface
+                            ),
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Notifications,
+                                        contentDescription = "Notifications",
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                    Column {
+                                        Text(
+                                            text = Constants.Settings.DAILY_BUDGET_NOTIFICATIONS,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Medium,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Text(
+                                            text = if (uiState.isNotificationEnabled) Constants.Settings.ENABLED else Constants.Settings.DISABLED,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                        )
+                                    }
+                                }
+
+                                Switch(
+                                    checked = uiState.isNotificationEnabled,
+                                    onCheckedChange = { enabled ->
+                                        viewModel.onEvent(Events.NotificationToggleClicked(enabled))
+                                    }
                                 )
                             }
                         }

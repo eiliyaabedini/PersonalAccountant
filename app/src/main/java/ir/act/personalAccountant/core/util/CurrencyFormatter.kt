@@ -4,6 +4,7 @@ import ir.act.personalAccountant.domain.model.CurrencySettings
 import java.text.NumberFormat
 import java.util.Currency
 import java.util.Locale
+import kotlin.math.abs
 
 object CurrencyFormatter {
     
@@ -39,6 +40,11 @@ object CurrencyFormatter {
     
     private fun formatCurrencyFallback(amount: Double, currencyCode: String): String {
         val symbol = CurrencySettings.getCurrencySymbol(currencyCode)
-        return "$symbol%.2f".format(amount)
+        // Ensure negative values show with minus sign
+        return if (amount < 0) {
+            "-$symbol%.2f".format(abs(amount))
+        } else {
+            "$symbol%.2f".format(amount)
+        }
     }
 }
