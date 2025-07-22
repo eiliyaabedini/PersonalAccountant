@@ -10,6 +10,7 @@ import ir.act.personalAccountant.ai.AIEngine
 import ir.act.personalAccountant.ai.data.repository.AIRepository
 import ir.act.personalAccountant.core.util.DateUtils
 import ir.act.personalAccountant.core.util.ImageFileManager
+import ir.act.personalAccountant.data.local.UserPreferences
 import ir.act.personalAccountant.domain.model.CurrencySettings
 import ir.act.personalAccountant.domain.model.Expense
 import ir.act.personalAccountant.domain.usecase.AIExchangeRateResult
@@ -42,6 +43,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ExpenseListViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val userPreferences: UserPreferences,
     private val getAllExpensesUseCase: GetAllExpensesUseCase,
     private val getTotalExpensesUseCase: GetTotalExpensesUseCase,
     private val getExpensesByTagUseCase: GetExpensesByTagUseCase,
@@ -70,6 +72,7 @@ class ExpenseListViewModel @Inject constructor(
 
     init {
         initializeCurrentMonth()
+        loadUserPreferences()
         loadExpenses()
         loadCurrencySettings()
         loadBudgetSettings()
@@ -81,6 +84,12 @@ class ExpenseListViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(
             currentYear = DateUtils.getCurrentYear(),
             currentMonth = DateUtils.getCurrentMonth()
+        )
+    }
+
+    private fun loadUserPreferences() {
+        _uiState.value = _uiState.value.copy(
+            isBudgetMode = userPreferences.isBudgetMode
         )
     }
 
@@ -147,7 +156,10 @@ class ExpenseListViewModel @Inject constructor(
                     }
                 } else {
                     // Toggle budget mode
-                    _uiState.value = _uiState.value.copy(isBudgetMode = !currentBudgetMode)
+                    val newBudgetMode = !currentBudgetMode
+                    _uiState.value = _uiState.value.copy(isBudgetMode = newBudgetMode)
+                    // Save the new state to preferences
+                    userPreferences.isBudgetMode = newBudgetMode
                 }
             }
             is ExpenseListEvent.CameraClicked -> {

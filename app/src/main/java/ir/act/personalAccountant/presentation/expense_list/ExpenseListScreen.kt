@@ -3,6 +3,9 @@ package ir.act.personalAccountant.presentation.expense_list
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -15,6 +18,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -69,6 +73,8 @@ import ir.act.personalAccountant.core.util.DateUtils
 import ir.act.personalAccountant.core.util.ImageFileManager
 import ir.act.personalAccountant.domain.model.CurrencySettings
 import ir.act.personalAccountant.domain.model.Expense
+import ir.act.personalAccountant.presentation.components.BudgetDetailsList
+import ir.act.personalAccountant.presentation.components.BudgetOwlDisplay
 import ir.act.personalAccountant.presentation.components.DonutChart
 import ir.act.personalAccountant.presentation.components.DonutChartLegend
 import ir.act.personalAccountant.presentation.components.LayeredProgressBar
@@ -157,18 +163,18 @@ fun ExpenseListScreen(
             Column(
                 modifier = Modifier.fillMaxSize()
             ) {
-                // White top section with status bar, header and donut chart
+                // White top section with status bar, header and chart/budget display
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(
                             MaterialTheme.colorScheme.primaryContainer,
-                            shape = androidx.compose.foundation.shape.RoundedCornerShape(
+                            shape = RoundedCornerShape(
                                 bottomStart = 30.dp,
                                 bottomEnd = 30.dp
                             )
                         )
-                        .padding(bottom = 20.dp)
+                        .padding(bottom = if (uiState.isBudgetMode) 0.dp else 20.dp)
                 ) {
                     // Status bar space
                     Spacer(modifier = Modifier.height(8.dp))
@@ -181,59 +187,61 @@ fun ExpenseListScreen(
                         onNavigateToGoogleSheets,
                         onNavigateToSettings
                     )
-                    // Month navigation header
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Previous month arrow
-                        IconButton(
-                            onClick = { viewModel.onEvent(ExpenseListEvent.PreviousMonthClicked) },
+                    // Month navigation header (only show in expense mode)
+                    if (!uiState.isBudgetMode) {
+                        Row(
                             modifier = Modifier
-                                .size(36.dp)
-                                .background(
-                                    Color.White.copy(alpha = 0.8f),
-                                    shape = CircleShape
-                                )
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                                contentDescription = "Previous month",
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-
-                        // Month/Year display
-                        Text(
-                            text = DateUtils.formatMonthYear(
-                                uiState.currentYear,
-                                uiState.currentMonth
-                            ),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-
-                        // Next month arrow
-                        IconButton(
-                            onClick = { viewModel.onEvent(ExpenseListEvent.NextMonthClicked) },
-                            modifier = Modifier
-                                .size(36.dp)
-                                .background(
-                                    Color.White.copy(alpha = 0.8f),
-                                    shape = CircleShape
+                            // Previous month arrow
+                            IconButton(
+                                onClick = { viewModel.onEvent(ExpenseListEvent.PreviousMonthClicked) },
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .background(
+                                        Color.White.copy(alpha = 0.8f),
+                                        shape = CircleShape
+                                    )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                                    contentDescription = "Previous month",
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    modifier = Modifier.size(24.dp)
                                 )
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                contentDescription = "Next month",
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.size(24.dp)
+                            }
+
+                            // Month/Year display
+                            Text(
+                                text = DateUtils.formatMonthYear(
+                                    uiState.currentYear,
+                                    uiState.currentMonth
+                                ),
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
+
+                            // Next month arrow
+                            IconButton(
+                                onClick = { viewModel.onEvent(ExpenseListEvent.NextMonthClicked) },
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .background(
+                                        Color.White.copy(alpha = 0.8f),
+                                        shape = CircleShape
+                                    )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                    contentDescription = "Next month",
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
                         }
                     }
 
@@ -242,11 +250,11 @@ fun ExpenseListScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 20.dp)
+                            .padding(horizontal = if (uiState.isBudgetMode) 0.dp else 20.dp)
                     ) {
                         if (uiState.isBudgetMode) {
-                            // Budget mode content
-                            BudgetModeContent(
+                            // Budget mode: Show owl display
+                            BudgetOwlDisplay(
                                 budgetData = uiState.budgetData,
                                 currencySettings = currencySettings,
                                 modifier = Modifier.fillMaxWidth()
@@ -340,13 +348,22 @@ fun ExpenseListScreen(
                     }
                 }
 
-                // Dark bottom section with expense list
+                // Bottom section - budget details in budget mode, expense list in expense mode
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(MaterialTheme.colorScheme.background)
                         .padding(horizontal = 20.dp, vertical = 20.dp)
                 ) {
+                    if (uiState.isBudgetMode) {
+                        // Budget Details List
+                        BudgetDetailsList(
+                            budgetData = uiState.budgetData,
+                            currencySettings = currencySettings,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        // Regular expense list
                     when {
                         uiState.isLoading -> {
                             Box(
@@ -363,19 +380,33 @@ fun ExpenseListScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.padding(24.dp)
                                 ) {
+                                    Image(
+                                        painter = painterResource(R.mipmap.owl),
+                                        contentDescription = "Owl waiting for expenses",
+                                        modifier = Modifier.size(120.dp)
+                                    )
+
+                                    Spacer(modifier = Modifier.height(24.dp))
+
                                     Text(
                                         text = "No expenses yet",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = MaterialTheme.colorScheme.onBackground
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onBackground,
+                                        textAlign = TextAlign.Center
                                     )
+
+                                    Spacer(modifier = Modifier.height(12.dp))
+
                                     Text(
-                                        text = "Add your first expense to get started",
-                                        style = MaterialTheme.typography.bodyMedium,
+                                        text = "Use the + button below to add your first expense and start tracking your finances",
+                                        style = MaterialTheme.typography.bodyLarge,
                                         color = TextSecondary,
                                         textAlign = TextAlign.Center,
-                                        modifier = Modifier.padding(top = 8.dp)
+                                        modifier = Modifier.padding(horizontal = 16.dp)
                                     )
                                 }
                             }
@@ -472,6 +503,7 @@ fun ExpenseListScreen(
                                 }
                             }
                         }
+                    }
                     }
                 }
             }
@@ -612,6 +644,15 @@ fun ExpenseListScreen(
                     aiExchangeRate = uiState.aiExchangeRate
                 )
             }
+
+            // Animated switch at bottom center
+            AnimatedBudgetModeSwitch(
+                viewModel = viewModel,
+                uiState = uiState,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 32.dp)
+            )
         }
     }
 }
@@ -631,8 +672,6 @@ private fun TopBar(
         horizontalArrangement = Arrangement.End,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        BudgetModeSwitchButton(viewModel, uiState)
-        Spacer(modifier = Modifier.width(8.dp))
         TripModeToggleButton(viewModel, uiState)
 
         Spacer(modifier = Modifier.weight(1f))
@@ -682,27 +721,115 @@ private fun TopBar(
 }
 
 @Composable
-private fun BudgetModeSwitchButton(
+private fun AnimatedBudgetModeSwitch(
     viewModel: ExpenseListViewModel,
-    uiState: ExpenseListUiState
+    uiState: ExpenseListUiState,
+    modifier: Modifier = Modifier
 ) {
-    TextButton(
+    // Animated values
+    val animatedBackgroundColor by animateColorAsState(
+        targetValue = if (uiState.isBudgetMode)
+            MaterialTheme.colorScheme.primary
+        else
+            MaterialTheme.colorScheme.surface,
+        animationSpec = tween(300),
+        label = "background_color"
+    )
+
+    val animatedThumbOffset by animateFloatAsState(
+        targetValue = if (uiState.isBudgetMode) 1f else 0f,
+        animationSpec = tween(300, easing = FastOutSlowInEasing),
+        label = "thumb_offset"
+    )
+
+    Card(
         onClick = { viewModel.onEvent(ExpenseListEvent.BudgetModeToggled) },
-        colors = ButtonDefaults.textButtonColors(
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            containerColor = Color.White.copy(alpha = 0.2f)
+        colors = CardDefaults.cardColors(
+            containerColor = animatedBackgroundColor.copy(alpha = 0.9f)
         ),
-        modifier = Modifier
-            .background(
-                Color.White.copy(alpha = 0.2f),
-                shape = RoundedCornerShape(16.dp)
-            )
+        shape = RoundedCornerShape(50.dp), // More rounded for switch appearance
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 6.dp,
+            pressedElevation = 12.dp
+        ),
+        modifier = modifier
     ) {
-        Text(
-            text = if (uiState.isBudgetMode) "Expense" else "Budget",
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium
-        )
+        Box(
+            modifier = Modifier
+                .width(140.dp)
+                .height(48.dp)
+                .padding(6.dp)
+        ) {
+            // Track background
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                        shape = RoundedCornerShape(50.dp)
+                    )
+            )
+
+            // Sliding thumb
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = if (uiState.isBudgetMode)
+                        MaterialTheme.colorScheme.onPrimary
+                    else
+                        MaterialTheme.colorScheme.primary
+                ),
+                shape = RoundedCornerShape(50.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+                modifier = Modifier
+                    .width(68.dp)
+                    .height(36.dp)
+                    .offset(x = (60.dp * animatedThumbOffset))
+                    .align(Alignment.CenterStart)
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = if (uiState.isBudgetMode) "Budget" else "Expense",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold,
+                        color = if (uiState.isBudgetMode)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.onPrimary
+                    )
+                }
+            }
+
+            // Background labels
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Expense",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (!uiState.isBudgetMode)
+                        Color.Transparent // Hidden when thumb is over it
+                    else
+                        MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = "Budget",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (uiState.isBudgetMode)
+                        Color.Transparent // Hidden when thumb is over it
+                    else
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
     }
 }
 
