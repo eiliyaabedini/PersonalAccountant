@@ -101,7 +101,7 @@ class BudgetNotificationManager @Inject constructor(
         val title =
             "${Constants.NotificationContent.TODAY_EXPENSES_PREFIX} ${data.formattedTodayExpenses}"
 
-        return if (!data.isBudgetConfigured.not()) {
+        return if (!data.isBudgetConfigured) {
             val contentText =
                 "${data.formattedTotalExpenses} ${Constants.NotificationContent.TOTAL_SUFFIX}"
             val bigText =
