@@ -1,7 +1,8 @@
 package ir.act.personalAccountant.core.util
 
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Calendar
+import java.util.Locale
 
 object DateUtils {
     
@@ -79,5 +80,24 @@ object DateUtils {
         
         val formatter = SimpleDateFormat("MMM yyyy", Locale.getDefault())
         return formatter.format(calendar.time)
+    }
+
+    /**
+     * Parses an ISO date string (YYYY-MM-DD) from receipt and converts to timestamp.
+     * Returns the timestamp for the parsed date or current timestamp if parsing fails.
+     */
+    fun parseReceiptDateToTimestamp(extractedDate: String?): Long {
+        if (extractedDate.isNullOrBlank()) {
+            return System.currentTimeMillis()
+        }
+
+        return try {
+            val isoFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val date = isoFormatter.parse(extractedDate.trim())
+            date?.time ?: System.currentTimeMillis()
+        } catch (e: Exception) {
+            // If parsing fails, fallback to current timestamp
+            System.currentTimeMillis()
+        }
     }
 }

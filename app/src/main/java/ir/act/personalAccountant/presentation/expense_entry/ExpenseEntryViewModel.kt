@@ -8,6 +8,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import ir.act.personalAccountant.ai.AIEngine
 import ir.act.personalAccountant.ai.data.repository.AIRepository
+import ir.act.personalAccountant.core.util.DateUtils
 import ir.act.personalAccountant.core.util.ImageFileManager
 import ir.act.personalAccountant.domain.model.CurrencySettings
 import ir.act.personalAccountant.domain.usecase.AIExchangeRateResult
@@ -485,6 +486,15 @@ class ExpenseEntryViewModel @Inject constructor(
                         result.category?.let { category ->
                             _uiState.update {
                                 it.copy(selectedTag = category)
+                            }
+                        }
+
+                        // Update date if extracted from receipt
+                        result.extractedDate?.let { extractedDate ->
+                            val parsedTimestamp =
+                                DateUtils.parseReceiptDateToTimestamp(extractedDate)
+                            _uiState.update {
+                                it.copy(selectedDate = parsedTimestamp)
                             }
                         }
 

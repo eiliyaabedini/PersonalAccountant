@@ -298,6 +298,7 @@ class OpenAIClient @Inject constructor(
             1. Total amount (as a decimal number)
             2. Most appropriate category from the available options
             3. Currency detected from the receipt (look for currency symbols, currency codes, or country context)
+            4. Date from the receipt (look for transaction date, purchase date, or any date on the receipt)
             
             Available categories: ${request.availableCategories.joinToString(", ")}
             
@@ -306,7 +307,8 @@ class OpenAIClient @Inject constructor(
                 "total_amount": 0.00,
                 "category": "category_name",
                 "confidence": 0.95,
-                "currency_detected": "USD"
+                "currency_detected": "USD",
+                "extracted_date": "2024-07-23"
             }
             
             Rules:
@@ -326,6 +328,10 @@ class OpenAIClient @Inject constructor(
                 }
             }
         }" as default
+            - extracted_date should be in YYYY-MM-DD format (ISO date format)
+            - Look for any date on the receipt: transaction date, purchase date, receipt date, etc.
+            - If multiple dates are present, prefer the transaction/purchase date over printed date
+            - If you can't find any date on the receipt, set extracted_date to null
             - If you can't determine the amount or category, use confidence < 0.5
         """.trimIndent()
 
@@ -642,7 +648,8 @@ class OpenAIClient @Inject constructor(
                 totalAmount = result.total_amount,
                 category = result.category,
                 confidence = result.confidence,
-                detectedCurrency = result.currency_detected
+                detectedCurrency = result.currency_detected,
+                extractedDate = result.extracted_date
             )
         } catch (e: Exception) {
             ReceiptAnalysisResponse(
