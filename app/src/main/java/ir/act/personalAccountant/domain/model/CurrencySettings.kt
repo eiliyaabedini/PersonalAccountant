@@ -4,6 +4,8 @@ data class CurrencySettings(
     val currencyCode: String = "USD",
     val locale: String = "en_US"
 ) {
+    val selectedCurrency: String get() = currencyCode
+    val availableCurrencies: List<String> get() = SUPPORTED_CURRENCIES.map { it.currencyCode }
     companion object {
         val DEFAULT = CurrencySettings()
         

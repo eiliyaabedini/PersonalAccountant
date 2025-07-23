@@ -7,6 +7,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import ir.act.personalAccountant.ai.presentation.settings.AISettingsScreen
+import ir.act.personalAccountant.presentation.asset_entry.AssetEntryScreen
+import ir.act.personalAccountant.presentation.asset_list.AssetListScreen
 import ir.act.personalAccountant.presentation.budget_config.BudgetConfigScreen
 import ir.act.personalAccountant.presentation.category_settings.CategorySettingsScreen
 import ir.act.personalAccountant.presentation.expense_edit.ExpenseEditContract
@@ -16,6 +18,9 @@ import ir.act.personalAccountant.presentation.expense_list.ExpenseListScreen
 import ir.act.personalAccountant.presentation.financial_advisor.FinancialAdvisorScreen
 import ir.act.personalAccountant.presentation.googlesheets.GoogleSheetsScreen
 import ir.act.personalAccountant.presentation.googlesheets.GoogleSheetsViewModel
+import ir.act.personalAccountant.presentation.net_worth_calculation.NetWorthCalculationScreen
+import ir.act.personalAccountant.presentation.net_worth_dashboard.NetWorthDashboardScreen
+import ir.act.personalAccountant.presentation.net_worth_history.NetWorthHistoryScreen
 import ir.act.personalAccountant.presentation.settings.SettingsContract
 import ir.act.personalAccountant.presentation.settings.SettingsScreen
 import ir.act.personalAccountant.presentation.sync.SyncProgressScreen
@@ -33,6 +38,12 @@ object Routes {
     const val SYNC_PROGRESS = "sync_progress"
     const val AI_SETTINGS = "ai_settings"
     const val FINANCIAL_ADVISOR = "financial_advisor"
+    const val NET_WORTH_DASHBOARD = "net_worth_dashboard"
+    const val NET_WORTH_HISTORY = "net_worth_history"
+    const val ASSET_LIST = "asset_list"
+    const val ASSET_ENTRY = "asset_entry"
+    const val ASSET_EDIT = "asset_edit/{assetId}"
+    const val NET_WORTH_CALCULATION = "net_worth_calculation"
 
     fun expenseEdit(expenseId: Long) = "expense_edit/$expenseId"
     fun viewAllExpenses(filterTag: String? = null) = if (filterTag != null) {
@@ -40,6 +51,7 @@ object Routes {
     } else {
         "view_all_expenses"
     }
+    fun assetEdit(assetId: Long) = "asset_edit/$assetId"
 }
 
 @Composable
@@ -82,6 +94,9 @@ fun PersonalAccountantNavigation(
                 },
                 onNavigateToFinancialAdvisor = {
                     navController.navigate(Routes.FINANCIAL_ADVISOR)
+                },
+                onNavigateToNetWorth = {
+                    navController.navigate(Routes.NET_WORTH_DASHBOARD)
                 }
             )
         }
@@ -205,6 +220,72 @@ fun PersonalAccountantNavigation(
                 },
                 onNavigateToAISettings = {
                     navController.navigate(Routes.AI_SETTINGS)
+                }
+            )
+        }
+
+        composable(Routes.NET_WORTH_DASHBOARD) {
+            NetWorthDashboardScreen(
+                onNavigateToAssetEntry = {
+                    navController.navigate(Routes.ASSET_ENTRY)
+                },
+                onNavigateToAssetEdit = { assetId ->
+                    navController.navigate(Routes.assetEdit(assetId))
+                },
+                onNavigateToNetWorthHistory = {
+                    navController.navigate(Routes.NET_WORTH_HISTORY)
+                }
+            )
+        }
+
+        composable(Routes.ASSET_LIST) {
+            AssetListScreen(
+                onNavigateToAssetEntry = {
+                    navController.navigate(Routes.ASSET_ENTRY)
+                },
+                onNavigateToAssetEdit = { assetId ->
+                    navController.navigate(Routes.assetEdit(assetId))
+                },
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Routes.ASSET_ENTRY) {
+            AssetEntryScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(
+            route = Routes.ASSET_EDIT,
+            arguments = listOf(
+                navArgument("assetId") { type = NavType.LongType }
+            )
+        ) { backStackEntry ->
+            val assetId = backStackEntry.arguments?.getLong("assetId") ?: 0L
+            AssetEntryScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Routes.NET_WORTH_HISTORY) {
+            NetWorthHistoryScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Routes.NET_WORTH_CALCULATION) {
+            NetWorthCalculationScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
                 }
             )
         }

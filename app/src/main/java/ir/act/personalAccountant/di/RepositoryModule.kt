@@ -4,16 +4,20 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import ir.act.personalAccountant.data.repository.AssetRepositoryImpl
 import ir.act.personalAccountant.data.repository.BudgetRepositoryImpl
 import ir.act.personalAccountant.data.repository.ExpenseRepositoryImpl
 import ir.act.personalAccountant.data.repository.GoogleSheetsRepositoryImpl
 import ir.act.personalAccountant.data.repository.SyncStateRepositoryImpl
 import ir.act.personalAccountant.data.repository.TripModeRepositoryImpl
+import ir.act.personalAccountant.domain.repository.AssetRepository
 import ir.act.personalAccountant.domain.repository.BudgetRepository
 import ir.act.personalAccountant.domain.repository.ExpenseRepository
 import ir.act.personalAccountant.domain.repository.GoogleSheetsRepository
 import ir.act.personalAccountant.domain.repository.SyncStateRepository
 import ir.act.personalAccountant.domain.repository.TripModeRepository
+import ir.act.personalAccountant.domain.usecase.AssetSnapshotUseCase
+import ir.act.personalAccountant.domain.usecase.AssetSnapshotUseCaseImpl
 import ir.act.personalAccountant.domain.usecase.BudgetUseCase
 import ir.act.personalAccountant.domain.usecase.BudgetUseCaseImpl
 import ir.act.personalAccountant.domain.usecase.NotificationUseCase
@@ -65,4 +69,16 @@ abstract class RepositoryModule {
     abstract fun bindNotificationUseCase(
         notificationUseCaseImpl: NotificationUseCaseImpl
     ): NotificationUseCase
+
+    @Binds
+    @Singleton
+    abstract fun bindAssetRepository(
+        assetRepositoryImpl: AssetRepositoryImpl
+    ): AssetRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAssetSnapshotUseCase(
+        assetSnapshotUseCaseImpl: AssetSnapshotUseCaseImpl
+    ): AssetSnapshotUseCase
 }
