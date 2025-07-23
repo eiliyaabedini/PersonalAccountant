@@ -94,9 +94,6 @@ fun PersonalAccountantNavigation(
                 },
                 onNavigateToFinancialAdvisor = {
                     navController.navigate(Routes.FINANCIAL_ADVISOR)
-                },
-                onNavigateToNetWorth = {
-                    navController.navigate(Routes.NET_WORTH_DASHBOARD)
                 }
             )
         }
@@ -143,6 +140,10 @@ fun PersonalAccountantNavigation(
 
                     override fun navigateToFinancialAdvisor() {
                         navController.navigate(Routes.FINANCIAL_ADVISOR)
+                    }
+
+                    override fun navigateToNetWorth() {
+                        navController.navigate(Routes.NET_WORTH_DASHBOARD)
                     }
                 }
             )

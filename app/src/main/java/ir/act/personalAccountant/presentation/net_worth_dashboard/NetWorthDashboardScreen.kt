@@ -3,10 +3,12 @@ package ir.act.personalAccountant.presentation.net_worth_dashboard
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -25,15 +27,29 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import ir.act.personalAccountant.core.util.CurrencyFormatter
 import ir.act.personalAccountant.domain.model.CurrencySettings
@@ -41,6 +57,7 @@ import ir.act.personalAccountant.presentation.components.DailyNetWorthLineChart
 import ir.act.personalAccountant.presentation.components.InlineAssetEditor
 import ir.act.personalAccountant.presentation.components.SimpleTimeRangeSelector
 import ir.act.personalAccountant.ui.theme.TextSecondary
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,88 +89,124 @@ fun NetWorthDashboardScreen(
         )
     }
 
-    Column(
+    val density = LocalDensity.current
+
+    // Track header size
+    var headerSize by remember { mutableStateOf(IntSize(0, 0)) }
+    val headerHeight by remember(headerSize) {
+        mutableStateOf(with(density) { headerSize.height.toDp() })
+    }
+
+    // Header offset for collapsing animation
+    val headerOffsetHeightPx = remember { mutableFloatStateOf(0f) }
+
+    // Nested scroll connection for collapsing behavior
+    val nestedScrollConnection = remember(headerSize) {
+        object : NestedScrollConnection {
+            val headerHeightPx = headerSize.height.toFloat()
+
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                val delta = available.y
+                val newOffset = headerOffsetHeightPx.floatValue + delta
+                headerOffsetHeightPx.floatValue = newOffset.coerceIn(-headerHeightPx, 0f)
+                return Offset.Zero
+            }
+        }
+    }
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .nestedScroll(nestedScrollConnection)
     ) {
-        // Header
-        Text(
-            text = "Net Worth Dashboard",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-
-        // Current Net Worth Card
-        CurrentNetWorthCard(
-            currentNetWorth = uiState.currentNetWorth,
-            currencySettings = uiState.currencySettings
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Time Range Selector
-        SimpleTimeRangeSelector(
-            selectedTimeRange = uiState.selectedTimeRange,
-            timeRanges = DashboardTimeRange.entries.toTypedArray(),
-            getDisplayName = { it.displayName },
-            onTimeRangeSelected = { range ->
-                viewModel.onEvent(NetWorthDashboardEvent.TimeRangeChanged(range))
-            }
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Net Worth Line Graph
-        if (uiState.netWorthHistory.isNotEmpty()) {
-            DailyNetWorthLineChart(
-                dailyNetWorth = uiState.netWorthHistory,
-                currencySettings = uiState.currencySettings,
-                height = 120.dp,
-                isClickable = true,
-                onClick = { viewModel.onEvent(NetWorthDashboardEvent.GraphClicked) }
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-
-        // Action Button
-        Button(
-            onClick = { viewModel.onEvent(NetWorthDashboardEvent.AddAssetClicked) },
-            modifier = Modifier.fillMaxWidth()
+        // Collapsible Header
+        Column(
+            modifier = Modifier
+                .zIndex(1f)
+                .offset { IntOffset(x = 0, y = headerOffsetHeightPx.floatValue.roundToInt()) }
+                .fillMaxWidth()
+                .onSizeChanged { headerSize = it }
         ) {
-            Icon(Icons.Default.Add, contentDescription = null)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Add Asset")
+            // Top App Bar
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Net Worth Dashboard",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            )
+
+            // Chart Card
+            NetWorthChartCard(
+                currentNetWorth = uiState.currentNetWorth,
+                currencySettings = uiState.currencySettings,
+                netWorthHistory = uiState.netWorthHistory,
+                selectedTimeRange = uiState.selectedTimeRange,
+                onTimeRangeChanged = { range ->
+                    viewModel.onEvent(NetWorthDashboardEvent.TimeRangeChanged(range))
+                },
+                onGraphClicked = { viewModel.onEvent(NetWorthDashboardEvent.GraphClicked) },
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Assets Section
-        Text(
-            text = "Your Assets",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-
-        // Assets List
-        if (uiState.isLoading) {
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
+        // Scrollable Content
+        LazyColumn(
+            contentPadding = PaddingValues(top = headerHeight + 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.fillMaxSize()
+        ) {
+            item {
+                // Action Button
+                Button(
+                    onClick = { viewModel.onEvent(NetWorthDashboardEvent.AddAssetClicked) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Add Asset")
+                }
             }
-        } else if (uiState.assetSnapshots.isEmpty()) {
-            EmptyAssetsState(
-                onAddAssetClicked = { viewModel.onEvent(NetWorthDashboardEvent.AddAssetClicked) }
-            )
-        } else {
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+
+            item {
+                // Assets Section Header
+                Text(
+                    text = "Your Assets",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+            }
+
+            // Assets List or Loading/Empty State
+            if (uiState.isLoading) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(100.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+            } else if (uiState.assetSnapshots.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                    ) {
+                        EmptyAssetsState(
+                            onAddAssetClicked = { viewModel.onEvent(NetWorthDashboardEvent.AddAssetClicked) }
+                        )
+                    }
+                }
+            } else {
                 items(uiState.assetSnapshots) { assetSnapshot ->
                     InlineAssetEditor(
                         assetSnapshot = assetSnapshot,
@@ -162,7 +215,11 @@ fun NetWorthDashboardScreen(
                         editingAmount = uiState.editingAmount,
                         editingQuantity = uiState.editingQuantity,
                         onStartEditing = {
-                            viewModel.onEvent(NetWorthDashboardEvent.StartEditingAsset(assetSnapshot))
+                            viewModel.onEvent(
+                                NetWorthDashboardEvent.StartEditingAsset(
+                                    assetSnapshot
+                                )
+                            )
                         },
                         onAmountChanged = { amount ->
                             viewModel.onEvent(NetWorthDashboardEvent.AmountChanged(amount))
@@ -185,7 +242,8 @@ fun NetWorthDashboardScreen(
                                     assetSnapshot
                                 )
                             )
-                        }
+                        },
+                        modifier = Modifier.padding(horizontal = 16.dp)
                     )
                 }
             }
@@ -201,39 +259,72 @@ fun NetWorthDashboardScreen(
 }
 
 @Composable
-private fun CurrentNetWorthCard(
+private fun NetWorthChartCard(
     currentNetWorth: Double,
-    currencySettings: CurrencySettings
+    currencySettings: CurrencySettings,
+    netWorthHistory: List<ir.act.personalAccountant.domain.usecase.DailyNetWorth>,
+    selectedTimeRange: DashboardTimeRange,
+    onTimeRangeChanged: (DashboardTimeRange) -> Unit,
+    onGraphClicked: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.padding(16.dp)
         ) {
-            Text(
-                text = "Current Net Worth",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
+            // Time Range Selector
+            SimpleTimeRangeSelector(
+                selectedTimeRange = selectedTimeRange,
+                timeRanges = DashboardTimeRange.entries.toTypedArray(),
+                getDisplayName = { it.displayName },
+                onTimeRangeSelected = onTimeRangeChanged
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = CurrencyFormatter.formatCurrency(currentNetWorth, currencySettings),
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
+            // Net Worth Line Graph (if data exists)
+            if (netWorthHistory.isNotEmpty()) {
+                DailyNetWorthLineChart(
+                    dailyNetWorth = netWorthHistory,
+                    currencySettings = currencySettings,
+                    height = 120.dp,
+                    isClickable = true,
+                    onClick = onGraphClicked
+                )
 
-            Text(
-                text = "Automatically calculated from latest asset values",
-                style = MaterialTheme.typography.bodySmall,
-                color = TextSecondary,
-                textAlign = TextAlign.Center
-            )
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            // Current Net Worth Value (centered below chart)
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Current Net Worth",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = CurrencyFormatter.formatCurrency(currentNetWorth, currencySettings),
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                Text(
+                    text = "Automatically calculated from latest asset values",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary,
+                    textAlign = TextAlign.Center
+                )
+            }
         }
     }
 }

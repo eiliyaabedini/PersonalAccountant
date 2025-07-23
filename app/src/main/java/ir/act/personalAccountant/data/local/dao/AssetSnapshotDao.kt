@@ -60,18 +60,18 @@ interface AssetSnapshotDao {
 
     @Query(
         """
-        SELECT DISTINCT DATE(timestamp/1000, 'unixepoch') as date, 
-        SUM(totalValue) as totalValue,
-        timestamp
-        FROM asset_snapshots a1 
-        WHERE timestamp = (
-            SELECT MAX(timestamp) 
-            FROM asset_snapshots a2 
-            WHERE a2.assetId = a1.assetId 
-            AND DATE(a2.timestamp/1000, 'unixepoch') = DATE(a1.timestamp/1000, 'unixepoch')
+        SELECT DATE(timestamp/1000, 'unixepoch', 'localtime') as date,
+               SUM(totalValue) as totalValue,
+               MAX(timestamp) as timestamp
+        FROM asset_snapshots a1
+        WHERE (:fromDate IS NULL OR timestamp >= :fromDate)
+        AND timestamp = (
+            SELECT MAX(timestamp)
+            FROM asset_snapshots a2
+            WHERE a2.assetId = a1.assetId
+            AND DATE(a2.timestamp/1000, 'unixepoch', 'localtime') = DATE(a1.timestamp/1000, 'unixepoch', 'localtime')
         )
-        AND (:fromDate IS NULL OR timestamp >= :fromDate)
-        GROUP BY DATE(timestamp/1000, 'unixepoch')
+        GROUP BY DATE(timestamp/1000, 'unixepoch', 'localtime')
         ORDER BY timestamp ASC
     """
     )
@@ -79,10 +79,32 @@ interface AssetSnapshotDao {
 
     @Query("DELETE FROM asset_snapshots WHERE timestamp < :cutoffTime")
     suspend fun deleteOldSnapshots(cutoffTime: Long)
+
+    // Debug query to see all raw data
+    @Query(
+        """
+        SELECT *, DATE(timestamp/1000, 'unixepoch') as formatted_date
+        FROM asset_snapshots 
+        ORDER BY timestamp DESC
+        LIMIT 20
+        """
+    )
+    suspend fun getAllSnapshotsForDebug(): List<AssetSnapshotWithFormattedDate>
 }
 
 data class DailyNetWorthSnapshot(
     val date: String,
     val totalValue: Double,
     val timestamp: Long
+)
+
+data class AssetSnapshotWithFormattedDate(
+    val id: Long,
+    val assetId: Long,
+    val amount: Double,
+    val quantity: Double,
+    val totalValue: Double,
+    val currency: String,
+    val timestamp: Long,
+    val formatted_date: String
 )

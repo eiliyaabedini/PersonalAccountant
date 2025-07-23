@@ -1,5 +1,7 @@
 package ir.act.personalAccountant.presentation.asset_entry
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -55,10 +57,22 @@ fun AssetEntryScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    // Image picker launcher
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let {
+            viewModel.onEvent(AssetEntryEvent.ImageSelected(it))
+        }
+    }
+
     LaunchedEffect(Unit) {
         viewModel.uiInteraction.collect { interaction ->
             when (interaction) {
                 is AssetEntryUiInteraction.NavigateBack -> onNavigateBack()
+                AssetEntryUiInteraction.OpenImagePicker -> {
+                    imagePickerLauncher.launch("image/*")
+                }
             }
         }
     }
@@ -102,6 +116,86 @@ fun AssetEntryScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            item {
+                // AI Image Analysis Button
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "AI Asset Analysis",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(
+                                    text = "Scan trading app screenshot to auto-fill asset details",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                                )
+                            }
+
+                            TextButton(
+                                onClick = {
+                                    viewModel.onEvent(AssetEntryEvent.AnalyzeImageClicked)
+                                },
+                                enabled = !uiState.isAnalyzingImage
+                            ) {
+                                if (uiState.isAnalyzingImage) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier
+                                            .padding(end = 4.dp)
+                                            .width(16.dp)
+                                            .height(16.dp)
+                                    )
+                                } else {
+                                    Icon(
+                                        Icons.Default.Add,
+                                        contentDescription = null,
+                                        modifier = Modifier.padding(end = 4.dp)
+                                    )
+                                }
+                                Text(if (uiState.isAnalyzingImage) "Analyzing..." else "Scan Image")
+                            }
+                        }
+
+                        // Show AI analysis message if available
+                        uiState.aiAnalysisMessage?.let { message ->
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = message,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                TextButton(
+                                    onClick = { viewModel.onEvent(AssetEntryEvent.ClearAiAnalysisMessage) }
+                                ) {
+                                    Text("Dismiss", style = MaterialTheme.typography.bodySmall)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             item {
                 // Asset Name
                 OutlinedTextField(

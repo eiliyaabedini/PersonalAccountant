@@ -16,6 +16,8 @@ import ir.act.personalAccountant.domain.repository.ExpenseRepository
 import ir.act.personalAccountant.domain.repository.GoogleSheetsRepository
 import ir.act.personalAccountant.domain.repository.SyncStateRepository
 import ir.act.personalAccountant.domain.repository.TripModeRepository
+import ir.act.personalAccountant.domain.usecase.AssetImageAnalysisUseCase
+import ir.act.personalAccountant.domain.usecase.AssetImageAnalysisUseCaseImpl
 import ir.act.personalAccountant.domain.usecase.AssetSnapshotUseCase
 import ir.act.personalAccountant.domain.usecase.AssetSnapshotUseCaseImpl
 import ir.act.personalAccountant.domain.usecase.BudgetUseCase
@@ -81,4 +83,10 @@ abstract class RepositoryModule {
     abstract fun bindAssetSnapshotUseCase(
         assetSnapshotUseCaseImpl: AssetSnapshotUseCaseImpl
     ): AssetSnapshotUseCase
+
+    @Binds
+    @Singleton
+    abstract fun bindAssetImageAnalysisUseCase(
+        assetImageAnalysisUseCaseImpl: AssetImageAnalysisUseCaseImpl
+    ): AssetImageAnalysisUseCase
 }

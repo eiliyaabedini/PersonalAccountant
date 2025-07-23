@@ -35,5 +35,6 @@ object SettingsContract {
         fun navigateToGoogleSheets()
         fun navigateToAISettings()
         fun navigateToFinancialAdvisor()
+        fun navigateToNetWorth()
     }
 }

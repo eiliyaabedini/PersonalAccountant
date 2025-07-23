@@ -119,7 +119,7 @@ fun DailyNetWorthLineChart(
                     .clip(RoundedCornerShape(8.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
             ) {
-                if (dailyNetWorth.size >= 2) {
+                if (dailyNetWorth.size >= 1) { // Changed from >= 2 to >= 1 to show single data points
                     drawNetWorthLineChart(
                         dailyNetWorth = dailyNetWorth,
                         minValue = minValue,
@@ -144,7 +144,12 @@ private fun DrawScope.drawNetWorthLineChart(
 
     // Calculate points
     val points = dailyNetWorth.mapIndexed { index, daily ->
-        val x = padding + (index.toFloat() / (dailyNetWorth.size - 1)) * (width - 2 * padding)
+        val x = if (dailyNetWorth.size == 1) {
+            // Center single point
+            width / 2f
+        } else {
+            padding + (index.toFloat() / (dailyNetWorth.size - 1)) * (width - 2 * padding)
+        }
         val normalizedValue = if (valueRange > 0) {
             ((daily.totalValue - minValue) / valueRange).toFloat()
         } else {
@@ -179,31 +184,32 @@ private fun DrawScope.drawNetWorthLineChart(
         )
     }
 
-    // Draw line
-    val path = Path()
-    if (points.isNotEmpty()) {
+    // Draw line (only if there are multiple points)
+    if (points.size > 1) {
+        val path = Path()
         path.moveTo(points.first().x, points.first().y)
         for (i in 1 until points.size) {
             path.lineTo(points[i].x, points[i].y)
         }
-    }
 
-    drawPath(
-        path = path,
-        color = Color(0xFF2196F3),
-        style = Stroke(width = 3f)
-    )
+        drawPath(
+            path = path,
+            color = Color(0xFF2196F3),
+            style = Stroke(width = 3f)
+        )
+    }
 
     // Draw data points
     points.forEach { point ->
+        val radius = if (points.size == 1) 6f else 4f // Larger radius for single points
         drawCircle(
             color = Color(0xFF2196F3),
-            radius = 4f,
+            radius = radius,
             center = point
         )
         drawCircle(
             color = Color.White,
-            radius = 2f,
+            radius = radius - 2f,
             center = point
         )
     }

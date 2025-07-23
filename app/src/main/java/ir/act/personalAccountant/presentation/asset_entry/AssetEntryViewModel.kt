@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import ir.act.personalAccountant.domain.usecase.AssetImageAnalysisUseCase
 import ir.act.personalAccountant.domain.usecase.AssetSnapshotUseCase
 import ir.act.personalAccountant.domain.usecase.GetCurrencySettingsUseCase
 import ir.act.personalAccountant.domain.usecase.ManageAssetsUseCase
@@ -20,6 +21,7 @@ class AssetEntryViewModel @Inject constructor(
     private val manageAssetsUseCase: ManageAssetsUseCase,
     private val assetSnapshotUseCase: AssetSnapshotUseCase,
     private val getCurrencySettingsUseCase: GetCurrencySettingsUseCase,
+    private val assetImageAnalysisUseCase: AssetImageAnalysisUseCase,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -114,6 +116,20 @@ class AssetEntryViewModel @Inject constructor(
                 )
             }
 
+            AssetEntryEvent.AnalyzeImageClicked -> {
+                viewModelScope.launch {
+                    _uiInteraction.send(AssetEntryUiInteraction.OpenImagePicker)
+                }
+            }
+
+            is AssetEntryEvent.ImageSelected -> {
+                analyzeImage(event.imageUri)
+            }
+
+            AssetEntryEvent.ClearAiAnalysisMessage -> {
+                _uiState.value = _uiState.value.copy(aiAnalysisMessage = null)
+            }
+
             AssetEntryEvent.SaveAsset -> {
                 saveAsset()
             }
@@ -177,8 +193,17 @@ class AssetEntryViewModel @Inject constructor(
 
             try {
                 val state = _uiState.value
-                val amount = state.currentAmount.toDoubleOrNull() ?: 0.0
-                val quantity = state.quantity.toDoubleOrNull() ?: 1.0
+                // Use BigDecimal for better precision handling before converting to Double
+                val amount = try {
+                    state.currentAmount.toBigDecimal().toDouble()
+                } catch (e: Exception) {
+                    0.0
+                }
+                val quantity = try {
+                    state.quantity.toBigDecimal().toDouble()
+                } catch (e: Exception) {
+                    1.0
+                }
 
                 val newAssetId = if (state.isEditMode && state.assetId != null) {
                     manageAssetsUseCase.updateAsset(
@@ -226,6 +251,55 @@ class AssetEntryViewModel @Inject constructor(
                     error = e.message ?: "Failed to save asset"
                 )
             }
+        }
+    }
+
+    private fun analyzeImage(imageUri: android.net.Uri) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                isAnalyzingImage = true,
+                aiAnalysisMessage = null
+            )
+
+            assetImageAnalysisUseCase.analyzeAssetImage(imageUri)
+                .onSuccess { analysisResult ->
+                    // Auto-populate form with AI analysis results
+                    val message =
+                        "AI Analysis completed with ${(analysisResult.confidence * 100).toInt()}% confidence"
+
+                    // Update form fields if analysis was successful and confidence is high enough
+                    if (analysisResult.confidence > 0.5f) {
+                        _uiState.value = _uiState.value.copy(
+                            assetName = analysisResult.assetName,
+                            assetType = analysisResult.assetType,
+                            currentAmount = analysisResult.amountPerUnit, // Keep as string for precision
+                            quantity = analysisResult.quantity, // Keep as string for precision
+                            selectedCurrency = analysisResult.currency,
+                            isAnalyzingImage = false,
+                            aiAnalysisMessage = message,
+                            // Add new asset type if it doesn't exist
+                            availableAssetTypes = if (!_uiState.value.availableAssetTypes.contains(
+                                    analysisResult.assetType
+                                )
+                            ) {
+                                _uiState.value.availableAssetTypes + analysisResult.assetType
+                            } else {
+                                _uiState.value.availableAssetTypes
+                            }
+                        )
+                    } else {
+                        _uiState.value = _uiState.value.copy(
+                            isAnalyzingImage = false,
+                            aiAnalysisMessage = "Analysis completed but confidence was low (${(analysisResult.confidence * 100).toInt()}%). Please verify the values."
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    _uiState.value = _uiState.value.copy(
+                        isAnalyzingImage = false,
+                        aiAnalysisMessage = "AI Analysis failed: ${error.message}"
+                    )
+                }
         }
     }
 }

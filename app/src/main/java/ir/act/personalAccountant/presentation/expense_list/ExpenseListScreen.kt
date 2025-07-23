@@ -31,7 +31,6 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
@@ -104,7 +103,6 @@ fun ExpenseListScreen(
     onNavigateToBudgetConfig: () -> Unit,
     onNavigateToGoogleSheets: () -> Unit,
     onNavigateToFinancialAdvisor: () -> Unit,
-    onNavigateToNetWorth: () -> Unit,
     viewModel: ExpenseListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -188,8 +186,7 @@ fun ExpenseListScreen(
                         uiState,
                         onNavigateToFinancialAdvisor,
                         onNavigateToGoogleSheets,
-                        onNavigateToSettings,
-                        onNavigateToNetWorth
+                        onNavigateToSettings
                     )
                     // Month navigation header (only show in expense mode)
                     if (!uiState.isBudgetMode) {
@@ -667,8 +664,7 @@ private fun TopBar(
     uiState: ExpenseListUiState,
     onNavigateToFinancialAdvisor: () -> Unit,
     onNavigateToGoogleSheets: () -> Unit,
-    onNavigateToSettings: () -> Unit,
-    onNavigateToNetWorth: () -> Unit
+    onNavigateToSettings: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -681,20 +677,6 @@ private fun TopBar(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Net Worth button
-        IconButton(
-            onClick = { onNavigateToNetWorth() },
-            modifier = Modifier.size(20.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Star,
-                contentDescription = "Net Worth",
-                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                modifier = Modifier.size(18.dp)
-            )
-        }
-
-        Spacer(modifier = Modifier.width(8.dp))
 
         // Financial Advisor AI icon
         IconButton(

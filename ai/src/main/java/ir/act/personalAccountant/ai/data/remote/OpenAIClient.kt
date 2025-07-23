@@ -2,6 +2,9 @@ package ir.act.personalAccountant.ai.data.remote
 
 import com.google.gson.Gson
 import ir.act.personalAccountant.ai.domain.model.AIAnalysisResult
+import ir.act.personalAccountant.ai.domain.model.AssetAIAnalysisResult
+import ir.act.personalAccountant.ai.domain.model.AssetAnalysisRequest
+import ir.act.personalAccountant.ai.domain.model.AssetAnalysisResponse
 import ir.act.personalAccountant.ai.domain.model.CurrencyExchangeResponse
 import ir.act.personalAccountant.ai.domain.model.ExchangeRateResult
 import ir.act.personalAccountant.ai.domain.model.ReceiptAnalysisRequest
@@ -66,6 +69,62 @@ class OpenAIClient @Inject constructor(
             }
         } catch (e: Exception) {
             ReceiptAnalysisResponse(
+                success = false,
+                errorMessage = "Network error: ${e.message}"
+            )
+        }
+    }
+
+    suspend fun analyzeAsset(
+        request: AssetAnalysisRequest,
+        apiKey: String
+    ): AssetAnalysisResponse = withContext(Dispatchers.IO) {
+        try {
+            val openAIRequest = createAssetAnalysisRequest(request)
+            val response = apiService.createChatCompletion(
+                authorization = "Bearer $apiKey",
+                request = openAIRequest
+            )
+
+            if (response.isSuccessful) {
+                val responseBody = response.body()
+                responseBody?.let { body ->
+                    if (body.error != null) {
+                        return@withContext AssetAnalysisResponse(
+                            success = false,
+                            errorMessage = body.error.message
+                        )
+                    }
+
+                    val content = body.choices.firstOrNull()?.message?.content
+                    if (content != null) {
+                        parseAssetAIResponse(content)
+                    } else {
+                        AssetAnalysisResponse(
+                            success = false,
+                            errorMessage = "No response content received"
+                        )
+                    }
+                } ?: AssetAnalysisResponse(
+                    success = false,
+                    errorMessage = "Empty response from API"
+                )
+            } else {
+                val errorBody = response.errorBody()?.string()
+                val errorMessage = try {
+                    val errorResponse = gson.fromJson(errorBody, OpenAIResponse::class.java)
+                    errorResponse.error?.message ?: "HTTP ${response.code()}: ${response.message()}"
+                } catch (e: Exception) {
+                    "HTTP ${response.code()}: ${response.message()}"
+                }
+
+                AssetAnalysisResponse(
+                    success = false,
+                    errorMessage = errorMessage
+                )
+            }
+        } catch (e: Exception) {
+            AssetAnalysisResponse(
                 success = false,
                 errorMessage = "Network error: ${e.message}"
             )
@@ -449,6 +508,122 @@ class OpenAIClient @Inject constructor(
             CurrencyExchangeResponse(
                 success = false,
                 errorMessage = "Failed to parse exchange rate response: ${e.message}"
+            )
+        }
+    }
+
+    private fun createAssetAnalysisRequest(request: AssetAnalysisRequest): OpenAIRequest {
+        val systemPrompt = """
+            You are an asset analysis assistant. Analyze the provided trading app screenshot and extract:
+            1. Asset name (e.g., "VUAA", "Top 500 US Stocks", "Bitcoin")
+            2. Asset type from available types or suggest a new one if needed
+            3. Amount per unit (price per share/unit/coin)
+            4. Quantity (how many units are owned)
+            5. Currency (EUR, USD, GBP, etc.)
+            
+            Available asset types: ${request.availableAssetTypes.joinToString(", ")}
+            
+            Respond ONLY with valid JSON in this exact format:
+            {
+                "assetName": "extracted_asset_name",
+                "assetType": "type_from_available_or_new",
+                "amountPerUnit": "0.00000000",
+                "quantity": "0.00000000",
+                "currency": "EUR",
+                "confidence": 0.95
+            }
+            
+            CRITICAL PRECISION RULES:
+            - amountPerUnit and quantity MUST be strings with FULL decimal precision as shown in the screenshot
+            - For crypto assets: preserve ALL decimal places (e.g., "0.83052318", "1.23456789", "0.00000001")
+            - For stocks: preserve at least 4 decimal places (e.g., "123.4567")
+            - NEVER round numbers or use scientific notation
+            - NEVER truncate decimal places - extract the EXACT number shown
+            - If you see "0.83052318", output exactly "0.83052318", not "0.83" or "0.8305"
+            - assetName should be the exact name from the screenshot
+            - assetType must be one of the available types or suggest a new appropriate type
+            - currency should be the 3-letter ISO currency code detected
+            - confidence should be between 0.0 and 1.0 based on how certain you are
+            - Focus on extracting exact values shown in the screenshot with maximum precision
+            - If any value is unclear, set confidence lower but still preserve all visible decimal places
+        """.trimIndent()
+
+        return OpenAIRequest(
+            model = "gpt-4o-mini-2024-07-18",
+            messages = listOf(
+                OpenAIMessage(
+                    role = "system",
+                    content = listOf(
+                        OpenAIContent(
+                            type = "text",
+                            text = systemPrompt
+                        )
+                    )
+                ),
+                OpenAIMessage(
+                    role = "user",
+                    content = listOf(
+                        OpenAIContent(
+                            type = "text",
+                            text = "Please analyze this trading app screenshot and extract the asset information."
+                        ),
+                        OpenAIContent(
+                            type = "image_url",
+                            image_url = OpenAIImageUrl(
+                                url = "data:image/jpeg;base64,${request.imageBase64}"
+                            )
+                        )
+                    )
+                )
+            ),
+            max_tokens = 300,
+            temperature = 0.2
+        )
+    }
+
+    private fun parseAssetAIResponse(content: String): AssetAnalysisResponse {
+        return try {
+            val cleanContent = content.trim()
+                .removePrefix("```json")
+                .removeSuffix("```")
+                .trim()
+
+            val result = gson.fromJson(cleanContent, AssetAIAnalysisResult::class.java)
+
+            // Validate that the string values can be converted to valid numbers
+            val validatedAmountPerUnit = try {
+                result.amountPerUnit.toBigDecimal()
+                result.amountPerUnit
+            } catch (e: Exception) {
+                return AssetAnalysisResponse(
+                    success = false,
+                    errorMessage = "Invalid amountPerUnit format: ${result.amountPerUnit}"
+                )
+            }
+
+            val validatedQuantity = try {
+                result.quantity.toBigDecimal()
+                result.quantity
+            } catch (e: Exception) {
+                return AssetAnalysisResponse(
+                    success = false,
+                    errorMessage = "Invalid quantity format: ${result.quantity}"
+                )
+            }
+
+            AssetAnalysisResponse(
+                success = true,
+                assetName = result.assetName,
+                assetType = result.assetType,
+                amountPerUnit = validatedAmountPerUnit,
+                quantity = validatedQuantity,
+                currency = result.currency,
+                confidence = result.confidence
+            )
+        } catch (e: Exception) {
+            AssetAnalysisResponse(
+                success = false,
+                errorMessage = "Failed to parse AI response: ${e.message}"
             )
         }
     }

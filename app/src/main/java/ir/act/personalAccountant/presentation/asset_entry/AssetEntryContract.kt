@@ -16,7 +16,9 @@ data class AssetEntryUiState(
     val newTypeName: String = "",
     val currencySettings: CurrencySettings = CurrencySettings(),
     val isEditMode: Boolean = false,
-    val assetId: Long? = null
+    val assetId: Long? = null,
+    val isAnalyzingImage: Boolean = false,
+    val aiAnalysisMessage: String? = null
 )
 
 sealed class AssetEntryEvent {
@@ -32,10 +34,14 @@ sealed class AssetEntryEvent {
     data class NewTypeNameChanged(val name: String) : AssetEntryEvent()
     object ConfirmNewType : AssetEntryEvent()
     object DismissAddTypeDialog : AssetEntryEvent()
+    object AnalyzeImageClicked : AssetEntryEvent()
+    data class ImageSelected(val imageUri: android.net.Uri) : AssetEntryEvent()
     object SaveAsset : AssetEntryEvent()
     object ClearError : AssetEntryEvent()
+    object ClearAiAnalysisMessage : AssetEntryEvent()
 }
 
 sealed class AssetEntryUiInteraction {
     data class NavigateBack(val newAssetId: Long? = null) : AssetEntryUiInteraction()
+    object OpenImagePicker : AssetEntryUiInteraction()
 }
