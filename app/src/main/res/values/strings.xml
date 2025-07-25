@@ -127,6 +127,8 @@
     <string name="google_sheets_title">Google Sheets</string>
     <string name="google_sheets_content_description">Google Sheets</string>
     <string name="configure_google_sheets_content_description">Configure Google Sheets</string>
+    <string name="account_settings_title">Account</string>
+    <string name="account_settings_content_description">Account Settings</string>
 
     <!-- Category Settings -->
     <string name="clear_selection_content_description">Clear selection</string>
@@ -178,4 +180,7 @@
     <string name="loading">Loading...</string>
     <string name="no_data">No data</string>
     <string name="error_occurred">An error occurred</string>
+
+    <!-- Firebase -->
+    <string name="default_web_client_id">1069297067563-2t0fimkibvfmlggohi56tgf27eg3dt87.apps.googleusercontent.com</string>
 </resources>

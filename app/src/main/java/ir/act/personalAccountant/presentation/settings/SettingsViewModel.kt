@@ -10,6 +10,8 @@ import ir.act.personalAccountant.data.notification.NotificationService
 import ir.act.personalAccountant.data.worker.DailyReminderScheduler
 import ir.act.personalAccountant.domain.usecase.BudgetUseCase
 import ir.act.personalAccountant.domain.usecase.GetCurrencySettingsUseCase
+import ir.act.personalAccountant.domain.usecase.GetCurrentUserUseCase
+import ir.act.personalAccountant.domain.usecase.SignOutUseCase
 import ir.act.personalAccountant.domain.usecase.UpdateCurrencySettingsUseCase
 import ir.act.personalAccountant.presentation.settings.SettingsContract.Events
 import ir.act.personalAccountant.presentation.settings.SettingsContract.UiState
@@ -30,6 +32,8 @@ class SettingsViewModel @Inject constructor(
     private val getCurrencySettingsUseCase: GetCurrencySettingsUseCase,
     private val updateCurrencySettingsUseCase: UpdateCurrencySettingsUseCase,
     private val budgetUseCase: BudgetUseCase,
+    private val getCurrentUserUseCase: GetCurrentUserUseCase,
+    private val signOutUseCase: SignOutUseCase,
     private val notificationPreferences: NotificationPreferences,
     private val notificationService: NotificationService,
     private val dailyReminderScheduler: DailyReminderScheduler,
@@ -45,6 +49,7 @@ class SettingsViewModel @Inject constructor(
     sealed class NavigationEvent {
         object NavigateToBudgetConfig : NavigationEvent()
         object NavigateToCategorySettings : NavigationEvent()
+        object NavigateToLogin : NavigationEvent()
     }
 
     sealed class NotificationEvent {
@@ -60,6 +65,15 @@ class SettingsViewModel @Inject constructor(
     init {
         loadSettings()
         checkNotificationPermissionStatus()
+        observeCurrentUser()
+    }
+
+    private fun observeCurrentUser() {
+        viewModelScope.launch {
+            getCurrentUserUseCase().collect { user ->
+                _uiState.value = _uiState.value.copy(currentUser = user)
+            }
+        }
     }
 
     fun onEvent(event: Events) {
@@ -86,6 +100,16 @@ class SettingsViewModel @Inject constructor(
                 viewModelScope.launch {
                     _navigationEvents.send(NavigationEvent.NavigateToCategorySettings)
                 }
+            }
+
+            is Events.AccountSettingsClicked -> {
+                viewModelScope.launch {
+                    _navigationEvents.send(NavigationEvent.NavigateToLogin)
+                }
+            }
+
+            is Events.SignOutClicked -> {
+                signOut()
             }
 
             is Events.NotificationToggleClicked -> {
@@ -245,4 +269,14 @@ class SettingsViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(isDailyReminderEnabled = enabled)
     }
 
+    private fun signOut() {
+        viewModelScope.launch {
+            try {
+                signOutUseCase()
+                // User state will be updated automatically through observeCurrentUser()
+            } catch (e: Exception) {
+                // Handle error if needed
+            }
+        }
+    }
 }

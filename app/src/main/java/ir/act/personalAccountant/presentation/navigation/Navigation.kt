@@ -18,6 +18,7 @@ import ir.act.personalAccountant.presentation.expense_list.ExpenseListScreen
 import ir.act.personalAccountant.presentation.financial_advisor.FinancialAdvisorScreen
 import ir.act.personalAccountant.presentation.googlesheets.GoogleSheetsScreen
 import ir.act.personalAccountant.presentation.googlesheets.GoogleSheetsViewModel
+import ir.act.personalAccountant.presentation.login.LoginScreen
 import ir.act.personalAccountant.presentation.net_worth_calculation.NetWorthCalculationScreen
 import ir.act.personalAccountant.presentation.net_worth_dashboard.NetWorthDashboardScreen
 import ir.act.personalAccountant.presentation.net_worth_history.NetWorthHistoryScreen
@@ -27,6 +28,7 @@ import ir.act.personalAccountant.presentation.sync.SyncProgressScreen
 import ir.act.personalAccountant.presentation.view_all_expenses.ViewAllExpensesScreen
 
 object Routes {
+    const val LOGIN = "login"
     const val EXPENSE_ENTRY = "expense_entry"
     const val EXPENSE_LIST = "expense_list"
     const val EXPENSE_EDIT = "expense_edit/{expenseId}"
@@ -58,12 +60,20 @@ object Routes {
 fun PersonalAccountantNavigation(
     navController: NavHostController,
     googleSheetsViewModel: GoogleSheetsViewModel,
-    onGoogleSignInClick: () -> Unit
+    onGoogleSignInClick: () -> Unit,
+    startDestination: String = Routes.EXPENSE_LIST
 ) {
     NavHost(
         navController = navController,
-        startDestination = Routes.EXPENSE_LIST
+        startDestination = startDestination
     ) {
+        composable(Routes.LOGIN) {
+            LoginScreen(
+                onNavigateToMain = {
+                    navController.popBackStack()
+                }
+            )
+        }
         composable(Routes.EXPENSE_ENTRY) {
             ExpenseEntryScreen(
                 onNavigateToExpenseList = {
@@ -144,6 +154,10 @@ fun PersonalAccountantNavigation(
 
                     override fun navigateToNetWorth() {
                         navController.navigate(Routes.NET_WORTH_DASHBOARD)
+                    }
+
+                    override fun navigateToLogin() {
+                        navController.navigate(Routes.LOGIN)
                     }
                 }
             )
