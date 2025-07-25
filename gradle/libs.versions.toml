@@ -33,6 +33,9 @@ hiltWork = "1.1.0"
 startup = "1.1.1"
 mockk = "1.13.8"
 kotlinxCoroutinesTest = "1.8.1"
+firebaseFirestore = "24.10.0"
+firebaseStorage = "20.3.0"
+compressor = "3.0.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -92,6 +95,9 @@ firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.r
 firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
 firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics-ndk" }
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
+firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore", version.ref = "firebaseFirestore" }
+firebase-storage = { group = "com.google.firebase", name = "firebase-storage", version.ref = "firebaseStorage" }
+compressor = { group = "id.zelory", name = "compressor", version.ref = "compressor" }
 
 # Retrofit and HTTP Client
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }

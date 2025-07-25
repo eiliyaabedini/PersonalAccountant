@@ -119,6 +119,11 @@ dependencies {
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.storage)
+
+    // Image compression
+    implementation(libs.compressor)
 
     testImplementation(libs.junit)
     testImplementation(libs.mockk)

@@ -6,27 +6,57 @@ import ir.act.personalAccountant.data.local.entity.ExpenseEntity
 import ir.act.personalAccountant.data.local.model.TagWithCount
 import ir.act.personalAccountant.domain.model.Expense
 import ir.act.personalAccountant.domain.repository.ExpenseRepository
+import ir.act.personalAccountant.domain.usecase.SyncExpenseUseCase
+import ir.act.personalAccountant.domain.usecase.SyncOperation
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class ExpenseRepositoryImpl @Inject constructor(
-    private val expenseDao: ExpenseDao
+    private val expenseDao: ExpenseDao,
+    private val syncExpenseUseCase: SyncExpenseUseCase
 ) : ExpenseRepository {
 
     override suspend fun addExpense(expense: Expense): Long {
-        return expenseDao.insertExpense(expense.toEntity())
+        val id = expenseDao.insertExpense(expense.toEntity())
+
+        // Trigger automatic sync after add (background, silent)
+        val expenseWithId = expense.copy(id = id)
+        val imageUris = if (expense.imagePath != null) listOf(expense.imagePath!!) else emptyList()
+
+        // Launch sync in background - don't block the UI
+        CoroutineScope(Dispatchers.IO).launch {
+            syncExpenseUseCase(expenseWithId, imageUris, SyncOperation.CREATE)
+        }
+
+        return id
     }
 
     override suspend fun updateExpense(expense: Expense) {
         expenseDao.updateExpense(expense.toEntity())
+
+        // Trigger automatic sync after update
+        val imageUris = if (expense.imagePath != null) listOf(expense.imagePath!!) else emptyList()
+
+        CoroutineScope(Dispatchers.IO).launch {
+            syncExpenseUseCase(expense, imageUris, SyncOperation.UPDATE)
+        }
     }
 
     override suspend fun deleteExpense(expenseId: Long) {
         expenseDao.getExpenseById(expenseId)?.let { entity ->
+            val expense = entity.toDomain()
             expenseDao.deleteExpense(entity)
+
+            // Trigger sync for deletion (empty image list)
+            CoroutineScope(Dispatchers.IO).launch {
+                syncExpenseUseCase(expense, emptyList(), SyncOperation.DELETE)
+            }
         }
     }
 

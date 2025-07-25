@@ -22,8 +22,14 @@ import ir.act.personalAccountant.domain.usecase.AssetSnapshotUseCase
 import ir.act.personalAccountant.domain.usecase.AssetSnapshotUseCaseImpl
 import ir.act.personalAccountant.domain.usecase.BudgetUseCase
 import ir.act.personalAccountant.domain.usecase.BudgetUseCaseImpl
+import ir.act.personalAccountant.domain.usecase.DownloadUserExpensesUseCase
+import ir.act.personalAccountant.domain.usecase.DownloadUserExpensesUseCaseImpl
 import ir.act.personalAccountant.domain.usecase.NotificationUseCase
 import ir.act.personalAccountant.domain.usecase.NotificationUseCaseImpl
+import ir.act.personalAccountant.domain.usecase.SyncAllExpensesUseCase
+import ir.act.personalAccountant.domain.usecase.SyncAllExpensesUseCaseImpl
+import ir.act.personalAccountant.domain.usecase.SyncExpenseUseCase
+import ir.act.personalAccountant.domain.usecase.SyncExpenseUseCaseImpl
 import javax.inject.Singleton
 
 @Module
@@ -89,4 +95,22 @@ abstract class RepositoryModule {
     abstract fun bindAssetImageAnalysisUseCase(
         assetImageAnalysisUseCaseImpl: AssetImageAnalysisUseCaseImpl
     ): AssetImageAnalysisUseCase
+
+    @Binds
+    @Singleton
+    abstract fun bindSyncExpenseUseCase(
+        syncExpenseUseCaseImpl: SyncExpenseUseCaseImpl
+    ): SyncExpenseUseCase
+
+    @Binds
+    @Singleton
+    abstract fun bindSyncAllExpensesUseCase(
+        syncAllExpensesUseCaseImpl: SyncAllExpensesUseCaseImpl
+    ): SyncAllExpensesUseCase
+
+    @Binds
+    @Singleton
+    abstract fun bindDownloadUserExpensesUseCase(
+        downloadUserExpensesUseCaseImpl: DownloadUserExpensesUseCaseImpl
+    ): DownloadUserExpensesUseCase
 }

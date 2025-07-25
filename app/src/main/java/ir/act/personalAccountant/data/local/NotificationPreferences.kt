@@ -18,6 +18,7 @@ class NotificationPreferences @Inject constructor(
     companion object {
         private const val KEY_NOTIFICATION_ENABLED = "notification_enabled"
         private const val KEY_DAILY_REMINDER_ENABLED = "daily_reminder_enabled"
+        private const val KEY_CLOUD_SYNC_ENABLED = "cloud_sync_enabled"
     }
 
     var isNotificationEnabled: Boolean
@@ -27,4 +28,8 @@ class NotificationPreferences @Inject constructor(
     var isDailyReminderEnabled: Boolean
         get() = prefs.getBoolean(KEY_DAILY_REMINDER_ENABLED, false)
         set(value) = prefs.edit().putBoolean(KEY_DAILY_REMINDER_ENABLED, value).apply()
+
+    var isCloudSyncEnabled: Boolean
+        get() = prefs.getBoolean(KEY_CLOUD_SYNC_ENABLED, false) // Default disabled for privacy
+        set(value) = prefs.edit().putBoolean(KEY_CLOUD_SYNC_ENABLED, value).apply()
 }

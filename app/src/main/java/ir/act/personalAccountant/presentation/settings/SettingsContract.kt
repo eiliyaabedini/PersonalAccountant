@@ -14,9 +14,13 @@ object SettingsContract {
         val isNotificationEnabled: Boolean = false,
         val isDailyReminderEnabled: Boolean = false,
         val hasNotificationPermission: Boolean = false,
+        val isCloudSyncEnabled: Boolean = false,
         val currentUser: User? = null,
         val isLoading: Boolean = false,
-        val error: String? = null
+        val error: String? = null,
+        val isSyncing: Boolean = false,
+        val syncError: String? = null,
+        val lastSyncTime: String? = null
     )
     
     sealed class Events {
@@ -29,7 +33,9 @@ object SettingsContract {
         object SignOutClicked : Events()
         data class NotificationToggleClicked(val enabled: Boolean) : Events()
         data class DailyReminderToggleClicked(val enabled: Boolean) : Events()
+        data class CloudSyncToggleClicked(val enabled: Boolean) : Events()
         object ClearError : Events()
+        object ManualSyncClicked : Events()
     }
     
     interface UiInteractions {

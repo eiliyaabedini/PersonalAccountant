@@ -8,10 +8,13 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import ir.act.personalAccountant.data.local.NotificationPreferences
 import ir.act.personalAccountant.data.notification.NotificationService
 import ir.act.personalAccountant.data.worker.DailyReminderScheduler
+import ir.act.personalAccountant.domain.sync.SyncResult
 import ir.act.personalAccountant.domain.usecase.BudgetUseCase
+import ir.act.personalAccountant.domain.usecase.DownloadUserExpensesUseCase
 import ir.act.personalAccountant.domain.usecase.GetCurrencySettingsUseCase
 import ir.act.personalAccountant.domain.usecase.GetCurrentUserUseCase
 import ir.act.personalAccountant.domain.usecase.SignOutUseCase
+import ir.act.personalAccountant.domain.usecase.SyncAllExpensesUseCase
 import ir.act.personalAccountant.domain.usecase.UpdateCurrencySettingsUseCase
 import ir.act.personalAccountant.presentation.settings.SettingsContract.Events
 import ir.act.personalAccountant.presentation.settings.SettingsContract.UiState
@@ -34,6 +37,8 @@ class SettingsViewModel @Inject constructor(
     private val budgetUseCase: BudgetUseCase,
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val signOutUseCase: SignOutUseCase,
+    private val syncAllExpensesUseCase: SyncAllExpensesUseCase,
+    private val downloadUserExpensesUseCase: DownloadUserExpensesUseCase,
     private val notificationPreferences: NotificationPreferences,
     private val notificationService: NotificationService,
     private val dailyReminderScheduler: DailyReminderScheduler,
@@ -119,9 +124,17 @@ class SettingsViewModel @Inject constructor(
             is Events.DailyReminderToggleClicked -> {
                 handleDailyReminderToggle(event.enabled)
             }
+
+            is Events.CloudSyncToggleClicked -> {
+                handleCloudSyncToggle(event.enabled)
+            }
             
             is Events.ClearError -> {
                 _uiState.value = _uiState.value.copy(error = null)
+            }
+
+            is Events.ManualSyncClicked -> {
+                performManualSync()
             }
         }
     }
@@ -146,6 +159,7 @@ class SettingsViewModel @Inject constructor(
                         budgetSettings = budgetSettings,
                         isNotificationEnabled = notificationPreferences.isNotificationEnabled,
                         isDailyReminderEnabled = notificationPreferences.isDailyReminderEnabled,
+                        isCloudSyncEnabled = notificationPreferences.isCloudSyncEnabled,
                         hasNotificationPermission = NotificationPermissionHelper.hasNotificationPermission(
                             context
                         ),
@@ -187,6 +201,7 @@ class SettingsViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(
             isNotificationEnabled = notificationPreferences.isNotificationEnabled,
             isDailyReminderEnabled = notificationPreferences.isDailyReminderEnabled,
+            isCloudSyncEnabled = notificationPreferences.isCloudSyncEnabled,
             hasNotificationPermission = hasPermission
         )
     }
@@ -269,6 +284,38 @@ class SettingsViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(isDailyReminderEnabled = enabled)
     }
 
+    private fun handleCloudSyncToggle(enabled: Boolean) {
+        notificationPreferences.isCloudSyncEnabled = enabled
+        _uiState.value = _uiState.value.copy(isCloudSyncEnabled = enabled)
+
+        // If user enables sync, offer to sync existing data
+        if (enabled && _uiState.value.currentUser != null) {
+            viewModelScope.launch {
+                // Optionally trigger sync of pending data when user enables sync
+                try {
+                    when (val result = syncAllExpensesUseCase()) {
+                        is SyncResult.Success -> {
+                            _uiState.value = _uiState.value.copy(
+                                lastSyncTime = "Just now",
+                                syncError = null
+                            )
+                        }
+
+                        is SyncResult.Error -> {
+                            // Don't show error immediately when enabling sync
+                            // User can manually sync if needed
+                        }
+
+                        else -> { /* Loading state */
+                        }
+                    }
+                } catch (e: Exception) {
+                    // Silent failure when auto-sync on enable fails
+                }
+            }
+        }
+    }
+
     private fun signOut() {
         viewModelScope.launch {
             try {
@@ -277,6 +324,46 @@ class SettingsViewModel @Inject constructor(
             } catch (e: Exception) {
                 // Handle error if needed
             }
+        }
+    }
+
+    private fun performManualSync() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isSyncing = true, syncError = null)
+
+            try {
+                when (val result = syncAllExpensesUseCase()) {
+                    is SyncResult.Success -> {
+                        _uiState.value = _uiState.value.copy(
+                            isSyncing = false,
+                            lastSyncTime = "Just now",
+                            syncError = null
+                        )
+                    }
+
+                    is SyncResult.Error -> {
+                        _uiState.value = _uiState.value.copy(
+                            isSyncing = false,
+                            syncError = result.message
+                        )
+                    }
+
+                    else -> {
+                        _uiState.value = _uiState.value.copy(isSyncing = false)
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isSyncing = false,
+                    syncError = "Sync failed: ${e.message}"
+                )
+            }
+        }
+    }
+
+    fun onUserLoggedIn() {
+        viewModelScope.launch {
+            downloadUserExpensesUseCase()
         }
     }
 }
