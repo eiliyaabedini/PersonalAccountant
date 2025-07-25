@@ -104,22 +104,39 @@ fun LoginScreen(
                 .padding(paddingValues),
             contentAlignment = Alignment.Center
         ) {
-            if (uiState.isLoading) {
-                CircularProgressIndicator()
-            } else {
-                LoginContent(
-                    isSignedIn = uiState.isSignedIn,
-                    user = uiState.user,
-                    onSignInClick = {
-                        viewModel.handleEvent(LoginContract.Event.SignInWithGoogle)
-                    },
-                    onSignOutClick = {
-                        viewModel.handleEvent(LoginContract.Event.SignOut)
-                    },
-                    onSkipClick = {
-                        viewModel.handleEvent(LoginContract.Event.SkipLogin)
-                    }
-                )
+            when {
+                uiState.isLoading -> {
+                    CircularProgressIndicator()
+                }
+
+                uiState.isRestoringData -> {
+                    DataRestorationContent(
+                        progress = uiState.dataRestoreProgress,
+                        error = uiState.dataRestoreError,
+                        onRetryClick = {
+                            viewModel.handleEvent(LoginContract.Event.RetryDataRestore)
+                        },
+                        onSkipClick = {
+                            viewModel.handleEvent(LoginContract.Event.SkipDataRestore)
+                        }
+                    )
+                }
+
+                else -> {
+                    LoginContent(
+                        isSignedIn = uiState.isSignedIn,
+                        user = uiState.user,
+                        onSignInClick = {
+                            viewModel.handleEvent(LoginContract.Event.SignInWithGoogle)
+                        },
+                        onSignOutClick = {
+                            viewModel.handleEvent(LoginContract.Event.SignOut)
+                        },
+                        onSkipClick = {
+                            viewModel.handleEvent(LoginContract.Event.SkipLogin)
+                        }
+                    )
+                }
             }
         }
     }
@@ -273,6 +290,108 @@ private fun UserCard(
             ) {
                 Text("Sign Out")
             }
+        }
+    }
+}
+
+@Composable
+private fun DataRestorationContent(
+    progress: String?,
+    error: String?,
+    onRetryClick: () -> Unit,
+    onSkipClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        // App Logo/Icon
+        Image(
+            painter = painterResource(id = R.mipmap.owl),
+            contentDescription = "App Logo",
+            modifier = Modifier.size(120.dp)
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Text(
+            text = "Restoring Your Data",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        if (error != null) {
+            // Show error state
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = error,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = onRetryClick,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Retry")
+                        }
+
+                        Button(
+                            onClick = onSkipClick,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Skip")
+                        }
+                    }
+                }
+            }
+        } else {
+            // Show progress state
+            CircularProgressIndicator(
+                modifier = Modifier.size(48.dp),
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            progress?.let { progressText ->
+                Text(
+                    text = progressText,
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Text(
+                text = "Please wait while we restore your expenses from the cloud",
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

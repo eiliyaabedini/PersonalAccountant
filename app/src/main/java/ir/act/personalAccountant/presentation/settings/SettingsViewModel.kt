@@ -10,7 +10,6 @@ import ir.act.personalAccountant.data.notification.NotificationService
 import ir.act.personalAccountant.data.worker.DailyReminderScheduler
 import ir.act.personalAccountant.domain.sync.SyncResult
 import ir.act.personalAccountant.domain.usecase.BudgetUseCase
-import ir.act.personalAccountant.domain.usecase.DownloadUserExpensesUseCase
 import ir.act.personalAccountant.domain.usecase.GetCurrencySettingsUseCase
 import ir.act.personalAccountant.domain.usecase.GetCurrentUserUseCase
 import ir.act.personalAccountant.domain.usecase.SignOutUseCase
@@ -38,7 +37,6 @@ class SettingsViewModel @Inject constructor(
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val signOutUseCase: SignOutUseCase,
     private val syncAllExpensesUseCase: SyncAllExpensesUseCase,
-    private val downloadUserExpensesUseCase: DownloadUserExpensesUseCase,
     private val notificationPreferences: NotificationPreferences,
     private val notificationService: NotificationService,
     private val dailyReminderScheduler: DailyReminderScheduler,
@@ -86,15 +84,15 @@ class SettingsViewModel @Inject constructor(
             is Events.CurrencyPickerClicked -> {
                 _uiState.value = _uiState.value.copy(showCurrencyPicker = true)
             }
-            
+
             is Events.DismissCurrencyPicker -> {
                 _uiState.value = _uiState.value.copy(showCurrencyPicker = false)
             }
-            
+
             is Events.CurrencySelected -> {
                 updateCurrency(event.currencySettings)
             }
-            
+
             is Events.BudgetConfigClicked -> {
                 viewModelScope.launch {
                     _navigationEvents.send(NavigationEvent.NavigateToBudgetConfig)
@@ -128,7 +126,7 @@ class SettingsViewModel @Inject constructor(
             is Events.CloudSyncToggleClicked -> {
                 handleCloudSyncToggle(event.enabled)
             }
-            
+
             is Events.ClearError -> {
                 _uiState.value = _uiState.value.copy(error = null)
             }
@@ -172,7 +170,7 @@ class SettingsViewModel @Inject constructor(
     private fun updateCurrency(currencySettings: ir.act.personalAccountant.domain.model.CurrencySettings) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, showCurrencyPicker = false)
-            
+
             try {
                 updateCurrencySettingsUseCase(currencySettings)
                 _uiState.value = _uiState.value.copy(
@@ -358,12 +356,6 @@ class SettingsViewModel @Inject constructor(
                     syncError = "Sync failed: ${e.message}"
                 )
             }
-        }
-    }
-
-    fun onUserLoggedIn() {
-        viewModelScope.launch {
-            downloadUserExpensesUseCase()
         }
     }
 }

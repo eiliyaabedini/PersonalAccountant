@@ -3,8 +3,11 @@ package ir.act.personalAccountant.presentation.login
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import ir.act.personalAccountant.data.local.NotificationPreferences
 import ir.act.personalAccountant.data.repository.FirebaseAuthRepositoryImpl
 import ir.act.personalAccountant.domain.model.AuthResult
+import ir.act.personalAccountant.domain.sync.SyncResult
+import ir.act.personalAccountant.domain.usecase.DownloadUserExpensesUseCase
 import ir.act.personalAccountant.domain.usecase.GetCurrentUserUseCase
 import ir.act.personalAccountant.domain.usecase.SignOutUseCase
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -22,7 +25,9 @@ import javax.inject.Inject
 class LoginViewModel @Inject constructor(
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val signOutUseCase: SignOutUseCase,
-    private val firebaseAuthRepository: FirebaseAuthRepositoryImpl
+    private val firebaseAuthRepository: FirebaseAuthRepositoryImpl,
+    private val downloadUserExpensesUseCase: DownloadUserExpensesUseCase,
+    private val notificationPreferences: NotificationPreferences
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginContract.UiState())
@@ -57,6 +62,14 @@ class LoginViewModel @Inject constructor(
             is LoginContract.Event.SkipLogin -> {
                 skipLogin()
             }
+
+            is LoginContract.Event.RetryDataRestore -> {
+                retryDataRestore()
+            }
+
+            is LoginContract.Event.SkipDataRestore -> {
+                skipDataRestore()
+            }
         }
     }
 
@@ -67,7 +80,8 @@ class LoginViewModel @Inject constructor(
                     user = user,
                     isSignedIn = user != null
                 )
-                if (user != null) {
+                // Only navigate automatically if user is signed in and not in data restoration flow
+                if (user != null && !_uiState.value.isRestoringData) {
                     _uiInteraction.emit(LoginContract.UiInteraction.NavigateToMain)
                 }
             }
@@ -99,6 +113,8 @@ class LoginViewModel @Inject constructor(
                             isSignedIn = true,
                             errorMessage = null
                         )
+                        // Start data restoration flow after successful login
+                        startDataRestoration()
                     }
 
                     is AuthResult.Error -> {
@@ -151,6 +167,77 @@ class LoginViewModel @Inject constructor(
 
     private fun skipLogin() {
         viewModelScope.launch {
+            _uiInteraction.emit(LoginContract.UiInteraction.NavigateToMain)
+        }
+    }
+
+    private fun startDataRestoration() {
+        viewModelScope.launch {
+            // Automatically enable cloud sync when user logs in
+            notificationPreferences.isCloudSyncEnabled = true
+
+            _uiState.value = _uiState.value.copy(
+                isRestoringData = true,
+                dataRestoreProgress = "Connecting to cloud...",
+                dataRestoreError = null
+            )
+
+            performDataRestoration()
+        }
+    }
+
+    private fun performDataRestoration() {
+        viewModelScope.launch {
+            try {
+                _uiState.value = _uiState.value.copy(
+                    dataRestoreProgress = "Downloading your data..."
+                )
+
+                when (val result = downloadUserExpensesUseCase()) {
+                    is SyncResult.Success -> {
+                        _uiState.value = _uiState.value.copy(
+                            dataRestoreProgress = "Data restored successfully!"
+                        )
+
+                        // Wait a moment to show success message, then navigate
+                        kotlinx.coroutines.delay(1000)
+                        _uiState.value = _uiState.value.copy(isRestoringData = false)
+                        _uiInteraction.emit(LoginContract.UiInteraction.NavigateToMain)
+                    }
+
+                    is SyncResult.Error -> {
+                        _uiState.value = _uiState.value.copy(
+                            dataRestoreProgress = null,
+                            dataRestoreError = "Failed to restore data: ${result.message}"
+                        )
+                    }
+
+                    else -> {
+                        _uiState.value = _uiState.value.copy(
+                            dataRestoreProgress = null,
+                            dataRestoreError = "Unexpected error during data restoration"
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    dataRestoreProgress = null,
+                    dataRestoreError = "Failed to restore data: ${e.message}"
+                )
+            }
+        }
+    }
+
+    private fun retryDataRestore() {
+        _uiState.value = _uiState.value.copy(
+            dataRestoreError = null
+        )
+        performDataRestoration()
+    }
+
+    private fun skipDataRestore() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isRestoringData = false)
             _uiInteraction.emit(LoginContract.UiInteraction.NavigateToMain)
         }
     }

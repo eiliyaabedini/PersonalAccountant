@@ -7,7 +7,10 @@ object LoginContract {
         val isLoading: Boolean = false,
         val user: User? = null,
         val errorMessage: String? = null,
-        val isSignedIn: Boolean = false
+        val isSignedIn: Boolean = false,
+        val isRestoringData: Boolean = false,
+        val dataRestoreProgress: String? = null,
+        val dataRestoreError: String? = null
     )
 
     sealed class Event {
@@ -16,6 +19,8 @@ object LoginContract {
         object ClearError : Event()
         object SkipLogin : Event()
         data class GoogleSignInResult(val idToken: String?) : Event()
+        object RetryDataRestore : Event()
+        object SkipDataRestore : Event()
     }
 
     sealed class UiInteraction {
